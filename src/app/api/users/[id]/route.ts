@@ -66,3 +66,81 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    // Check if user exists
+    const existingUser = await db.user.findUnique({ where: { id } });
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Build update data from provided fields
+    const updateData: Record<string, unknown> = {};
+    const allowedFields = [
+      'name', 'nameFr', 'phone', 'bio', 'bioFr',
+      'city', 'wilaya', 'specialties', 'experience',
+      'hourlyRate', 'shopName', 'shopNameFr',
+      'isVerified', 'avatar',
+    ];
+
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'No valid fields to update' },
+        { status: 400 }
+      );
+    }
+
+    const updatedUser = await db.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        nameFr: true,
+        phone: true,
+        role: true,
+        avatar: true,
+        bio: true,
+        bioFr: true,
+        city: true,
+        wilaya: true,
+        isVerified: true,
+        rating: true,
+        totalReviews: true,
+        specialties: true,
+        experience: true,
+        hourlyRate: true,
+        shopName: true,
+        shopNameFr: true,
+        hasDelivery: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error('Update user error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

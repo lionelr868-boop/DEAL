@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Wrench, ShoppingBag, Truck, ChevronDown, ChevronUp } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import SearchBar from './search-bar';
@@ -25,6 +25,14 @@ const containerVariants = {
   },
 };
 
+const cardScrollVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  show: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.5, ease: 'easeOut' },
+  },
+};
+
 const ITEMS_PER_PAGE = 6;
 
 export default function SectionSwitcher() {
@@ -32,6 +40,12 @@ export default function SectionSwitcher() {
   const { activeSection, setActiveSection, searchQuery } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [60, -60]);
 
   const tabLabels: Record<string, string> = {
     services: t.sections.services,
@@ -114,7 +128,7 @@ export default function SectionSwitcher() {
   const handleShowLess = () => setShowAll(false);
 
   return (
-    <section className="py-16 bg-gray-50/50" id={`${activeSection}-section`}>
+    <section ref={sectionRef} className="py-16 bg-gray-50/50" id={`${activeSection}-section`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Search Bar */}
         <SearchBar />
@@ -206,13 +220,20 @@ export default function SectionSwitcher() {
                 />
               )}
               <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
                 {visibleServices.map((service, i) => (
-                  <ServiceCard key={service.id} service={service} index={i} />
+                  <motion.div
+                    key={service.id}
+                    variants={cardScrollVariants}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: '-30px' }}
+                    style={{ y: parallaxY }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <ServiceCard service={service} index={i} />
+                  </motion.div>
                 ))}
               </motion.div>
             </motion.div>
@@ -237,13 +258,20 @@ export default function SectionSwitcher() {
                 />
               )}
               <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
                 {visibleProducts.map((product, i) => (
-                  <ProductCard key={product.id} product={product} index={i} />
+                  <motion.div
+                    key={product.id}
+                    variants={cardScrollVariants}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: '-30px' }}
+                    style={{ y: parallaxY }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <ProductCard product={product} index={i} />
+                  </motion.div>
                 ))}
               </motion.div>
             </motion.div>
@@ -260,13 +288,20 @@ export default function SectionSwitcher() {
               transition={{ duration: 0.4 }}
             >
               <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
                 {visibleEquipment.map((eq, i) => (
-                  <EquipmentCard key={eq.id} equipment={eq} index={i} />
+                  <motion.div
+                    key={eq.id}
+                    variants={cardScrollVariants}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: '-30px' }}
+                    style={{ y: parallaxY }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <EquipmentCard equipment={eq} index={i} />
+                  </motion.div>
                 ))}
               </motion.div>
             </motion.div>

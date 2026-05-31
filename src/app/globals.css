@@ -793,3 +793,95 @@ body::before {
   background: linear-gradient(90deg, rgba(255, 107, 53, 0.05), rgba(13, 148, 136, 0.05));
   padding-inline-start: 1.25rem;
 }
+
+/* ========== RIPPLE EFFECT ========== */
+
+/* Material Design ripple on click */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple .ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.35) 0%, rgba(255, 107, 53, 0.1) 60%, transparent 70%);
+  transform: scale(0);
+  animation: rippleExpand 0.7s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* 3D button ripple modifier */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple .ripple-wave {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 50%, transparent 70%);
+  animation: rippleExpand 0.6s ease-out forwards;
+}
+
+.btn-ripple:active {
+  transform: translateY(2px) !important;
+}
+
+/* Spotlight card glow effect */
+.card-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+/* Loading screen */
+.loading-gradient {
+  background: linear-gradient(
+    135deg,
+    #FF6B35 0%,
+    #E55A25 25%,
+    #0D9488 50%,
+    #0F766E 75%,
+    #F59E0B 100%
+  );
+  background-size: 400% 400%;
+  animation: loadingGradient 3s ease infinite;
+}
+
+@keyframes loadingGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Loading logo pulse ring */
+@keyframes loadingPulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

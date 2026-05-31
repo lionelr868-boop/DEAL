@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Users,
   Wrench,
@@ -24,6 +24,7 @@ import {
   ShieldX,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import { AnimatedCounter } from '../animated-counter';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -73,6 +74,10 @@ export default function AdminDashboard() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Stats from API
+  const [apiStats, setApiStats] = useState<{ users: Record<string, number>; services: number; products: number; equipment: number; bookings: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
@@ -88,11 +93,30 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const res = await fetch('/api/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setApiStats(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (dashboardActiveTab === 'users') {
       fetchUsers();
     }
   }, [dashboardActiveTab, fetchUsers]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const handleApproveUser = async (userId: string) => {
     setActionLoading(userId);
@@ -126,14 +150,29 @@ export default function AdminDashboard() {
     }
   };
 
-  const platformStats = [
-    { label: t.dashboard.customers, value: '342', icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange' },
-    { label: t.dashboard.craftsmen, value: '128', icon: Wrench, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal' },
-    { label: t.dashboard.merchants, value: '56', icon: Package, bg: 'bg-deal-gold/10', iconColor: 'text-deal-gold-dark' },
-    { label: t.dashboard.equipmentOwners, value: '23', icon: Truck, bg: 'bg-purple-50', iconColor: 'text-purple-500' },
-    { label: t.dashboard.totalBookings, value: '1,247', icon: ShoppingCart, bg: 'bg-blue-50', iconColor: 'text-blue-500' },
-    { label: t.dashboard.totalRevenueCount, value: '2.4M', icon: DollarSign, bg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+  // Fallback stats (shown while loading or if API fails)
+  const fallbackStats = [
+    { label: t.dashboard.customers, value: '0', icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange', key: 'customers' },
+    { label: t.dashboard.craftsmen, value: '0', icon: Wrench, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal', key: 'craftsmen' },
+    { label: t.dashboard.merchants, value: '0', icon: Package, bg: 'bg-deal-gold/10', iconColor: 'text-deal-gold-dark', key: 'merchants' },
+    { label: t.dashboard.equipmentOwners, value: '0', icon: Truck, bg: 'bg-purple-50', iconColor: 'text-purple-500', key: 'equipmentOwners' },
+    { label: t.dashboard.totalBookings, value: '0', icon: ShoppingCart, bg: 'bg-amber-50', iconColor: 'text-amber-600', key: 'bookings' },
+    { label: t.dashboard.totalRevenueCount, value: '0', icon: DollarSign, bg: 'bg-emerald-50', iconColor: 'text-emerald-500', key: 'revenue' },
   ];
+
+  // Real stats from API
+  const platformStats = apiStats
+    ? [
+        { label: t.dashboard.customers, value: String(apiStats.users.customers || 0), icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange', key: 'customers' },
+        { label: t.dashboard.craftsmen, value: String(apiStats.users.craftsmen || 0), icon: Wrench, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal', key: 'craftsmen' },
+        { label: t.dashboard.merchants, value: String(apiStats.users.merchants || 0), icon: Package, bg: 'bg-deal-gold/10', iconColor: 'text-deal-gold-dark', key: 'merchants' },
+        { label: t.dashboard.equipmentOwners, value: String(apiStats.users.equipmentOwners || 0), icon: Truck, bg: 'bg-purple-50', iconColor: 'text-purple-500', key: 'equipmentOwners' },
+        { label: t.dashboard.totalBookings, value: String(apiStats.bookings || 0), icon: ShoppingCart, bg: 'bg-amber-50', iconColor: 'text-amber-600', key: 'bookings' },
+        { label: t.dashboard.totalRevenueCount, value: String(apiStats.users.total || 0), icon: DollarSign, bg: 'bg-emerald-50', iconColor: 'text-emerald-500', key: 'revenue' },
+      ]
+    : fallbackStats;
+
+  const statsReady = useMemo(() => !statsLoading, [statsLoading]);
 
   const recentUsers = [
     { id: '1', name: { ar: 'أحمد بن محمد', fr: 'Ahmed Ben Mohamed' }, role: 'craftsman', date: '2025-01-15' },
@@ -325,7 +364,7 @@ export default function AdminDashboard() {
               <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${stat.bg} flex items-center justify-center mx-auto mb-2`}>
                 <Icon className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
-              <p className="text-xl sm:text-2xl font-black text-deal-navy">{stat.value}</p>
+              <p className="text-xl sm:text-2xl font-black text-deal-navy">{statsReady && <AnimatedCounter target={stat.value} duration={1000} />}</p>
               <p className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 truncate">{stat.label}</p>
             </motion.div>
           );

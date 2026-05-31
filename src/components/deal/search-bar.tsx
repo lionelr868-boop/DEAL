@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, SlidersHorizontal, X, TrendingUp, Clock, Sparkles } from 'lucide-react';
+import { Search, Globe, SlidersHorizontal, X, TrendingUp, Clock, Sparkles, RotateCw } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 
 export default function SearchBar() {
@@ -10,7 +10,11 @@ export default function SearchBar() {
   const { searchQuery, setSearchQuery } = useAppStore();
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
+  const [iconRotating, setIconRotating] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rippleId = useRef(0);
 
   // Mock search suggestions
   const suggestions = locale === 'ar'
@@ -27,10 +31,37 @@ export default function SearchBar() {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         inputRef.current?.focus();
+        setIconRotating(true);
+        setTimeout(() => setIconRotating(false), 500);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Ripple effect on input change
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    // Add ripple effect on container
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const id = ++rippleId.current;
+      const fakeEvent = { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+      setRipples((prev) => [...prev, { x: fakeEvent.clientX - rect.left, y: fakeEvent.clientY - rect.top, id }]);
+      setTimeout(() => setRipples((prev) => prev.filter((r) => r.id !== id)), 600);
+    }
+  }, [setSearchQuery]);
+
+  // Reset icon rotation when focusing
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+    setShowSuggestions(true);
+    setIconRotating(true);
+    setTimeout(() => setIconRotating(false), 500);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setTimeout(() => { setIsFocused(false); setShowSuggestions(false); }, 200);
   }, []);
 
   const clearSearch = () => {
@@ -45,7 +76,18 @@ export default function SearchBar() {
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className="w-full max-w-2xl mx-auto mb-8"
     >
-      <div className="relative">
+    <div ref={containerRef} className="relative overflow-visible">
+      {/* Ripple effects */}
+      {ripples.map((ripple) => (
+        <motion.span
+          key={ripple.id}
+          initial={{ scale: 0, opacity: 0.4 }}
+          animate={{ scale: 4, opacity: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="absolute w-8 h-8 rounded-full bg-deal-orange/20 pointer-events-none"
+          style={{ left: ripple.x - 16, top: ripple.y - 16 }}
+        />
+      ))}
         <div
           className={`
             relative flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 rounded-2xl
@@ -56,13 +98,19 @@ export default function SearchBar() {
             }
           `}
         >
-          {/* Search icon */}
+          {/* Search icon with rotation */}
           <motion.div
-            animate={{ scale: isFocused ? 1.15 : 1, color: isFocused ? '#FF6B35' : '#94A3B8' }}
-            transition={{ duration: 0.2 }}
+            animate={{
+              scale: isFocused ? 1.15 : 1,
+              rotate: iconRotating ? 360 : 0,
+            }}
+            transition={{
+              scale: { duration: 0.2 },
+              rotate: { duration: 0.5, ease: 'easeInOut' },
+            }}
             className="flex-shrink-0"
           >
-            <Search className="w-5 h-5 text-slate-400" />
+            <Search className={`w-5 h-5 transition-colors duration-300 ${isFocused ? 'text-deal-orange' : 'text-slate-400'}`} />
           </motion.div>
 
           {/* Input field */}
@@ -70,13 +118,27 @@ export default function SearchBar() {
             ref={inputRef}
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => { setIsFocused(true); setShowSuggestions(true); }}
-            onBlur={() => { setTimeout(() => { setIsFocused(false); setShowSuggestions(false); }, 200); }}
+            onChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder={t.nav.search}
             className="flex-1 bg-transparent outline-none text-sm sm:text-base text-deal-navy placeholder:text-slate-400 font-medium min-w-0"
             dir={locale === 'ar' ? 'rtl' : 'ltr'}
           />
+
+          {/* Character count indicator */}
+          <AnimatePresence>
+            {isFocused && searchQuery.length > 0 && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="hidden sm:inline-flex text-[10px] font-mono text-muted-foreground/50 flex-shrink-0"
+              >
+                {searchQuery.length}
+              </motion.span>
+            )}
+          </AnimatePresence>
 
           {/* Clear button */}
           <AnimatePresence>

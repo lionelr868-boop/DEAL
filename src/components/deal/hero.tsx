@@ -228,7 +228,7 @@ export default function Hero() {
         className="absolute top-1/2 start-1/3 w-64 h-64 rounded-full bg-deal-gold/15 blur-3xl"
       />
 
-      {/* Floating circles */}
+      {/* Floating decorative circles */}
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
@@ -243,6 +243,53 @@ export default function Hero() {
           }}
         />
       ))}
+
+      {/* Floating particle dots */}
+      {(() => {
+        const particles = Array.from({ length: 18 }, (_, i) => ({
+          id: i,
+          size: 2 + Math.random() * 4,
+          opacity: 0.1 + Math.random() * 0.3,
+          color: ['#FF6B35', '#0D9488', '#F59E0B'][i % 3],
+          x: `${5 + Math.random() * 90}%`,
+          y: `${5 + Math.random() * 90}%`,
+          duration: 8 + Math.random() * 12,
+          delay: Math.random() * 5,
+          moveX: -40 + Math.random() * 80,
+          moveY: -40 + Math.random() * 80,
+        }));
+        return particles.map((p) => (
+          <motion.div
+            key={`particle-${p.id}`}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{
+              opacity: [p.opacity, p.opacity * 0.5, p.opacity],
+              scale: [1, 1.2, 0.8, 1],
+              x: [0, p.moveX, -p.moveX * 0.5, 0],
+              y: [0, p.moveY, -p.moveY * 0.5, 0],
+            }}
+            transition={{
+              duration: p.duration,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: p.delay,
+              opacity: { duration: p.duration, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
+              scale: { duration: p.duration * 0.6, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
+              x: { duration: p.duration, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
+              y: { duration: p.duration * 0.8, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
+            }}
+            className="absolute rounded-full"
+            style={{
+              width: p.size,
+              height: p.size,
+              backgroundColor: p.color,
+              left: p.x,
+              top: p.y,
+              filter: `blur(${p.size > 4 ? 1 : 0}px)`,
+            }}
+          />
+        ));
+      })()}
 
       {/* Content with parallax */}
       <motion.div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20" style={{ y: contentY }}>

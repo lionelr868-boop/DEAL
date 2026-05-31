@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Package,
   ShoppingCart,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { products } from '@/lib/data/mock';
+import { AnimatedCounter } from '../animated-counter';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -47,6 +49,8 @@ export default function MerchantDashboard() {
     { label: t.dashboard.revenue, value: '520,000', icon: DollarSign, bg: 'bg-deal-gold/10' },
     { label: t.dashboard.avgRating, value: '4.6', icon: Star, bg: 'bg-deal-gold/10' },
   ];
+
+  const statsReady = useMemo(() => true, []);
 
   const orders = [
     { id: 'ORD-001', product: { ar: 'أسمنت بوورتلاند 50كغ', fr: 'Ciment Portland 50kg' }, customer: { ar: 'أحمد بلقاسم', fr: 'Ahmed Belkacem' }, qty: '50', date: '2025-01-15', status: 'PROCESSING', total: 75000 },
@@ -231,7 +235,7 @@ export default function MerchantDashboard() {
                   <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-deal-navy" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-deal-navy truncate">{stat.value}</p>
+                  <p className="text-xl sm:text-2xl font-black text-deal-navy truncate">{statsReady && <AnimatedCounter target={stat.value} duration={1000} />}</p>
                   <p className="text-[11px] sm:text-sm text-muted-foreground font-medium truncate">{stat.label}</p>
                 </div>
               </div>

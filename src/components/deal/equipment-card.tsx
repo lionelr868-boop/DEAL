@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { User, CheckCircle2, Clock, Heart, Zap, TrendingUp } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
@@ -11,11 +11,6 @@ interface EquipmentCardProps {
   equipment: EquipmentItem;
   index?: number;
 }
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-};
 
 const gradients = [
   'from-deal-gold/20 to-amber-100/10',
@@ -31,9 +26,12 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
   const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
   const [priceTab, setPriceTab] = useState<PriceTab>('daily');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [heartBounce, setHeartBounce] = useState(false);
+  const [tiltStyle, setTiltStyle] = useState<React.CSSProperties>({});
+  const [spotlightStyle, setSpotlightStyle] = useState<React.CSSProperties>({ opacity: 0 });
+  const [glowBorder, setGlowBorder] = useState(false);
   const gradient = gradients[index % gradients.length];
 
-  // Every 2nd card gets a NEW badge, every 6th gets POPULAR
   const showNewBadge = index % 2 === 0;
   const showPopularBadge = !showNewBadge && index % 6 === 0;
 
@@ -49,18 +47,75 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
     monthly: t.equipment.monthly,
   };
 
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+
+    setTiltStyle({
+      transform: `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
+      transition: 'transform 0.1s ease-out',
+    });
+
+    setSpotlightStyle({
+      opacity: 1,
+      background: `radial-gradient(circle at ${x}px ${y}px, rgba(245,158,11,0.15) 0%, transparent 60%)`,
+      transition: 'opacity 0.3s ease',
+    });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setTiltStyle({
+      transform: 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+      transition: 'transform 0.5s ease-out',
+    });
+    setSpotlightStyle({ opacity: 0, transition: 'opacity 0.5s ease' });
+    setGlowBorder(false);
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setGlowBorder(true);
+  }, []);
+
+  const toggleFavorite = useCallback(() => {
+    setIsFavorite((prev) => !prev);
+    setHeartBounce(true);
+    setTimeout(() => setHeartBounce(false), 400);
+  }, []);
+
   return (
     <motion.div
-      variants={cardVariants}
-      whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
       onClick={() => {
         setDetailType('equipment');
         setSelectedItemId(equipment.id);
         setShowDetailModal(true);
       }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onMouseEnter={handleMouseEnter}
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
+      style={tiltStyle}
     >
+      {/* Spotlight overlay */}
+      <div className="absolute inset-0 rounded-2xl pointer-events-none z-10" style={spotlightStyle} />
+
+      {/* Glow border on hover - gold themed */}
+      <motion.div
+        initial={false}
+        animate={glowBorder ? { opacity: 1 } : { opacity: 0 }}
+        className="absolute inset-0 rounded-2xl pointer-events-none z-20"
+        style={{
+          boxShadow: glowBorder ? '0 0 0 2px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15)' : 'none',
+          transition: 'box-shadow 0.3s ease',
+        }}
+      />
+
       {/* Image placeholder with gradient */}
       <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center card-image-overlay overflow-hidden`}>
         <div className="absolute inset-0 hero-pattern opacity-40" />
@@ -70,15 +125,14 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
           </span>
         </div>
 
-        {/* Favorites button */}
+        {/* Favorites button with bounce */}
         <motion.button
+          animate={heartBounce ? { scale: [1, 1.4, 0.8, 1.15, 1] } : { scale: 1 }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.8 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsFavorite(!isFavorite);
-          }}
-          className={`absolute top-3 start-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
+          onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
+          className={`absolute top-3 start-3 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
             isFavorite
               ? 'bg-red-500 shadow-lg shadow-red-500/30 active'
               : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white'

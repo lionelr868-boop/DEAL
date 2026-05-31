@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Truck,
   CalendarCheck,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { equipmentList } from '@/lib/data/mock';
+import { AnimatedCounter } from '../animated-counter';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -47,6 +49,8 @@ export default function EquipmentOwnerDashboard() {
     { label: t.dashboard.revenue, value: '340,000', icon: DollarSign, bg: 'bg-deal-orange/10' },
     { label: t.dashboard.avgRating, value: '4.7', icon: Star, bg: 'bg-deal-gold/10' },
   ];
+
+  const statsReady = useMemo(() => true, []);
 
   const equipmentStatus = [
     { label: t.dashboard.available, value: 5, color: 'bg-emerald-500', lightBg: 'bg-emerald-50', textColor: 'text-emerald-600' },
@@ -270,7 +274,7 @@ export default function EquipmentOwnerDashboard() {
                   <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-deal-navy" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-deal-navy truncate">{stat.value}</p>
+                  <p className="text-xl sm:text-2xl font-black text-deal-navy truncate">{statsReady && <AnimatedCounter target={stat.value} duration={1000} />}</p>
                   <p className="text-[11px] sm:text-sm text-muted-foreground font-medium truncate">{stat.label}</p>
                 </div>
               </div>

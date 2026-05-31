@@ -9,6 +9,7 @@ import {
   User, Store, PackageCheck, CheckCircle2, XCircle, Clock,
   Wrench, Zap, Droplets, HardHat, Hammer, Wind, PaintBucket, Home,
   Heart, Share2, MessageCircle, Star, ChevronLeft, ChevronRight, ImageIcon,
+  Loader2, CalendarDays, Send, PenLine,
 } from 'lucide-react';
 import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
 import { services, products, equipmentList } from '@/lib/data/mock';
@@ -106,13 +107,35 @@ export default function DetailModal() {
   const { t, locale, getLocalizedValue } = useI18n();
   const {
     showDetailModal, setShowDetailModal, detailType, selectedItemId,
-    setDetailType, setSelectedItemId, setShowProfileModal,
+    setDetailType, setSelectedItemId, setShowProfileModal, currentUser,
     setProfileProviderName, setProfileSpecialty, setProfileRating, setProfileReviewsCount,
   } = useAppStore();
   const { toggleFavorite, isFavorite, addNotification } = useFavoritesStore();
 
   const [priceTab, setPriceTab] = useState<PriceTab>('daily');
   const [activeImage, setActiveImage] = useState(0);
+
+  // Booking form state
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTimePref, setBookingTimePref] = useState('morning');
+  const [bookingNotes, setBookingNotes] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  // Review form state
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [userReviews, setUserReviews] = useState<Array<{ name: string; rating: number; text: string; date: string }>>([]);
+
+  // Contact form state
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactLoading, setContactLoading] = useState(false);
 
   // Find the item based on type and ID
   const service = detailType === 'service' ? services.find(s => s.id === selectedItemId) : null;
@@ -165,34 +188,328 @@ export default function DetailModal() {
     toast.success(locale === 'ar' ? 'تم نسخ الرابط!' : 'Lien copié !');
   };
 
-  const handleContact = (name: { ar: string; fr: string }) => {
-    setShowDetailModal(false);
-    setProfileProviderName(name);
-    setProfileSpecialty(
-      detailType === 'service'
-        ? { ar: 'حرفي', fr: 'Artisan' }
-        : detailType === 'product'
-          ? { ar: 'تاجر', fr: 'Commerçant' }
-          : { ar: 'مؤجر معدات', fr: 'Loueur' }
-    );
-    setProfileRating(rating);
-    setProfileReviewsCount(totalReviews);
-    setShowProfileModal(true);
+  const handleContact = (_name: { ar: string; fr: string }) => {
+    setShowContactForm(true);
+    setShowBookingForm(false);
+    setShowReviewForm(false);
   };
 
-  const handleBooking = (itemName: string) => {
-    const msg = detailType === 'equipment' ? t.common.bookingSuccess : (
-      detailType === 'product' ? t.common.orderSuccess : t.common.bookingSuccess
-    );
-    addNotification({
-      message: {
-        ar: `تم تأكيد طلب: ${itemName}`,
-        fr: `Demande confirmée: ${itemName}`,
-      },
-      type: 'booking',
-    });
-    toast.success(msg);
+  const handleBooking = (_itemName: string) => {
+    if (!currentUser) {
+      toast.error(t.common.loginRequired);
+      return;
+    }
+    setShowBookingForm(true);
+    setShowContactForm(false);
+    setShowReviewForm(false);
   };
+
+  const submitBooking = async () => {
+    if (!bookingDate || !currentUser) return;
+    setBookingLoading(true);
+    try {
+      const price = service?.price || product?.price || equipment?.dailyPrice || 0;
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: currentUser.id,
+          providerId: currentUser.id,
+          type: detailType === 'equipment' ? 'EQUIPMENT' : 'SERVICE',
+          serviceId: service?.id || null,
+          equipmentId: equipment?.id || null,
+          startDate: bookingDate,
+          totalPrice: price,
+          description: bookingTimePref,
+          notes: bookingNotes,
+        }),
+      });
+      if (res.ok) {
+        addNotification({
+          message: { ar: `تم تأكيد طلب: ${title}`, fr: `Demande confirmée: ${title}` },
+          type: 'booking',
+        });
+        toast.success(detailType === 'product' ? t.common.orderSuccess : t.common.bookingSuccess);
+        setShowBookingForm(false);
+        setBookingDate('');
+        setBookingNotes('');
+        setBookingTimePref('morning');
+      } else {
+        toast.error(t.common.bookingError);
+      }
+    } catch {
+      toast.error(t.common.bookingError);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const submitReview = async () => {
+    if (reviewRating === 0 || !currentUser) {
+      if (!currentUser) toast.error(t.common.loginRequired);
+      return;
+    }
+    setReviewLoading(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          authorId: currentUser.id,
+          targetId: currentUser.id,
+          targetType: detailType === 'service' ? 'SERVICE' : detailType === 'product' ? 'PRODUCT' : 'EQUIPMENT',
+          rating: reviewRating,
+          comment: reviewComment,
+          commentFr: reviewComment,
+        }),
+      });
+      if (res.ok) {
+        setUserReviews(prev => [{ name: currentUser.name, rating: reviewRating, text: reviewComment, date: new Date().toISOString().split('T')[0] }, ...prev]);
+        toast.success(t.common.reviewSuccess);
+        setShowReviewForm(false);
+        setReviewRating(0);
+        setReviewComment('');
+      } else {
+        toast.error(t.common.reviewError);
+      }
+    } catch {
+      toast.error(t.common.reviewError);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const submitContact = async () => {
+    if (!contactName || !contactEmail || !contactMessage) return;
+    setContactLoading(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactName, email: contactEmail, phone: contactPhone,
+          message: contactMessage,
+          recipientType: detailType === 'service' ? 'craftsman' : detailType === 'product' ? 'merchant' : 'equipment_owner',
+          recipientId: currentUser?.id || 'unknown',
+        }),
+      });
+      if (res.ok) {
+        toast.success(t.common.sendContactSuccess);
+        setShowContactForm(false);
+        setContactName(''); setContactEmail(''); setContactPhone(''); setContactMessage('');
+      } else {
+        toast.error(t.common.sendContactError);
+      }
+    } catch {
+      toast.error(t.common.sendContactError);
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  // Shared sub-components
+  const StarSelector = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <motion.button key={star} type="button" whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}
+          onClick={() => onChange(star === value ? 0 : star)} className="focus:outline-none">
+          <Star className={`w-6 h-6 transition-colors ${star <= value ? 'fill-deal-gold text-deal-gold' : 'text-gray-300'}`} />
+        </motion.button>
+      ))}
+    </div>
+  );
+
+  const BookingFormSection = () => (
+    <AnimatePresence>
+      {showBookingForm && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+          <div className="p-4 rounded-xl bg-deal-orange/5 border border-deal-orange/20 space-y-3">
+            <h5 className="text-sm font-bold text-deal-navy flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-deal-orange" />{t.common.bookingForm}
+            </h5>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t.common.selectDate}</label>
+              <input type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t.common.selectTime}</label>
+              <div className="flex rounded-lg overflow-hidden border border-gray-200">
+                {(['morning', 'afternoon', 'evening'] as const).map((tp) => (
+                  <button key={tp} type="button" onClick={() => setBookingTimePref(tp)}
+                    className={`flex-1 py-2 text-xs font-bold transition-all ${bookingTimePref === tp ? 'bg-deal-orange text-white' : 'bg-white text-muted-foreground hover:bg-gray-50'}`}>
+                    {t.common[tp]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t.common.bookingNotes}</label>
+              <textarea value={bookingNotes} onChange={(e) => setBookingNotes(e.target.value)}
+                placeholder={t.common.bookingNotesPlaceholder} rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange" />
+            </div>
+            <div className="flex gap-2">
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                disabled={!bookingDate || bookingLoading} onClick={submitBooking}
+                className="flex-1 btn-3d-sm text-white bg-deal-orange rounded-xl px-4 py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
+                {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
+                {t.common.submitBooking}
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={() => setShowBookingForm(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-muted-foreground hover:bg-gray-50">
+                {t.common.cancel}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const ReviewFormSection = () => (
+    <AnimatePresence>
+      {showReviewForm && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+          <div className="p-4 rounded-xl bg-deal-gold/5 border border-deal-gold/20 space-y-3">
+            <h5 className="text-sm font-bold text-deal-navy flex items-center gap-2">
+              <PenLine className="w-4 h-4 text-deal-gold" />{t.common.reviewForm}
+            </h5>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t.common.yourRating}</label>
+              <StarSelector value={reviewRating} onChange={setReviewRating} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t.common.yourComment}</label>
+              <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)}
+                placeholder={t.common.commentPlaceholder} rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-deal-gold/30 focus:border-deal-gold" />
+            </div>
+            <div className="flex gap-2">
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                disabled={reviewRating === 0 || reviewLoading} onClick={submitReview}
+                className="flex-1 btn-3d-sm rounded-xl px-4 py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)', boxShadow: '0 4px 0 0 #D97706, 0 6px 8px rgba(245,158,11,0.25)', color: '#1E293B' }}>
+                {reviewLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t.common.submitReview}
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={() => setShowReviewForm(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-muted-foreground hover:bg-gray-50">
+                {t.common.cancel}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const ContactFormSection = () => (
+    <AnimatePresence>
+      {showContactForm && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+          <div className="p-4 rounded-xl bg-deal-teal/5 border border-deal-teal/20 space-y-3">
+            <h5 className="text-sm font-bold text-deal-navy flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-deal-teal" />{t.common.contactForm}
+            </h5>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block">{t.common.contactName}</label>
+                <input type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder={t.common.contactName}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block">{t.common.contactEmail}</label>
+                <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t.common.contactEmail}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block">{t.common.contactPhone}</label>
+              <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={t.common.contactPhone}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block">{t.common.contactMessage}</label>
+              <textarea value={contactMessage} onChange={(e) => setContactMessage(e.target.value)}
+                placeholder={t.common.contactMessagePlaceholder} rows={2}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" />
+            </div>
+            <div className="flex gap-2">
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                disabled={!contactName || !contactEmail || !contactMessage || contactLoading} onClick={submitContact}
+                className="flex-1 btn-3d-sm text-white rounded-xl px-4 py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)', boxShadow: '0 4px 0 0 #0F766E, 0 6px 8px rgba(13,148,136,0.25)' }}>
+                {contactLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t.common.send}
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={() => setShowContactForm(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-muted-foreground hover:bg-gray-50">
+                {t.common.cancel}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const ReviewsSection = () => (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-bold text-deal-navy flex items-center gap-2">
+          <Star className="w-4 h-4 fill-deal-gold text-deal-gold" />
+          {t.common.reviews} ({totalReviews + userReviews.length})
+        </h4>
+        {currentUser && !showReviewForm && (
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={() => { setShowReviewForm(true); setShowBookingForm(false); setShowContactForm(false); }}
+            className="text-[10px] font-bold text-deal-gold bg-deal-gold/10 px-3 py-1 rounded-full hover:bg-deal-gold/20 transition-colors flex items-center gap-1">
+            <PenLine className="w-3 h-3" />{t.common.writeReview}
+          </motion.button>
+        )}
+      </div>
+      <ReviewFormSection />
+      <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+        {userReviews.map((review, i) => (
+          <motion.div key={`user-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="p-3 rounded-xl bg-deal-gold/5 border border-deal-gold/20">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-deal-gold to-amber-500 flex items-center justify-center">
+                  <span className="text-white text-[10px] font-bold">{review.name.charAt(0)}</span>
+                </div>
+                <span className="text-xs font-bold text-deal-navy">{review.name}</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">{review.date}</span>
+            </div>
+            <RatingStars rating={review.rating} size="sm" showCount={false} />
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{review.text}</p>
+          </motion.div>
+        ))}
+        {staticReviews.map((review, i) => (
+          <motion.div key={`static-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+            className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center">
+                  <span className="text-white text-[10px] font-bold">{getLocalizedValue(review.name.ar, review.name.fr).charAt(0)}</span>
+                </div>
+                <span className="text-xs font-bold text-deal-navy">{getLocalizedValue(review.name.ar, review.name.fr)}</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">{review.date}</span>
+            </div>
+            <RatingStars rating={review.rating} size="sm" showCount={false} />
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{getLocalizedValue(review.text.ar, review.text.fr)}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
 
   const handleOpenSimilar = (similarItemId: string, type: 'service' | 'product' | 'equipment') => {
     setSelectedItemId(similarItemId);
@@ -338,42 +655,10 @@ export default function DetailModal() {
               {t.common.contactProvider}
             </motion.button>
 
-            {/* Reviews Section */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-deal-navy flex items-center gap-2">
-                <Star className="w-4 h-4 fill-deal-gold text-deal-gold" />
-                {locale === 'ar' ? 'التقييمات' : 'Avis'} ({totalReviews})
-              </h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                {staticReviews.map((review, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-3 rounded-xl bg-gray-50 border border-gray-100"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center">
-                          <span className="text-white text-[10px] font-bold">
-                            {getLocalizedValue(review.name.ar, review.name.fr).charAt(0)}
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-deal-navy">
-                          {getLocalizedValue(review.name.ar, review.name.fr)}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">{review.date}</span>
-                    </div>
-                    <RatingStars rating={review.rating} size="sm" showCount={false} />
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {getLocalizedValue(review.text.ar, review.text.fr)}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            <ReviewsSection />
+
+            <BookingFormSection />
+            <ContactFormSection />
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div>
@@ -386,10 +671,10 @@ export default function DetailModal() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleBooking(service.title)}
+                onClick={() => { handleBooking(service.title); }}
                 className="btn-3d text-white bg-deal-orange rounded-xl px-8 py-3 font-bold text-base"
               >
-                {t.services.book}
+                {showBookingForm ? t.common.cancel : t.services.book}
               </motion.button>
             </div>
 
@@ -585,42 +870,10 @@ export default function DetailModal() {
               </div>
             </div>
 
-            {/* Reviews */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-deal-navy flex items-center gap-2">
-                <Star className="w-4 h-4 fill-deal-gold text-deal-gold" />
-                {locale === 'ar' ? 'التقييمات' : 'Avis'} ({totalReviews})
-              </h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                {staticReviews.map((review, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-3 rounded-xl bg-gray-50 border border-gray-100"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-deal-teal to-emerald-500 flex items-center justify-center">
-                          <span className="text-white text-[10px] font-bold">
-                            {getLocalizedValue(review.name.ar, review.name.fr).charAt(0)}
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-deal-navy">
-                          {getLocalizedValue(review.name.ar, review.name.fr)}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">{review.date}</span>
-                    </div>
-                    <RatingStars rating={review.rating} size="sm" showCount={false} />
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {getLocalizedValue(review.text.ar, review.text.fr)}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            <ReviewsSection />
+
+            <BookingFormSection />
+            <ContactFormSection />
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div>
@@ -634,10 +887,10 @@ export default function DetailModal() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={product.stock <= 0}
-                onClick={() => handleBooking(product.title)}
+                onClick={() => { handleBooking(product.title); }}
                 className="btn-3d-sm btn-3d-teal text-white rounded-xl px-8 py-3 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t.products.buyNow}
+                {showBookingForm ? t.common.cancel : t.products.buyNow}
               </motion.button>
             </div>
 
@@ -865,42 +1118,10 @@ export default function DetailModal() {
               </div>
             </div>
 
-            {/* Reviews */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-deal-navy flex items-center gap-2">
-                <Star className="w-4 h-4 fill-deal-gold text-deal-gold" />
-                {locale === 'ar' ? 'التقييمات' : 'Avis'} ({totalReviews})
-              </h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                {staticReviews.map((review, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-3 rounded-xl bg-gray-50 border border-gray-100"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-deal-gold to-amber-500 flex items-center justify-center">
-                          <span className="text-white text-[10px] font-bold">
-                            {getLocalizedValue(review.name.ar, review.name.fr).charAt(0)}
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-deal-navy">
-                          {getLocalizedValue(review.name.ar, review.name.fr)}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">{review.date}</span>
-                    </div>
-                    <RatingStars rating={review.rating} size="sm" showCount={false} />
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {getLocalizedValue(review.text.ar, review.text.fr)}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            <ReviewsSection />
+
+            <BookingFormSection />
+            <ContactFormSection />
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div>
@@ -918,10 +1139,10 @@ export default function DetailModal() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={equipment.status !== 'AVAILABLE'}
-                onClick={() => handleBooking(equipment.title)}
+                onClick={() => { handleBooking(equipment.title); }}
                 className="btn-3d-sm btn-3d-gold text-deal-navy rounded-xl px-8 py-3 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t.equipment.book}
+                {showBookingForm ? t.common.cancel : t.equipment.book}
               </motion.button>
             </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
 import {
   CalendarCheck,
   PackageCheck,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
 import { services, products, equipmentList } from '@/lib/data/mock';
+import { AnimatedCounter } from '../animated-counter';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -54,6 +56,8 @@ export default function CustomerDashboard() {
     { label: t.dashboard.completedOrders, value: '12', icon: PackageCheck, color: 'from-deal-teal to-deal-teal-dark', bg: 'bg-deal-teal/10' },
     { label: t.dashboard.pendingReviews, value: '2', icon: Star, color: 'from-deal-gold to-deal-gold-dark', bg: 'bg-deal-gold/10' },
   ];
+
+  const statsReady = useMemo(() => true, []);
 
   const bookings: Booking[] = [
     { id: '1', name: { ar: 'تمديد كهربائي', fr: 'Installation électrique' }, provider: { ar: 'أحمد بن علي', fr: 'Ahmed Ben Ali' }, date: '2025-01-15', status: 'IN_PROGRESS', price: 15000, type: 'service' },
@@ -281,7 +285,7 @@ export default function CustomerDashboard() {
                   <Icon className="w-6 h-6 text-deal-navy" />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-deal-navy">{stat.value}</p>
+                  <p className="text-2xl font-black text-deal-navy">{statsReady && <AnimatedCounter target={stat.value} duration={1000} />}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</p>
                 </div>
               </div>

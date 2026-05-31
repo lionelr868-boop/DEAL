@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Wrench,
   CalendarCheck,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { services } from '@/lib/data/mock';
+import { AnimatedCounter } from '../animated-counter';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -63,6 +65,8 @@ export default function CraftsmanDashboard() {
     { label: t.dashboard.totalRevenue, value: '185,000', icon: DollarSign, color: 'from-deal-gold to-deal-gold-dark', bg: 'bg-deal-gold/10' },
     { label: t.dashboard.avgRating, value: '4.8', icon: Star, color: 'from-deal-orange to-deal-gold', bg: 'bg-deal-gold/10' },
   ];
+
+  const statsReady = useMemo(() => true, []);
 
   const revenueData = [
     { month: { ar: 'يناير', fr: 'Jan' }, value: 85 },
@@ -262,7 +266,7 @@ export default function CraftsmanDashboard() {
                   <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-deal-navy" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-black text-deal-navy truncate">{stat.value}</p>
+                  <p className="text-xl sm:text-2xl font-black text-deal-navy truncate">{statsReady && <AnimatedCounter target={stat.value} duration={1000} />}</p>
                   <p className="text-[11px] sm:text-sm text-muted-foreground font-medium truncate">{stat.label}</p>
                 </div>
               </div>
