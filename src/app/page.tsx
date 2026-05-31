@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/deal/navbar';
+import AuthPage from '@/components/deal/auth-page';
 import Hero from '@/components/deal/hero';
 import SectionSwitcher from '@/components/deal/section-switcher';
 import TestimonialsSection from '@/components/deal/testimonials-section';
@@ -10,6 +11,8 @@ import FAQSection from '@/components/deal/faq-section';
 import AuthModal from '@/components/deal/auth-modal';
 import DetailModal from '@/components/deal/detail-modal';
 import ProfileModal from '@/components/deal/profile-modal';
+import ComplaintModal from '@/components/deal/complaint-modal';
+import MessagingWidget from '@/components/deal/messaging-widget';
 import Footer from '@/components/deal/footer';
 import DashboardWrapper from '@/components/deal/dashboard-wrapper';
 import { useAppStore } from '@/lib/store';
@@ -242,8 +245,11 @@ export default function Home() {
           )}
         </AnimatePresence>
 
+        <AuthPage />
         <AuthModal />
         <DetailModal />
+        <ComplaintModal />
+        <MessagingWidget />
         <ProfileModal />
       </div>
     </>

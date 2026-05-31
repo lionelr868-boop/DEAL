@@ -9,12 +9,20 @@ export async function GET() {
       totalProducts,
       totalEquipment,
       totalBookings,
+      totalOrders,
+      avgRating,
     ] = await Promise.all([
       db.user.groupBy({ by: ['role'], _count: { role: true } }),
       db.service.count(),
       db.product.count(),
       db.equipment.count(),
       db.booking.count(),
+      db.productOrder.count(),
+      // Average rating across all rated users
+      db.user.aggregate({
+        _avg: { rating: true },
+        where: { rating: { gt: 0 } },
+      }),
     ]);
 
     // Build a role -> count map
@@ -23,9 +31,11 @@ export async function GET() {
       roleMap[group.role.toLowerCase()] = group._count.role;
     }
 
+    const totalUsers = usersByRole.reduce((sum, g) => sum + g._count.role, 0);
+
     return NextResponse.json({
       users: {
-        total: usersByRole.reduce((sum, g) => sum + g._count.role, 0),
+        total: totalUsers,
         customers: roleMap['customer'] || 0,
         craftsmen: roleMap['craftsman'] || 0,
         merchants: roleMap['merchant'] || 0,
@@ -36,6 +46,10 @@ export async function GET() {
       products: totalProducts,
       equipment: totalEquipment,
       bookings: totalBookings,
+      orders: totalOrders,
+      avgRating: avgRating._avg.rating
+        ? Math.round(avgRating._avg.rating * 10) / 10
+        : 0,
     });
   } catch (error) {
     console.error('Fetch stats error:', error);

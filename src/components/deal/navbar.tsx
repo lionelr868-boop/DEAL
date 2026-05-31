@@ -8,7 +8,7 @@ import NotificationCenter from './notification-center';
 
 export default function Navbar() {
   const { locale, toggleLocale, t } = useI18n();
-  const { currentUser, showAuthModal, setShowAuthModal, setAuthMode, logout, setShowDashboard, setActiveSection, setDetailType, setSelectedItemId } = useAppStore();
+  const { currentUser, showAuthPage, setShowAuthPage, showAuthModal, setShowAuthModal, setAuthMode, logout, setShowDashboard, setActiveSection, setDetailType, setSelectedItemId } = useAppStore();
   const { favorites } = useFavoritesStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -124,7 +124,7 @@ export default function Navbar() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+                  onClick={() => { setAuthMode('login'); setShowAuthPage(true); }}
                   className="btn-3d-sm bg-white text-deal-orange border border-deal-orange/30 text-xs"
                   style={{
                     background: 'white',
@@ -136,7 +136,7 @@ export default function Navbar() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}
+                  onClick={() => { setAuthMode('register'); setShowAuthPage(true); }}
                   className="btn-3d-sm text-white text-xs"
                 >
                   {t.nav.register}
@@ -221,13 +221,13 @@ export default function Navbar() {
                 {!currentUser ? (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => { setAuthMode('login'); setShowAuthModal(true); setMobileOpen(false); }}
+                      onClick={() => { setAuthMode('login'); setShowAuthPage(true); setMobileOpen(false); }}
                       className="flex-1 btn-3d-sm text-white text-xs"
                     >
                       {t.nav.login}
                     </button>
                     <button
-                      onClick={() => { setAuthMode('register'); setShowAuthModal(true); setMobileOpen(false); }}
+                      onClick={() => { setAuthMode('register'); setShowAuthPage(true); setMobileOpen(false); }}
                       className="flex-1 btn-3d-sm btn-3d-teal text-white text-xs"
                     >
                       {t.nav.register}

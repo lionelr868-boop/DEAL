@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowDown, Users, ShoppingBag, Truck, Search, CheckCircle, Wrench, Star } from 'lucide-react';
 import { useI18n } from '@/lib/store';
@@ -184,6 +184,22 @@ export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const statsInView = useInView(statsRef, { once: true, margin: '-50px' });
+  const [realStats, setRealStats] = useState<{ users: number; services: number; products: number; equipment: number; avgRating: number } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(data => {
+        setRealStats({
+          users: data.users?.total || 0,
+          services: data.services || 0,
+          products: data.products || 0,
+          equipment: data.equipment || 0,
+          avgRating: data.avgRating || 0,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   const { scrollY } = useScroll({
     target: heroRef,
@@ -197,10 +213,10 @@ export default function Hero() {
   const opacity = useTransform(scrollY, [0, 350], [1, 0]);
 
   const stats = [
-    { key: 'craftsmen', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', delay: 0, target: '+200' },
-    { key: 'products', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.15, target: '+500' },
-    { key: 'equipment', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.3, target: '+100' },
-    { key: 'satisfaction', icon: Star, color: 'from-deal-orange to-deal-gold', delay: 0.45, target: '98%' },
+    { key: 'craftsmen', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', delay: 0, target: realStats ? `+${realStats.users}` : '+200' },
+    { key: 'products', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.15, target: realStats ? `+${realStats.services}` : '+500' },
+    { key: 'equipment', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.3, target: realStats ? `+${realStats.equipment}` : '+100' },
+    { key: 'satisfaction', icon: Star, color: 'from-deal-orange to-deal-gold', delay: 0.45, target: realStats ? `${Math.round(realStats.avgRating * 20)}%` : '98%' },
   ];
 
   const statLabels: Record<string, string> = {

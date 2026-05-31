@@ -42,6 +42,10 @@ model User {
   merchantOrders   ProductOrder[] @relation("MerchantOrders")
   authorReviews    Review[] @relation("AuthorReviews")
   targetReviews    Review[] @relation("TargetReviews")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  notifications     NotificationDb[] @relation("UserNotifications")
+  complaints       Complaint[] @relation("UserComplaints")
 }
 
 model ServiceCategory {
@@ -193,4 +197,50 @@ model Testimonial {
   isFeatured  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+model NotificationDb {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   @default("system")
+  title       String
+  titleFr     String?
+  message     String
+  messageFr   String?
+  link        String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User      @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Complaint {
+  id          String   @id @default(cuid())
+  userId      String
+  targetId    String?
+  targetType  String?
+  subject     String
+  subjectFr   String?
+  description String
+  descriptionFr String?
+  status      String   @default("PENDING")
+  adminReply  String?
+  adminReplyFr String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User      @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade)
 }

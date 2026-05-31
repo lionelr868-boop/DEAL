@@ -65,6 +65,7 @@ interface AppState {
   } | null;
   activeSection: 'services' | 'products' | 'equipment';
   showAuthModal: boolean;
+  showAuthPage: boolean;
   authMode: 'login' | 'register';
   showDetailModal: boolean;
   detailType: 'service' | 'product' | 'equipment' | 'profile' | null;
@@ -74,6 +75,7 @@ interface AppState {
   showDashboard: boolean;
   dashboardActiveTab: string;
   showProfileModal: boolean;
+  showComplaintModal: boolean;
   profileProviderName: { ar: string; fr: string };
   profileSpecialty: { ar: string; fr: string };
   profileRating: number;
@@ -83,6 +85,7 @@ interface AppState {
   logout: () => void;
   setActiveSection: (section: AppState['activeSection']) => void;
   setShowAuthModal: (show: boolean) => void;
+  setShowAuthPage: (show: boolean) => void;
   setAuthMode: (mode: 'login' | 'register') => void;
   setShowDetailModal: (show: boolean) => void;
   setDetailType: (type: AppState['detailType']) => void;
@@ -92,6 +95,7 @@ interface AppState {
   setShowDashboard: (show: boolean) => void;
   setDashboardActiveTab: (tab: string) => void;
   setShowProfileModal: (show: boolean) => void;
+  setShowComplaintModal: (show: boolean) => void;
   setProfileProviderName: (name: { ar: string; fr: string }) => void;
   setProfileSpecialty: (specialty: { ar: string; fr: string }) => void;
   setProfileRating: (rating: number) => void;
@@ -102,6 +106,7 @@ export const useAppStore = create<AppState>((set) => ({
   currentUser: null,
   activeSection: 'services',
   showAuthModal: false,
+  showAuthPage: false,
   authMode: 'login',
   showDetailModal: false,
   detailType: null,
@@ -111,6 +116,7 @@ export const useAppStore = create<AppState>((set) => ({
   showDashboard: false,
   dashboardActiveTab: 'overview',
   showProfileModal: false,
+  showComplaintModal: false,
   profileProviderName: { ar: '', fr: '' },
   profileSpecialty: { ar: '', fr: '' },
   profileRating: 0,
@@ -120,6 +126,7 @@ export const useAppStore = create<AppState>((set) => ({
   logout: () => set({ currentUser: null, showDashboard: false, dashboardActiveTab: 'overview' }),
   setActiveSection: (section) => set({ activeSection: section }),
   setShowAuthModal: (show) => set({ showAuthModal: show }),
+  setShowAuthPage: (show) => set({ showAuthPage: show }),
   setAuthMode: (mode) => set({ authMode: mode }),
   setShowDetailModal: (show) => set({ showDetailModal: show }),
   setDetailType: (type) => set({ detailType: type }),
@@ -129,6 +136,7 @@ export const useAppStore = create<AppState>((set) => ({
   setShowDashboard: (show) => set({ showDashboard: show }),
   setDashboardActiveTab: (tab) => set({ dashboardActiveTab: tab }),
   setShowProfileModal: (show) => set({ showProfileModal: show }),
+  setShowComplaintModal: (show) => set({ showComplaintModal: show }),
   setProfileProviderName: (name) => set({ profileProviderName: name }),
   setProfileSpecialty: (specialty) => set({ profileSpecialty: specialty }),
   setProfileRating: (rating) => set({ profileRating: rating }),
