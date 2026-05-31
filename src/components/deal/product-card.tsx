@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Store, PackageCheck, PackageX } from 'lucide-react';
-import { useI18n } from '@/lib/store';
+import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { ProductItem } from '@/lib/data/mock';
 
@@ -36,6 +36,7 @@ const unitLabels: Record<string, Record<string, string>> = {
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { getLocalizedValue, t, locale } = useI18n();
+  const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
   const gradient = gradients[index % gradients.length];
   const unitLabel = unitLabels[product.unit]?.[locale] || product.unit;
 
@@ -44,7 +45,12 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       variants={cardVariants}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl"
+      onClick={() => {
+        setDetailType('product');
+        setSelectedItemId(product.id);
+        setShowDetailModal(true);
+      }}
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer"
     >
       {/* Image placeholder with gradient */}
       <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center`}>

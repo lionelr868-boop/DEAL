@@ -21,6 +21,13 @@
     "subtitle": "La plateforme DEAL réunit les meilleurs artisans, commerçants et fournisseurs d'équipements en un seul endroit",
     "cta1": "Parcourir les services",
     "cta2": "Rejoindre en tant qu'artisan",
+    "howItWorks": "Comment ça marche ?",
+    "step1Title": "Rechercher un service",
+    "step1Desc": "Parcourez les services et produits disponibles",
+    "step2Title": "Choisir un prestataire",
+    "step2Desc": "Choisissez le meilleur artisan ou commerçant",
+    "step3Title": "Profitez du service",
+    "step3Desc": "Réservez et profitez d'un service professionnel",
     "stats": {
       "craftsmen": "+200 artisans",
       "products": "+500 produits",
@@ -102,7 +109,12 @@
     "noAccount": "Pas de compte ?",
     "hasAccount": "Déjà un compte ?",
     "orLogin": "ou se connecter",
-    "orRegister": "ou créer un compte"
+    "orRegister": "ou créer un compte",
+    "loginSuccess": "Connexion réussie !",
+    "registerSuccess": "Compte créé avec succès !",
+    "invalidCredentials": "Identifiants invalides",
+    "emailExists": "Email déjà enregistré",
+    "requiredFields": "Veuillez remplir tous les champs requis"
   },
   "dashboard": {
     "welcome": "Bienvenue",
@@ -196,7 +208,13 @@
     "rights": "Tous droits réservés",
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
-    "help": "Centre d'aide"
+    "help": "Centre d'aide",
+    "newsletter": "Newsletter",
+    "newsletterDesc": "Inscrivez-vous pour recevoir les nouveautés",
+    "newsletterPlaceholder": "Votre email",
+    "subscribe": "S'inscrire",
+    "backToTop": "Retour en haut",
+    "resultsCount": "résultat(s)"
   },
   "common": {
     "search": "Rechercher",

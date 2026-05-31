@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Zap, Droplets, HardHat, Hammer, Wind, Wrench,
   PaintBucket, Home, Construction, Cable, TreePine, Pipette,
-  Palette, Drill, type LucideIcon,
+  Palette, Drill, Layers, type LucideIcon,
 } from 'lucide-react';
 import { useI18n } from '@/lib/store';
 import type { Category } from '@/lib/data/mock';
@@ -62,7 +62,7 @@ export default function CategoryGrid({
   onSelectCategory,
   colorScheme = 'orange',
 }: CategoryGridProps) {
-  const { getLocalizedValue } = useI18n();
+  const { getLocalizedValue, t } = useI18n();
   const colors = colorSchemes[colorScheme];
 
   return (
@@ -85,10 +85,10 @@ export default function CategoryGrid({
           }`}
       >
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-deal-orange/10 to-deal-gold/10 ${!activeCategory ? colors.icon : 'text-gray-500'}`}>
-          <Wrench className="w-5 h-5" />
+          <Layers className="w-5 h-5" />
         </div>
         <span className="text-sm font-semibold text-center">
-          {colorScheme === 'teal' ? 'الكل' : colorScheme === 'gold' ? 'الكل' : 'الكل'}
+          {t.categories.all}
         </span>
       </motion.button>
 

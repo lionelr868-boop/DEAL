@@ -94,7 +94,7 @@ export const useAppStore = create<AppState>((set) => ({
   dashboardActiveTab: 'overview',
 
   setCurrentUser: (user) => set({ currentUser: user }),
-  logout: () => set({ currentUser: null }),
+  logout: () => set({ currentUser: null, showDashboard: false, dashboardActiveTab: 'overview' }),
   setActiveSection: (section) => set({ activeSection: section }),
   setShowAuthModal: (show) => set({ showAuthModal: show }),
   setAuthMode: (mode) => set({ authMode: mode }),

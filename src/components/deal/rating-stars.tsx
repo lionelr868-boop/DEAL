@@ -39,7 +39,7 @@ export default function RatingStars({ rating, size = 'md', reviewCount, showCoun
         ))}
       </div>
       {showCount && reviewCount !== undefined && (
-        <span className="text-xs text-muted-foreground mr-1">
+        <span className="text-xs text-muted-foreground ms-1">
           {rating} ({reviewCount})
         </span>
       )}

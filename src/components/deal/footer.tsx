@@ -1,11 +1,64 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Phone, Mail, Heart, ArrowUp, Send } from 'lucide-react';
 import { useI18n } from '@/lib/store';
 
+// SVG Social Icons as components
+function FacebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+      <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678a6.162 6.162 0 100 12.324 6.162 6.162 0 100-12.324zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405a1.441 1.441 0 11-2.88 0 1.441 1.441 0 012.88 0z" />
+    </svg>
+  );
+}
+
+function YoutubeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
+function TikTokIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+    </svg>
+  );
+}
+
+const socialLinks = [
+  { icon: FacebookIcon, label: 'Facebook', href: '#', color: 'hover:bg-blue-600' },
+  { icon: InstagramIcon, label: 'Instagram', href: '#', color: 'hover:bg-gradient-to-tr hover:from-purple-600 hover:via-pink-500 hover:to-yellow-500' },
+  { icon: YoutubeIcon, label: 'YouTube', href: '#', color: 'hover:bg-red-600' },
+  { icon: TikTokIcon, label: 'TikTok', href: '#', color: 'hover:bg-gray-900' },
+];
+
 export default function Footer() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // Show back to top button on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const quickLinks = [
     { label: t.nav.services, href: '#services' },
@@ -16,17 +69,34 @@ export default function Footer() {
     { label: t.footer.terms, href: '#' },
   ];
 
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 3000);
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="relative bg-deal-navy text-white mt-auto">
-      {/* Top gradient line */}
-      <div className="h-1 gradient-animated" />
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-deal-orange/5 via-transparent to-deal-teal/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-deal-navy-dark/50 via-transparent to-transparent pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Top gradient line */}
+      <div className="h-1 gradient-animated relative z-10" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10"
         >
           {/* About section */}
           <div className="space-y-4">
@@ -41,6 +111,25 @@ export default function Footer() {
             <p className="text-white/60 text-sm leading-relaxed">
               {t.footer.aboutText}
             </p>
+
+            {/* Social icons */}
+            <div className="flex gap-2 pt-2">
+              {socialLinks.map((social) => {
+                const IconComp = social.icon;
+                return (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    whileHover={{ scale: 1.15, y: -2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className={`w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all duration-300 cursor-pointer ${social.color}`}
+                    title={social.label}
+                  >
+                    <IconComp />
+                  </motion.a>
+                );
+              })}
+            </div>
           </div>
 
           {/* Quick links */}
@@ -77,18 +166,47 @@ export default function Footer() {
                 <span>contact@deal.dz</span>
               </div>
             </div>
+          </div>
 
-            {/* Social icons placeholder */}
-            <div className="flex gap-2 pt-2">
-              {['fb', 'tw', 'ig', 'yt'].map((social) => (
-                <div
-                  key={social}
-                  className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-deal-orange/20 transition-colors cursor-pointer"
+          {/* Newsletter */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold">{t.footer.newsletter}</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              {t.footer.newsletterDesc}
+            </p>
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t.footer.newsletterPlaceholder}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white text-sm placeholder:text-white/40 outline-none focus:border-deal-orange/50 focus:bg-white/15 transition-all"
+                  dir="ltr"
+                  required
+                />
+              </div>
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-deal-orange to-deal-orange-dark text-white flex items-center justify-center hover:shadow-lg hover:shadow-deal-orange/30 transition-all"
+              >
+                <Send className="w-4 h-4" />
+              </motion.button>
+            </form>
+            <AnimatePresence>
+              {subscribed && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-deal-teal text-xs font-medium"
                 >
-                  <span className="text-xs font-bold text-white/60">{social.toUpperCase()}</span>
-                </div>
-              ))}
-            </div>
+                  ✓ {locale === 'ar' ? 'تم الاشتراك بنجاح!' : 'Inscrit avec succès!'}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
 
@@ -98,10 +216,28 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} DEAL. {t.footer.rights}
           </p>
           <p className="text-white/30 text-xs flex items-center gap-1">
-            صُنع بـ <Heart className="w-3 h-3 text-red-400 fill-red-400" /> في سوق أهراس
+            {locale === 'ar' ? 'صُنع بـ' : 'Fait avec'} <Heart className="w-3 h-3 text-red-400 fill-red-400" /> {locale === 'ar' ? 'في سوق أهراس' : 'à Souk Ahras'}
           </p>
         </div>
       </div>
+
+      {/* Back to top button */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 end-6 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-deal-orange to-deal-orange-dark text-white shadow-lg shadow-deal-orange/30 flex items-center justify-center hover:shadow-xl hover:shadow-deal-orange/40 transition-shadow"
+            title={t.footer.backToTop}
+          >
+            <ArrowUp className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </footer>
   );
 }

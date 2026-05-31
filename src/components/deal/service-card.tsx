@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { User, CheckCircle2, XCircle } from 'lucide-react';
-import { useI18n } from '@/lib/store';
+import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { ServiceItem } from '@/lib/data/mock';
 
@@ -25,6 +25,7 @@ const gradients = [
 
 export default function ServiceCard({ service, index = 0 }: ServiceCardProps) {
   const { getLocalizedValue, t } = useI18n();
+  const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
   const gradient = gradients[index % gradients.length];
 
   return (
@@ -32,7 +33,12 @@ export default function ServiceCard({ service, index = 0 }: ServiceCardProps) {
       variants={cardVariants}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl"
+      onClick={() => {
+        setDetailType('service');
+        setSelectedItemId(service.id);
+        setShowDetailModal(true);
+      }}
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer"
     >
       {/* Image placeholder with gradient */}
       <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center`}>

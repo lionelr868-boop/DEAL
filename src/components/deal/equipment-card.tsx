@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, CheckCircle2, Clock } from 'lucide-react';
-import { useI18n } from '@/lib/store';
+import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { EquipmentItem } from '@/lib/data/mock';
 
@@ -28,6 +28,7 @@ type PriceTab = 'daily' | 'weekly' | 'monthly';
 
 export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardProps) {
   const { getLocalizedValue, t } = useI18n();
+  const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
   const [priceTab, setPriceTab] = useState<PriceTab>('daily');
   const gradient = gradients[index % gradients.length];
 
@@ -48,7 +49,12 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
       variants={cardVariants}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl"
+      onClick={() => {
+        setDetailType('equipment');
+        setSelectedItemId(equipment.id);
+        setShowDetailModal(true);
+      }}
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer"
     >
       {/* Image placeholder with gradient */}
       <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center`}>

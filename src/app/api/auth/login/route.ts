@@ -23,9 +23,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Compare password (base64 decode for MVP)
-    const hashedPassword = Buffer.from(password).toString('base64');
-    if (user.password !== hashedPassword) {
+    // Compare password (MVP: direct comparison)
+    if (user.password !== password) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }

@@ -31,14 +31,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password (simple base64 for MVP)
-    const hashedPassword = Buffer.from(password).toString('base64');
-
     // Create user
     const user = await db.user.create({
       data: {
         email,
-        password: hashedPassword,
+        password,
         name,
         nameFr: nameFr || null,
         phone: phone || null,

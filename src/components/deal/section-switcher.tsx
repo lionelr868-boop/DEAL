@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, ShoppingBag, Truck } from 'lucide-react';
+import { Wrench, ShoppingBag, Truck, ChevronDown, ChevronUp } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import SearchBar from './search-bar';
 import CategoryGrid from './category-grid';
 import ServiceCard from './service-card';
 import ProductCard from './product-card';
@@ -24,10 +25,13 @@ const containerVariants = {
   },
 };
 
+const ITEMS_PER_PAGE = 6;
+
 export default function SectionSwitcher() {
-  const { t } = useI18n();
-  const { activeSection, setActiveSection } = useAppStore();
+  const { t, locale } = useI18n();
+  const { activeSection, setActiveSection, searchQuery } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const tabLabels: Record<string, string> = {
     services: t.sections.services,
@@ -47,19 +51,74 @@ export default function SectionSwitcher() {
     equipment: t.equipment.subtitle,
   };
 
-  const filteredServices = selectedCategory
-    ? services.filter((s) => s.categoryId === selectedCategory)
-    : services;
+  // Search filtering
+  const searchFilteredServices = useMemo(() => {
+    const base = selectedCategory
+      ? services.filter((s) => s.categoryId === selectedCategory)
+      : services;
+    if (!searchQuery.trim()) return base;
+    const q = searchQuery.trim().toLowerCase();
+    return base.filter((s) =>
+      s.title.toLowerCase().includes(q) ||
+      s.titleFr.toLowerCase().includes(q)
+    );
+  }, [selectedCategory, searchQuery]);
 
-  const filteredProducts = selectedCategory
-    ? products.filter((p) => p.categoryId === selectedCategory)
-    : products;
+  const searchFilteredProducts = useMemo(() => {
+    const base = selectedCategory
+      ? products.filter((p) => p.categoryId === selectedCategory)
+      : products;
+    if (!searchQuery.trim()) return base;
+    const q = searchQuery.trim().toLowerCase();
+    return base.filter((p) =>
+      p.title.toLowerCase().includes(q) ||
+      p.titleFr.toLowerCase().includes(q)
+    );
+  }, [selectedCategory, searchQuery]);
 
-  const filteredEquipment = equipmentList;
+  const searchFilteredEquipment = useMemo(() => {
+    if (!searchQuery.trim()) return equipmentList;
+    const q = searchQuery.trim().toLowerCase();
+    return equipmentList.filter((e) =>
+      e.title.toLowerCase().includes(q) ||
+      e.titleFr.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
+  // Visible items (show more / show less)
+  const visibleServices = showAll ? searchFilteredServices : searchFilteredServices.slice(0, ITEMS_PER_PAGE);
+  const visibleProducts = showAll ? searchFilteredProducts : searchFilteredProducts.slice(0, ITEMS_PER_PAGE);
+  const visibleEquipment = showAll ? searchFilteredEquipment : searchFilteredEquipment.slice(0, ITEMS_PER_PAGE);
+
+  // Current item count
+  const currentCount = activeSection === 'services' ? searchFilteredServices.length
+    : activeSection === 'products' ? searchFilteredProducts.length
+    : searchFilteredEquipment.length;
+
+  const needsShowMore = activeSection === 'services' ? searchFilteredServices.length > ITEMS_PER_PAGE
+    : activeSection === 'products' ? searchFilteredProducts.length > ITEMS_PER_PAGE
+    : searchFilteredEquipment.length > ITEMS_PER_PAGE;
+
+  const currentVisible = activeSection === 'services' ? visibleServices.length
+    : activeSection === 'products' ? visibleProducts.length
+    : visibleEquipment.length;
+
+  // Reset show more when switching tabs or changing search
+  const handleTabChange = (key: 'services' | 'products' | 'equipment') => {
+    setActiveSection(key);
+    setSelectedCategory(null);
+    setShowAll(false);
+  };
+
+  const handleShowMore = () => setShowAll(true);
+  const handleShowLess = () => setShowAll(false);
 
   return (
     <section className="py-16 bg-gray-50/50" id={`${activeSection}-section`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Search Bar */}
+        <SearchBar />
+
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -92,7 +151,7 @@ export default function SectionSwitcher() {
                   key={tab.key}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => { setActiveSection(tab.key); setSelectedCategory(null); }}
+                  onClick={() => handleTabChange(tab.key)}
                   className={`relative flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                     isActive
                       ? 'bg-deal-orange text-white shadow-lg shadow-deal-orange/30'
@@ -107,6 +166,25 @@ export default function SectionSwitcher() {
           </motion.div>
         </div>
 
+        {/* Results count badge */}
+        {searchQuery.trim() && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-center mb-6"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-deal-orange/5 border border-deal-orange/15">
+              <div className="w-2 h-2 rounded-full bg-deal-orange animate-pulse" />
+              <span className="text-sm font-semibold text-deal-navy">
+                {currentCount} {t.footer.resultsCount}
+              </span>
+              {currentCount === 0 && (
+                <span className="text-sm text-muted-foreground">— {t.common.noResults}</span>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* Content area */}
         <AnimatePresence mode="wait">
           {/* Services Tab */}
@@ -119,19 +197,21 @@ export default function SectionSwitcher() {
               exit={{ opacity: 0, x: 30 }}
               transition={{ duration: 0.4 }}
             >
-              <CategoryGrid
-                categories={serviceCategories}
-                activeCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-                colorScheme="orange"
-              />
+              {!searchQuery.trim() && (
+                <CategoryGrid
+                  categories={serviceCategories}
+                  activeCategory={selectedCategory}
+                  onSelectCategory={(cat) => { setSelectedCategory(cat); setShowAll(false); }}
+                  colorScheme="orange"
+                />
+              )}
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
-                {filteredServices.map((service, i) => (
+                {visibleServices.map((service, i) => (
                   <ServiceCard key={service.id} service={service} index={i} />
                 ))}
               </motion.div>
@@ -148,19 +228,21 @@ export default function SectionSwitcher() {
               exit={{ opacity: 0, x: 30 }}
               transition={{ duration: 0.4 }}
             >
-              <CategoryGrid
-                categories={productCategories}
-                activeCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-                colorScheme="teal"
-              />
+              {!searchQuery.trim() && (
+                <CategoryGrid
+                  categories={productCategories}
+                  activeCategory={selectedCategory}
+                  onSelectCategory={(cat) => { setSelectedCategory(cat); setShowAll(false); }}
+                  colorScheme="teal"
+                />
+              )}
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
-                {filteredProducts.map((product, i) => (
+                {visibleProducts.map((product, i) => (
                   <ProductCard key={product.id} product={product} index={i} />
                 ))}
               </motion.div>
@@ -183,13 +265,41 @@ export default function SectionSwitcher() {
                 animate="show"
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
               >
-                {filteredEquipment.map((eq, i) => (
+                {visibleEquipment.map((eq, i) => (
                   <EquipmentCard key={eq.id} equipment={eq} index={i} />
                 ))}
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Show more / Show less button */}
+        {needsShowMore && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-center mt-10"
+          >
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={showAll ? handleShowLess : handleShowMore}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border-2 border-deal-orange/20 text-deal-orange font-bold text-sm hover:border-deal-orange/40 hover:bg-deal-orange/5 transition-all shadow-md"
+            >
+              {showAll ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  <span>{t.common.seeLess}</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  <span>{t.common.seeMore} ({currentCount - ITEMS_PER_PAGE}+)</span>
+                </>
+              )}
+            </motion.button>
+          </motion.div>
+        )}
       </div>
     </section>
   );

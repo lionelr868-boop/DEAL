@@ -7,12 +7,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, User, Phone } from 'lucide-react';
+import { Mail, Lock, User, Phone, Loader2 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 export default function AuthModal() {
   const { t, locale } = useI18n();
-  const { showAuthModal, setShowAuthModal, authMode, setAuthMode } = useAppStore();
+  const {
+    showAuthModal, setShowAuthModal, authMode, setAuthMode,
+    setCurrentUser, setShowDashboard,
+  } = useAppStore();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,6 +24,7 @@ export default function AuthModal() {
     password: '',
     role: 'CUSTOMER',
   });
+  const [loading, setLoading] = useState(false);
 
   const isLogin = authMode === 'login';
   const isRTL = locale === 'ar';
@@ -30,6 +35,113 @@ export default function AuthModal() {
 
   const toggleMode = () => {
     setAuthMode(isLogin ? 'register' : 'login');
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      role: 'CUSTOMER',
+    });
+  };
+
+  const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      toast.error(t.auth.requiredFields);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(t.auth.invalidCredentials);
+        return;
+      }
+
+      setCurrentUser({
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      });
+
+      toast.success(t.auth.loginSuccess);
+      resetForm();
+      setShowAuthModal(false);
+      setShowDashboard(true);
+    } catch {
+      toast.error(t.auth.invalidCredentials);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!formData.email || !formData.password || !formData.name || !formData.role) {
+      toast.error(t.auth.requiredFields);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          phone: formData.phone,
+          role: formData.role,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          toast.error(t.auth.emailExists);
+        } else {
+          toast.error(data.error || t.auth.requiredFields);
+        }
+        return;
+      }
+
+      setCurrentUser({
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      });
+
+      toast.success(t.auth.registerSuccess);
+      resetForm();
+      setShowAuthModal(false);
+      setShowDashboard(true);
+    } catch {
+      toast.error(t.auth.requiredFields);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLogin) {
+      handleLogin();
+    } else {
+      handleRegister();
+    }
   };
 
   const roles = [
@@ -85,7 +197,7 @@ export default function AuthModal() {
               exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
               transition={{ duration: 0.3 }}
               className="space-y-4"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubmit}
             >
               {/* Register fields */}
               {!isLogin && (
@@ -185,11 +297,19 @@ export default function AuthModal() {
               {/* Submit button */}
               <motion.button
                 type="submit"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full btn-3d text-white bg-deal-orange rounded-xl py-3 font-bold text-base"
+                disabled={loading}
+                whileHover={{ scale: loading ? 1 : 1.02 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
+                className="w-full btn-3d text-white bg-deal-orange rounded-xl py-3 font-bold text-base disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isLogin ? t.auth.login : t.auth.register}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t.common.loading}
+                  </>
+                ) : (
+                  isLogin ? t.auth.login : t.auth.register
+                )}
               </motion.button>
 
               {/* Toggle mode link */}
