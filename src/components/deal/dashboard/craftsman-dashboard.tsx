@@ -12,8 +12,16 @@ import {
   Check,
   X,
   TrendingUp,
+  Zap,
+  Droplets,
+  HardHat,
+  Hammer,
+  Wind,
+  PaintBucket,
+  Home,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import { services } from '@/lib/data/mock';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -32,9 +40,22 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   CANCELLED: { bg: 'bg-red-50', text: 'text-red-500', dot: 'bg-red-500' },
 };
 
+const categoryIconMap: Record<string, React.ElementType> = {
+  elec: Zap,
+  plumb: Droplets,
+  build: HardHat,
+  carp: Hammer,
+  hvac: Wind,
+  metal: Wrench,
+  paint: PaintBucket,
+  clean: Home,
+};
+
 export default function CraftsmanDashboard() {
-  const { t, getLocalizedValue } = useI18n();
-  const { currentUser } = useAppStore();
+  const { t, getLocalizedValue, locale } = useI18n();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId } = useAppStore();
+
+  const myServices = services.slice(0, 8);
 
   const stats = [
     { label: t.dashboard.totalServices, value: '8', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', bg: 'bg-deal-orange/10' },
@@ -54,38 +75,12 @@ export default function CraftsmanDashboard() {
   ];
 
   const bookings = [
-    {
-      id: '1',
-      name: { ar: 'تمديد كهربائي', fr: 'Installation électrique' },
-      customer: { ar: 'محمد أمين', fr: 'Mohamed Amine' },
-      date: '2025-01-15',
-      status: 'PENDING' as const,
-      price: 15000,
-    },
-    {
-      id: '2',
-      name: { ar: 'إصلاح سباكة', fr: 'Réparation plomberie' },
-      customer: { ar: 'فاطمة الزهراء', fr: 'Fatima Zahra' },
-      date: '2025-01-14',
-      status: 'PENDING' as const,
-      price: 8000,
-    },
-    {
-      id: '3',
-      name: { ar: 'تركيب تكييف', fr: 'Installation climatisation' },
-      customer: { ar: 'يوسف بن عمر', fr: 'Youcef Ben Omar' },
-      date: '2025-01-12',
-      status: 'IN_PROGRESS' as const,
-      price: 25000,
-    },
-    {
-      id: '4',
-      name: { ar: 'دهان غرفة', fr: 'Peinture chambre' },
-      customer: { ar: 'سارة بوعلام', fr: 'Sara Boualem' },
-      date: '2025-01-10',
-      status: 'ACCEPTED' as const,
-      price: 12000,
-    },
+    { id: '1', name: { ar: 'تمديد كهربائي', fr: 'Installation électrique' }, customer: { ar: 'محمد أمين', fr: 'Mohamed Amine' }, date: '2025-01-15', status: 'PENDING' as const, price: 15000 },
+    { id: '2', name: { ar: 'إصلاح سباكة', fr: 'Réparation plomberie' }, customer: { ar: 'فاطمة الزهراء', fr: 'Fatima Zahra' }, date: '2025-01-14', status: 'PENDING' as const, price: 8000 },
+    { id: '3', name: { ar: 'تركيب تكييف', fr: 'Installation climatisation' }, customer: { ar: 'يوسف بن عمر', fr: 'Youcef Ben Omar' }, date: '2025-01-12', status: 'IN_PROGRESS' as const, price: 25000 },
+    { id: '4', name: { ar: 'دهان غرفة', fr: 'Peinture chambre' }, customer: { ar: 'سارة بوعلام', fr: 'Sara Boualem' }, date: '2025-01-10', status: 'ACCEPTED' as const, price: 12000 },
+    { id: '5', name: { ar: 'ترميم منزل', fr: 'Rénovation maison' }, customer: { ar: 'كريم بلقاسم', fr: 'Karim Belkacem' }, date: '2025-01-08', status: 'COMPLETED' as const, price: 45000 },
+    { id: '6', name: { ar: 'صيانة كهربائية', fr: 'Maintenance électrique' }, customer: { ar: 'نادر بن سعيد', fr: 'Nadir Ben Said' }, date: '2025-01-06', status: 'CANCELLED' as const, price: 5000 },
   ];
 
   const quickActions = [
@@ -96,6 +91,138 @@ export default function CraftsmanDashboard() {
 
   const maxRevenue = Math.max(...revenueData.map((d) => d.value));
 
+  const handleOpenService = (id: string) => {
+    setSelectedItemId(id);
+    setDetailType('service');
+    setShowDetailModal(true);
+  };
+
+  // --- Services Tab ---
+  if (dashboardActiveTab === 'services') {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-orange via-deal-orange-dark to-deal-gold p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -top-10 -end-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-black">{t.dashboard.services} 🔧</h2>
+              <p className="mt-1 text-white/80 text-sm">{locale === 'ar' ? 'إدارة وعرض خدماتك' : 'Gérer et afficher vos services'}</p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn-3d-sm text-white text-xs"
+            >
+              <Plus className="w-4 h-4 inline-block me-1" />
+              {t.dashboard.addNewService}
+            </motion.button>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {myServices.map((svc, i) => {
+            const CategoryIcon = categoryIconMap[svc.categoryId] || Wrench;
+            const title = getLocalizedValue(svc.title, svc.titleFr);
+            return (
+              <motion.div
+                key={svc.id}
+                custom={i}
+                variants={fadeInUp}
+                initial="hidden"
+                animate="visible"
+                whileHover={{ y: -4, scale: 1.02 }}
+                onClick={() => handleOpenService(svc.id)}
+                className="card-3d rounded-2xl p-4 bg-white cursor-pointer"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-deal-orange/10 flex items-center justify-center flex-shrink-0">
+                    <CategoryIcon className="w-5 h-5 text-deal-orange" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-deal-navy truncate">{title}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {svc.rating} ⭐ • {svc.totalReviews} {t.common.reviewsCountPlural}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <span className="text-lg font-black text-deal-orange">{svc.price.toLocaleString()} <span className="text-xs">{t.common.currency}</span></span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${svc.isAvailable ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                    {svc.isAvailable ? t.services.available : t.services.unavailable}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // --- Bookings Tab ---
+  if (dashboardActiveTab === 'bookings') {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-teal via-deal-teal-dark to-deal-teal p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -bottom-8 -end-8 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative z-10">
+            <h2 className="text-2xl font-black">{t.dashboard.bookings} 📋</h2>
+            <p className="mt-1 text-white/80 text-sm">{locale === 'ar' ? 'جميع حجوزات الخدمات' : 'Toutes les réservations de services'}</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+            {bookings.map((booking, i) => {
+              const status = statusConfig[booking.status];
+              return (
+                <motion.div
+                  key={booking.id}
+                  custom={i}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-deal-navy truncate">
+                      {getLocalizedValue(booking.name.ar, booking.name.fr)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {getLocalizedValue(booking.customer.ar, booking.customer.fr)} • {booking.date}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <span className="text-sm font-bold text-deal-navy hidden sm:block">
+                      {booking.price.toLocaleString()} {t.common.currency}
+                    </span>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold ${status.bg} ${status.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                      {t.dashboard[booking.status.toLowerCase() as keyof typeof t.dashboard]}
+                    </span>
+                    {booking.status === 'PENDING' && (
+                      <div className="flex gap-1">
+                        <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm hover:bg-emerald-600 transition-colors">
+                          <Check className="w-4 h-4 text-white" />
+                        </motion.button>
+                        <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors">
+                          <X className="w-4 h-4 text-white" />
+                        </motion.button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- Overview Tab (default) ---
   return (
     <div className="space-y-6">
       {/* Welcome */}
@@ -156,7 +283,6 @@ export default function CraftsmanDashboard() {
             <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.revenueChart}</h3>
             <TrendingUp className="w-5 h-5 text-deal-teal" />
           </div>
-
           <div className="flex items-end gap-2 h-48">
             {revenueData.map((bar, i) => (
               <motion.div
@@ -190,9 +316,8 @@ export default function CraftsmanDashboard() {
             <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.recentBookings}</h3>
             <ClipboardList className="w-5 h-5 text-muted-foreground" />
           </div>
-
           <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
-            {bookings.map((booking, i) => {
+            {bookings.slice(0, 4).map((booking, i) => {
               const status = statusConfig[booking.status];
               return (
                 <motion.div
@@ -211,7 +336,6 @@ export default function CraftsmanDashboard() {
                       {getLocalizedValue(booking.customer.ar, booking.customer.fr)} • {booking.date}
                     </p>
                   </div>
-
                   <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     <span className="text-sm font-bold text-deal-navy hidden sm:block">
                       {booking.price.toLocaleString()} {t.common.currency}
@@ -220,21 +344,12 @@ export default function CraftsmanDashboard() {
                       <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                       {t.dashboard[booking.status.toLowerCase() as keyof typeof t.dashboard]}
                     </span>
-
                     {booking.status === 'PENDING' && (
                       <div className="flex gap-1">
-                        <motion.button
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm hover:bg-emerald-600 transition-colors"
-                        >
+                        <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm hover:bg-emerald-600 transition-colors">
                           <Check className="w-4 h-4 text-white" />
                         </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
-                        >
+                        <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors">
                           <X className="w-4 h-4 text-white" />
                         </motion.button>
                       </div>

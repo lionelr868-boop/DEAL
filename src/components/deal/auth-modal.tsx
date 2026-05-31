@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, User, Phone, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Phone, Loader2, Users, Wrench, Store, HardHat, Sparkles } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 
@@ -145,10 +145,10 @@ export default function AuthModal() {
   };
 
   const roles = [
-    { value: 'CUSTOMER', label: t.auth.customer },
-    { value: 'CRAFTSMAN', label: t.auth.craftsman },
-    { value: 'MERCHANT', label: t.auth.merchant },
-    { value: 'EQUIPMENT_OWNER', label: t.auth.equipmentOwner },
+    { value: 'CUSTOMER', label: t.auth.customer, icon: Users, gradient: 'from-deal-orange/10 to-deal-orange/5', activeGradient: 'from-deal-orange to-deal-orange-dark' },
+    { value: 'CRAFTSMAN', label: t.auth.craftsman, icon: Wrench, gradient: 'from-deal-teal/10 to-deal-teal/5', activeGradient: 'from-deal-teal to-deal-teal-dark' },
+    { value: 'MERCHANT', label: t.auth.merchant, icon: Store, gradient: 'from-deal-gold/10 to-deal-gold/5', activeGradient: 'from-deal-gold to-deal-gold-dark' },
+    { value: 'EQUIPMENT_OWNER', label: t.auth.equipmentOwner, icon: HardHat, gradient: 'from-purple-100 to-purple-50', activeGradient: 'from-purple-600 to-purple-700' },
   ];
 
   return (
@@ -157,9 +157,12 @@ export default function AuthModal() {
         {/* Decorative gradient top bar */}
         <div className="h-2 gradient-animated" />
 
-        <div className="p-6 space-y-5">
+        {/* Decorative background pattern */}
+        <div className="auth-pattern" />
+
+        <div className="relative p-6 space-y-5">
           {/* Mode toggle */}
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm">
             <button
               onClick={() => setAuthMode('login')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all duration-300 ${
@@ -178,6 +181,7 @@ export default function AuthModal() {
                   : 'text-muted-foreground hover:text-deal-orange'
               }`}
             >
+              <Sparkles className="w-3.5 h-3.5" />
               {t.auth.registerTitle}
             </button>
           </div>
@@ -211,7 +215,7 @@ export default function AuthModal() {
                         value={formData.name}
                         onChange={(e) => handleChange('name', e.target.value)}
                         placeholder={t.auth.name}
-                        className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20"
+                        className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20 transition-all duration-200"
                       />
                     </div>
                   </div>
@@ -225,13 +229,13 @@ export default function AuthModal() {
                         value={formData.phone}
                         onChange={(e) => handleChange('phone', e.target.value)}
                         placeholder={t.auth.phone}
-                        className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20"
+                        className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20 transition-all duration-200"
                         dir="ltr"
                       />
                     </div>
                   </div>
 
-                  {/* Role selection */}
+                  {/* Role selection - enhanced with icons and gradients */}
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-deal-navy">{t.auth.role}</Label>
                     <div className="grid grid-cols-2 gap-2">
@@ -239,16 +243,25 @@ export default function AuthModal() {
                         <motion.button
                           key={role.value}
                           type="button"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.03, y: -1 }}
+                          whileTap={{ scale: 0.97 }}
                           onClick={() => handleChange('role', role.value)}
-                          className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                          className={`relative flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-bold transition-all duration-300 overflow-hidden ${
                             formData.role === role.value
-                              ? 'bg-deal-orange text-white shadow-md shadow-deal-orange/30 border-deal-orange'
-                              : 'bg-white text-deal-navy border-gray-200 hover:border-deal-orange/50'
-                          } border-2`}
+                              ? `bg-gradient-to-br ${role.activeGradient} text-white shadow-lg`
+                              : `bg-gradient-to-br ${role.gradient} text-deal-navy border-2 border-gray-200 hover:border-deal-orange/50`
+                          }`}
                         >
-                          {role.label}
+                          <role.icon className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{role.label}</span>
+                          {/* Subtle shine on active */}
+                          {formData.role === role.value && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"
+                            />
+                          )}
                         </motion.button>
                       ))}
                     </div>
@@ -266,7 +279,7 @@ export default function AuthModal() {
                     value={formData.email}
                     onChange={(e) => handleChange('email', e.target.value)}
                     placeholder={t.auth.email}
-                    className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20"
+                    className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20 transition-all duration-200"
                     dir="ltr"
                   />
                 </div>
@@ -282,25 +295,29 @@ export default function AuthModal() {
                     value={formData.password}
                     onChange={(e) => handleChange('password', e.target.value)}
                     placeholder={t.auth.password}
-                    className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20"
+                    className="ps-10 h-11 rounded-xl border-gray-200 focus:border-deal-orange focus:ring-deal-orange/20 transition-all duration-200"
                   />
                 </div>
               </div>
 
               {/* Forgot password (login only) */}
               {isLogin && (
-                <button type="button" className="text-xs text-deal-orange hover:underline">
+                <button type="button" className="text-xs text-deal-orange hover:underline transition-colors">
                   {t.auth.forgotPassword}
                 </button>
               )}
 
-              {/* Submit button */}
+              {/* Submit button - enhanced with shimmer on loading */}
               <motion.button
                 type="submit"
                 disabled={loading}
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
-                className="w-full btn-3d text-white bg-deal-orange rounded-xl py-3 font-bold text-base disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className={`w-full relative overflow-hidden rounded-xl py-3 font-bold text-base disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 ${
+                  loading
+                    ? 'btn-3d btn-shimmer text-deal-navy/80'
+                    : 'btn-3d text-white bg-deal-orange'
+                }`}
               >
                 {loading ? (
                   <>
@@ -318,7 +335,7 @@ export default function AuthModal() {
                 <button
                   type="button"
                   onClick={toggleMode}
-                  className="text-deal-orange font-bold hover:underline"
+                  className="text-deal-orange font-bold hover:underline transition-colors"
                 >
                   {isLogin ? t.auth.orRegister : t.auth.orLogin}
                 </button>

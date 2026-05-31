@@ -104,6 +104,7 @@
     "craftsman": "حرفي",
     "merchant": "تاجر",
     "equipmentOwner": "مزود معدات",
+    "admin": "مدير",
     "login": "دخول",
     "register": "تسجيل",
     "forgotPassword": "نسيت كلمة المرور؟",
@@ -237,6 +238,24 @@
     "loading": "جاري التحميل...",
     "noResults": "لا توجد نتائج",
     "seeMore": "عرض المزيد",
-    "seeLess": "عرض أقل"
+    "seeLess": "عرض أقل",
+    "favorites": "المفضلة",
+    "addedToFavorites": "تمت الإضافة إلى المفضلة",
+    "removedFromFavorites": "تمت الإزالة من المفضلة",
+    "notifications": "الإشعارات",
+    "noNotifications": "لا توجد إشعارات",
+    "providerInfo": "معلومات المقدم",
+    "viewProfile": "عرض الملف الشخصي",
+    "reviewsCount": "تقييم",
+    "reviewsCountPlural": "تقييمات",
+    "dailyPrice": "السعر اليومي",
+    "weeklyPrice": "السعر الأسبوعي",
+    "monthlyPrice": "السعر الشهري",
+    "unit": "وحدة",
+    "items": "عنصر",
+    "itemsPlural": "عناصر",
+    "bookingSuccess": "تم إرسال طلب الحجز بنجاح!",
+    "orderSuccess": "تم إرسال الطلب بنجاح!",
+    "contactProvider": "تواصل مع المقدم"
   }
 }

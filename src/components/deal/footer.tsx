@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Phone, Mail, Heart, ArrowUp, Send } from 'lucide-react';
+import { MapPin, Phone, Mail, Heart, ArrowUp, Send, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useI18n } from '@/lib/store';
 
 // SVG Social Icons as components
@@ -39,10 +39,10 @@ function TikTokIcon() {
 }
 
 const socialLinks = [
-  { icon: FacebookIcon, label: 'Facebook', href: '#', color: 'hover:bg-blue-600' },
-  { icon: InstagramIcon, label: 'Instagram', href: '#', color: 'hover:bg-gradient-to-tr hover:from-purple-600 hover:via-pink-500 hover:to-yellow-500' },
-  { icon: YoutubeIcon, label: 'YouTube', href: '#', color: 'hover:bg-red-600' },
-  { icon: TikTokIcon, label: 'TikTok', href: '#', color: 'hover:bg-gray-900' },
+  { icon: FacebookIcon, label: 'Facebook', href: '#', hoverBg: 'hover:bg-blue-600', hoverShadow: 'hover:shadow-blue-600/40' },
+  { icon: InstagramIcon, label: 'Instagram', href: '#', hoverBg: 'hover:bg-gradient-to-tr hover:from-purple-600 hover:via-pink-500 hover:to-yellow-500', hoverShadow: 'hover:shadow-pink-500/40' },
+  { icon: YoutubeIcon, label: 'YouTube', href: '#', hoverBg: 'hover:bg-red-600', hoverShadow: 'hover:shadow-red-600/40' },
+  { icon: TikTokIcon, label: 'TikTok', href: '#', hoverBg: 'hover:bg-gray-900', hoverShadow: 'hover:shadow-gray-600/40' },
 ];
 
 export default function Footer() {
@@ -112,17 +112,21 @@ export default function Footer() {
               {t.footer.aboutText}
             </p>
 
-            {/* Social icons */}
-            <div className="flex gap-2 pt-2">
-              {socialLinks.map((social) => {
+            {/* Social icons - enhanced */}
+            <div className="flex gap-3 pt-2">
+              {socialLinks.map((social, i) => {
                 const IconComp = social.icon;
                 return (
                   <motion.a
                     key={social.label}
                     href={social.href}
-                    whileHover={{ scale: 1.15, y: -2 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    whileHover={{ scale: 1.2, y: -4 }}
                     whileTap={{ scale: 0.9 }}
-                    className={`w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all duration-300 cursor-pointer ${social.color}`}
+                    className={`w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all duration-300 cursor-pointer ${social.hoverBg} ${social.hoverShadow} hover:shadow-lg`}
                     title={social.label}
                   >
                     <IconComp />
@@ -135,12 +139,12 @@ export default function Footer() {
           {/* Quick links */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold">{t.footer.quickLinks}</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-white/60 hover:text-deal-orange text-sm transition-colors"
+                    className="text-white/60 hover:text-deal-orange text-sm transition-all duration-200 hover:translate-x-1 hover:ps-1 inline-block"
                   >
                     {link.label}
                   </a>
@@ -153,46 +157,57 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-lg font-bold">{t.footer.contact}</h3>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-white/60 text-sm">
-                <MapPin className="w-4 h-4 text-deal-orange flex-shrink-0" />
+              <div className="flex items-center gap-3 text-white/60 text-sm group hover:text-white/80 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-deal-orange/10 flex items-center justify-center flex-shrink-0 group-hover:bg-deal-orange/20 transition-colors">
+                  <MapPin className="w-4 h-4 text-deal-orange" />
+                </div>
                 <span>سوق أهراس، الجزائر</span>
               </div>
-              <div className="flex items-center gap-3 text-white/60 text-sm">
-                <Phone className="w-4 h-4 text-deal-teal flex-shrink-0" />
+              <div className="flex items-center gap-3 text-white/60 text-sm group hover:text-white/80 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-deal-teal/10 flex items-center justify-center flex-shrink-0 group-hover:bg-deal-teal/20 transition-colors">
+                  <Phone className="w-4 h-4 text-deal-teal" />
+                </div>
                 <span dir="ltr">+213 77 000 00 00</span>
               </div>
-              <div className="flex items-center gap-3 text-white/60 text-sm">
-                <Mail className="w-4 h-4 text-deal-gold flex-shrink-0" />
+              <div className="flex items-center gap-3 text-white/60 text-sm group hover:text-white/80 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-deal-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-deal-gold/20 transition-colors">
+                  <Mail className="w-4 h-4 text-deal-gold" />
+                </div>
                 <span>contact@deal.dz</span>
               </div>
             </div>
           </div>
 
-          {/* Newsletter */}
+          {/* Newsletter - enhanced */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">{t.footer.newsletter}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold">{t.footer.newsletter}</h3>
+              <Sparkles className="w-4 h-4 text-deal-gold" />
+            </div>
             <p className="text-white/60 text-sm leading-relaxed">
               {t.footer.newsletterDesc}
             </p>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <div className="relative flex-1">
+            <form onSubmit={handleSubscribe} className="space-y-3">
+              <div className="relative">
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t.footer.newsletterPlaceholder}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white text-sm placeholder:text-white/40 outline-none focus:border-deal-orange/50 focus:bg-white/15 transition-all"
+                  className="w-full ps-10 pe-4 py-3 rounded-xl bg-white/8 border border-white/15 text-white text-sm placeholder:text-white/35 outline-none focus:border-deal-orange/60 focus:bg-white/12 transition-all duration-300 focus:shadow-[0_0_0_3px_rgba(255,107,53,0.15)]"
                   dir="ltr"
                   required
                 />
               </div>
               <motion.button
                 type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-deal-orange to-deal-orange-dark text-white flex items-center justify-center hover:shadow-lg hover:shadow-deal-orange/30 transition-all"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full px-4 py-3 rounded-xl bg-gradient-to-br from-deal-orange to-deal-orange-dark text-white flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-deal-orange/30 transition-all duration-300 font-semibold text-sm"
               >
                 <Send className="w-4 h-4" />
+                {locale === 'ar' ? 'اشترك الآن' : "S'inscrire"}
               </motion.button>
             </form>
             <AnimatePresence>
@@ -201,22 +216,26 @@ export default function Footer() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-deal-teal text-xs font-medium"
+                  className="text-deal-teal text-xs font-medium flex items-center gap-1"
                 >
-                  ✓ {locale === 'ar' ? 'تم الاشتراك بنجاح!' : 'Inscrit avec succès!'}
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  {locale === 'ar' ? 'تم الاشتراك بنجاح!' : 'Inscrit avec succès!'}
                 </motion.p>
               )}
             </AnimatePresence>
           </div>
         </motion.div>
 
+        {/* Gradient divider before copyright */}
+        <div className="gradient-divider mb-6" />
+
         {/* Bottom bar */}
-        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-white/40 text-xs">
             &copy; {new Date().getFullYear()} DEAL. {t.footer.rights}
           </p>
-          <p className="text-white/30 text-xs flex items-center gap-1">
-            {locale === 'ar' ? 'صُنع بـ' : 'Fait avec'} <Heart className="w-3 h-3 text-red-400 fill-red-400" /> {locale === 'ar' ? 'في سوق أهراس' : 'à Souk Ahras'}
+          <p className="text-white/30 text-xs flex items-center gap-1.5">
+            {locale === 'ar' ? 'صُنع بـ' : 'Fait avec'} <Heart className="w-3 h-3 text-red-400 fill-red-400 animate-pulse" /> {locale === 'ar' ? 'في سوق أهراس' : 'à Souk Ahras'}
           </p>
         </div>
       </div>

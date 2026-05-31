@@ -6,6 +6,7 @@ import Hero from '@/components/deal/hero';
 import SectionSwitcher from '@/components/deal/section-switcher';
 import AuthModal from '@/components/deal/auth-modal';
 import DetailModal from '@/components/deal/detail-modal';
+import ProfileModal from '@/components/deal/profile-modal';
 import Footer from '@/components/deal/footer';
 import DashboardWrapper from '@/components/deal/dashboard-wrapper';
 import { useAppStore } from '@/lib/store';
@@ -29,6 +30,7 @@ export default function Home() {
       )}
       <AuthModal />
       <DetailModal />
+      <ProfileModal />
     </div>
   );
 }

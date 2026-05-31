@@ -7,6 +7,14 @@ type Translations = typeof ar;
 
 const translations: Record<Locale, Translations> = { ar, fr };
 
+export interface Notification {
+  id: string;
+  message: { ar: string; fr: string };
+  type: 'booking' | 'review' | 'system';
+  timestamp: number;
+  read: boolean;
+}
+
 interface I18nState {
   locale: Locale;
   dir: 'rtl' | 'ltr';
@@ -65,7 +73,12 @@ interface AppState {
   selectedCategory: string | null;
   showDashboard: boolean;
   dashboardActiveTab: string;
-  
+  showProfileModal: boolean;
+  profileProviderName: { ar: string; fr: string };
+  profileSpecialty: { ar: string; fr: string };
+  profileRating: number;
+  profileReviewsCount: number;
+
   setCurrentUser: (user: AppState['currentUser']) => void;
   logout: () => void;
   setActiveSection: (section: AppState['activeSection']) => void;
@@ -78,6 +91,11 @@ interface AppState {
   setSelectedCategory: (category: string | null) => void;
   setShowDashboard: (show: boolean) => void;
   setDashboardActiveTab: (tab: string) => void;
+  setShowProfileModal: (show: boolean) => void;
+  setProfileProviderName: (name: { ar: string; fr: string }) => void;
+  setProfileSpecialty: (specialty: { ar: string; fr: string }) => void;
+  setProfileRating: (rating: number) => void;
+  setProfileReviewsCount: (count: number) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -92,6 +110,11 @@ export const useAppStore = create<AppState>((set) => ({
   selectedCategory: null,
   showDashboard: false,
   dashboardActiveTab: 'overview',
+  showProfileModal: false,
+  profileProviderName: { ar: '', fr: '' },
+  profileSpecialty: { ar: '', fr: '' },
+  profileRating: 0,
+  profileReviewsCount: 0,
 
   setCurrentUser: (user) => set({ currentUser: user }),
   logout: () => set({ currentUser: null, showDashboard: false, dashboardActiveTab: 'overview' }),
@@ -105,4 +128,78 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedCategory: (category) => set({ selectedCategory: category }),
   setShowDashboard: (show) => set({ showDashboard: show }),
   setDashboardActiveTab: (tab) => set({ dashboardActiveTab: tab }),
+  setShowProfileModal: (show) => set({ showProfileModal: show }),
+  setProfileProviderName: (name) => set({ profileProviderName: name }),
+  setProfileSpecialty: (specialty) => set({ profileSpecialty: specialty }),
+  setProfileRating: (rating) => set({ profileRating: rating }),
+  setProfileReviewsCount: (count) => set({ profileReviewsCount: count }),
+}));
+
+// Favorites & Notifications store
+interface FavoritesState {
+  favorites: string[];
+  notifications: Notification[];
+  unreadCount: number;
+
+  toggleFavorite: (id: string) => void;
+  isFavorite: (id: string) => boolean;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
+}
+
+export const useFavoritesStore = create<FavoritesState>((set, get) => ({
+  favorites: [],
+  notifications: [],
+  unreadCount: 0,
+
+  toggleFavorite: (id) => {
+    const { favorites } = get();
+    if (favorites.includes(id)) {
+      set({ favorites: favorites.filter((f) => f !== id) });
+    } else {
+      set({ favorites: [...favorites, id] });
+    }
+  },
+
+  isFavorite: (id) => {
+    return get().favorites.includes(id);
+  },
+
+  addNotification: (notification) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      timestamp: Date.now(),
+      read: false,
+    };
+    set((state) => ({
+      notifications: [newNotification, ...state.notifications],
+      unreadCount: state.unreadCount + 1,
+    }));
+  },
+
+  markNotificationRead: (id) => {
+    set((state) => {
+      const notifications = state.notifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      );
+      return {
+        notifications,
+        unreadCount: notifications.filter((n) => !n.read).length,
+      };
+    });
+  },
+
+  markAllNotificationsRead: () => {
+    set((state) => ({
+      notifications: state.notifications.map((n) => ({ ...n, read: true })),
+      unreadCount: 0,
+    }));
+  },
+
+  clearNotifications: () => {
+    set({ notifications: [], unreadCount: 0 });
+  },
 }));

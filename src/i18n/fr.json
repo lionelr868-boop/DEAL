@@ -76,6 +76,7 @@
     "perDay": "par jour"
   },
   "categories": {
+    "all": "Tout",
     "electrical": "Électricité et Électronique",
     "plumbing": "Plomberie",
     "construction": "Construction et Rénovation",
@@ -103,6 +104,7 @@
     "craftsman": "Artisan",
     "merchant": "Commerçant",
     "equipmentOwner": "Loueur d'équipements",
+    "admin": "Admin",
     "login": "Connexion",
     "register": "Inscription",
     "forgotPassword": "Mot de passe oublié ?",
@@ -236,6 +238,24 @@
     "loading": "Chargement...",
     "noResults": "Aucun résultat",
     "seeMore": "Voir plus",
-    "seeLess": "Voir moins"
+    "seeLess": "Voir moins",
+    "favorites": "Favoris",
+    "addedToFavorites": "Ajouté aux favoris",
+    "removedFromFavorites": "Retiré des favoris",
+    "notifications": "Notifications",
+    "noNotifications": "Aucune notification",
+    "providerInfo": "Informations du prestataire",
+    "viewProfile": "Voir le profil",
+    "reviewsCount": "avis",
+    "reviewsCountPlural": "avis",
+    "dailyPrice": "Prix journalier",
+    "weeklyPrice": "Prix hebdomadaire",
+    "monthlyPrice": "Prix mensuel",
+    "unit": "unité",
+    "items": "article",
+    "itemsPlural": "articles",
+    "bookingSuccess": "Demande de réservation envoyée avec succès !",
+    "orderSuccess": "Commande envoyée avec succès !",
+    "contactProvider": "Contacter le prestataire"
   }
 }

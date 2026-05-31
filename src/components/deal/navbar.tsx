@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe, LogOut, LayoutDashboard, User } from 'lucide-react';
-import { useI18n, useAppStore } from '@/lib/store';
+import { Menu, X, Globe, LogOut, LayoutDashboard, User, Heart } from 'lucide-react';
+import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
+import NotificationCenter from './notification-center';
 
 export default function Navbar() {
   const { locale, toggleLocale, t } = useI18n();
-  const { currentUser, showAuthModal, setShowAuthModal, setAuthMode, logout, setShowDashboard } = useAppStore();
+  const { currentUser, showAuthModal, setShowAuthModal, setAuthMode, logout, setShowDashboard, setActiveSection, setDetailType, setSelectedItemId } = useAppStore();
+  const { favorites } = useFavoritesStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
@@ -25,6 +27,23 @@ export default function Navbar() {
       el?.scrollIntoView({ behavior: 'smooth' });
     }},
   ];
+
+  const handleFavoritesClick = () => {
+    if (favorites.length > 0) {
+      const firstFav = favorites[0];
+      if (firstFav.startsWith('s')) {
+        setActiveSection('services');
+        setDetailType('service');
+      } else if (firstFav.startsWith('p')) {
+        setActiveSection('products');
+        setDetailType('product');
+      } else if (firstFav.startsWith('e')) {
+        setActiveSection('equipment');
+        setDetailType('equipment');
+      }
+      setSelectedItemId(firstFav);
+    }
+  };
 
   return (
     <motion.header
@@ -78,6 +97,26 @@ export default function Navbar() {
                 {locale === 'ar' ? 'FR' : 'AR'}
               </span>
             </motion.button>
+
+            {/* Notification Center (visible when logged in) */}
+            {currentUser && (
+              <NotificationCenter />
+            )}
+
+            {/* Favorites (visible when logged in) */}
+            {currentUser && favorites.length > 0 && (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleFavoritesClick}
+                className="relative w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:border-red-300 hover:bg-red-50 transition-colors shadow-sm"
+              >
+                <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {favorites.length}
+                </span>
+              </motion.button>
+            )}
 
             {/* Auth buttons or User menu */}
             {!currentUser ? (

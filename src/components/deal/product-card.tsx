@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Store, PackageCheck, PackageX } from 'lucide-react';
+import { Store, PackageCheck, PackageX, Heart, Zap, Flame } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { ProductItem } from '@/lib/data/mock';
@@ -37,8 +38,13 @@ const unitLabels: Record<string, Record<string, string>> = {
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { getLocalizedValue, t, locale } = useI18n();
   const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
+  const [isFavorite, setIsFavorite] = useState(false);
   const gradient = gradients[index % gradients.length];
   const unitLabel = unitLabels[product.unit]?.[locale] || product.unit;
+
+  // Every 4th card gets a NEW badge, every 7th gets POPULAR
+  const showNewBadge = index % 4 === 0;
+  const showPopularBadge = !showNewBadge && index % 7 === 0;
 
   return (
     <motion.div
@@ -50,31 +56,66 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         setSelectedItemId(product.id);
         setShowDetailModal(true);
       }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer"
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group"
     >
       {/* Image placeholder with gradient */}
-      <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+      <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center card-image-overlay overflow-hidden`}>
         <div className="absolute inset-0 hero-pattern opacity-40" />
-        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg">
+        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
           <PackageCheck className="w-8 h-8 text-deal-teal" />
         </div>
 
+        {/* Favorites button */}
+        <motion.button
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFavorite(!isFavorite);
+          }}
+          className={`absolute top-3 end-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
+            isFavorite
+              ? 'bg-red-500 shadow-lg shadow-red-500/30 active'
+              : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white'
+          }`}
+        >
+          <Heart className={`w-4 h-4 transition-colors duration-200 ${isFavorite ? 'text-white fill-white' : 'text-deal-navy/60'}`} />
+        </motion.button>
+
         {/* Category badge */}
-        <div className="absolute top-3 start-3">
+        <div className="absolute top-3 start-3 z-10">
           <span className="badge-3d bg-deal-teal text-white text-[10px]">
             {getLocalizedValue(product.categoryName, product.categoryNameFr)}
           </span>
         </div>
 
-        {/* Stock badge */}
-        <div className="absolute top-3 end-3">
+        {/* NEW / POPULAR badge */}
+        {showNewBadge && (
+          <div className="absolute bottom-3 start-3">
+            <span className="badge-shimmer badge-3d bg-gradient-to-r from-deal-teal to-deal-teal-light text-white text-[10px] font-black px-3 py-1 flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              {locale === 'ar' ? 'جديد' : 'NOUVEAU'}
+            </span>
+          </div>
+        )}
+        {showPopularBadge && (
+          <div className="absolute bottom-3 start-3">
+            <span className="badge-shimmer badge-3d bg-gradient-to-r from-deal-orange to-deal-gold text-white text-[10px] font-black px-3 py-1 flex items-center gap-1">
+              <Flame className="w-3 h-3" />
+              {locale === 'ar' ? 'الأكثر مبيعاً' : 'TOP'}
+            </span>
+          </div>
+        )}
+
+        {/* Stock badge moved below favorites */}
+        <div className="absolute top-14 end-3 z-10">
           {product.stock > 0 ? (
-            <span className="badge-3d bg-emerald-500 text-white text-[10px] flex items-center gap-1">
+            <span className="badge-3d bg-emerald-500/90 text-white text-[10px] flex items-center gap-1">
               <PackageCheck className="w-3 h-3" />
               {t.products.inStock}
             </span>
           ) : (
-            <span className="badge-3d bg-red-500 text-white text-[10px] flex items-center gap-1">
+            <span className="badge-3d bg-red-500/90 text-white text-[10px] flex items-center gap-1">
               <PackageX className="w-3 h-3" />
               {t.products.outOfStock}
             </span>
@@ -104,14 +145,14 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         {/* Price and CTA */}
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <div className="flex flex-col">
-            <span className="text-sm font-black text-deal-teal">
+            <span className="price-tag text-sm" style={{ background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)', boxShadow: '0 3px 0 0 #0F766E' }}>
               {product.price.toLocaleString()} {t.common.currency}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground text-center mt-0.5">
               / {unitLabel}
             </span>
           </div>
-          <button className="btn-3d-sm btn-3d-teal text-white text-xs">
+          <button className="btn-3d-sm btn-3d-teal text-white text-xs pulse-ring">
             {t.products.buyNow}
           </button>
         </div>

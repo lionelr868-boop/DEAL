@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, CheckCircle2, XCircle } from 'lucide-react';
+import { User, CheckCircle2, XCircle, Heart, Zap } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { ServiceItem } from '@/lib/data/mock';
@@ -24,9 +25,14 @@ const gradients = [
 ];
 
 export default function ServiceCard({ service, index = 0 }: ServiceCardProps) {
-  const { getLocalizedValue, t } = useI18n();
+  const { getLocalizedValue, t, locale } = useI18n();
   const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
+  const [isFavorite, setIsFavorite] = useState(false);
   const gradient = gradients[index % gradients.length];
+
+  // Every 3rd card gets a NEW badge, every 5th gets POPULAR
+  const showNewBadge = index % 3 === 0;
+  const showPopularBadge = !showNewBadge && index % 5 === 0;
 
   return (
     <motion.div
@@ -38,19 +44,53 @@ export default function ServiceCard({ service, index = 0 }: ServiceCardProps) {
         setSelectedItemId(service.id);
         setShowDetailModal(true);
       }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer"
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group"
     >
       {/* Image placeholder with gradient */}
-      <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+      <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center card-image-overlay overflow-hidden`}>
         <div className="absolute inset-0 hero-pattern opacity-40" />
-        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg">
+        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
           <span className="text-3xl font-black text-deal-orange">
             {getLocalizedValue(service.title, service.titleFr).charAt(0)}
           </span>
         </div>
 
+        {/* Favorites button */}
+        <motion.button
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFavorite(!isFavorite);
+          }}
+          className={`absolute top-3 start-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
+            isFavorite
+              ? 'bg-red-500 shadow-lg shadow-red-500/30 active'
+              : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white'
+          }`}
+        >
+          <Heart className={`w-4 h-4 transition-colors duration-200 ${isFavorite ? 'text-white fill-white' : 'text-deal-navy/60'}`} />
+        </motion.button>
+
+        {/* NEW / POPULAR badge */}
+        {showNewBadge && (
+          <div className="absolute top-3 start-1/2 -translate-x-1/2">
+            <span className="badge-shimmer badge-3d bg-gradient-to-r from-deal-orange to-deal-gold text-white text-[10px] font-black px-3 py-1 flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              {locale === 'ar' ? 'جديد' : 'NEW'}
+            </span>
+          </div>
+        )}
+        {showPopularBadge && (
+          <div className="absolute top-3 start-1/2 -translate-x-1/2">
+            <span className="badge-shimmer badge-3d bg-gradient-to-r from-deal-teal to-deal-teal-light text-white text-[10px] font-black px-3 py-1">
+              🔥 {locale === 'ar' ? 'رائج' : 'POPULAR'}
+            </span>
+          </div>
+        )}
+
         {/* Availability badge */}
-        <div className="absolute top-3 end-3">
+        <div className="absolute top-3 end-3 z-10">
           {service.isAvailable ? (
             <span className="badge-3d bg-emerald-500 text-white text-xs flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
@@ -89,7 +129,7 @@ export default function ServiceCard({ service, index = 0 }: ServiceCardProps) {
           <span className="price-tag text-sm">
             {service.price.toLocaleString()} {t.common.currency}
           </span>
-          <button className="btn-3d-sm bg-deal-orange text-white text-xs">
+          <button className="btn-3d-sm bg-deal-orange text-white text-xs pulse-ring">
             {t.services.book}
           </button>
         </div>

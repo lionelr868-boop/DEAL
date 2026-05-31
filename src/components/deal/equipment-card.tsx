@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, CheckCircle2, Clock } from 'lucide-react';
+import { User, CheckCircle2, Clock, Heart, Zap, TrendingUp } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { EquipmentItem } from '@/lib/data/mock';
@@ -27,10 +27,15 @@ const gradients = [
 type PriceTab = 'daily' | 'weekly' | 'monthly';
 
 export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardProps) {
-  const { getLocalizedValue, t } = useI18n();
+  const { getLocalizedValue, t, locale } = useI18n();
   const { setDetailType, setSelectedItemId, setShowDetailModal } = useAppStore();
   const [priceTab, setPriceTab] = useState<PriceTab>('daily');
+  const [isFavorite, setIsFavorite] = useState(false);
   const gradient = gradients[index % gradients.length];
+
+  // Every 2nd card gets a NEW badge, every 6th gets POPULAR
+  const showNewBadge = index % 2 === 0;
+  const showPopularBadge = !showNewBadge && index % 6 === 0;
 
   const priceMap: Record<PriceTab, number | undefined> = {
     daily: equipment.dailyPrice,
@@ -54,19 +59,54 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
         setSelectedItemId(equipment.id);
         setShowDetailModal(true);
       }}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer"
+      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group"
     >
       {/* Image placeholder with gradient */}
-      <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+      <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center card-image-overlay overflow-hidden`}>
         <div className="absolute inset-0 hero-pattern opacity-40" />
-        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg">
+        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
           <span className="text-2xl font-black text-deal-gold">
             {getLocalizedValue(equipment.title, equipment.titleFr).charAt(0)}
           </span>
         </div>
 
+        {/* Favorites button */}
+        <motion.button
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFavorite(!isFavorite);
+          }}
+          className={`absolute top-3 start-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
+            isFavorite
+              ? 'bg-red-500 shadow-lg shadow-red-500/30 active'
+              : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white'
+          }`}
+        >
+          <Heart className={`w-4 h-4 transition-colors duration-200 ${isFavorite ? 'text-white fill-white' : 'text-deal-navy/60'}`} />
+        </motion.button>
+
+        {/* NEW / POPULAR badge */}
+        {showNewBadge && (
+          <div className="absolute top-3 start-1/2 -translate-x-1/2 z-10">
+            <span className="badge-shimmer badge-3d bg-gradient-to-r from-deal-gold to-amber-400 text-deal-navy text-[10px] font-black px-3 py-1 flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              {locale === 'ar' ? 'جديد' : 'NOUVEAU'}
+            </span>
+          </div>
+        )}
+        {showPopularBadge && (
+          <div className="absolute top-3 start-1/2 -translate-x-1/2 z-10">
+            <span className="badge-shimmer badge-3d bg-gradient-to-r from-deal-orange to-deal-gold text-white text-[10px] font-black px-3 py-1 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              {locale === 'ar' ? 'الأكثر طلباً' : 'POPULAIRE'}
+            </span>
+          </div>
+        )}
+
         {/* Status badge */}
-        <div className="absolute top-3 end-3">
+        <div className="absolute top-3 end-3 z-10">
           {equipment.status === 'AVAILABLE' ? (
             <span className="badge-3d bg-emerald-500 text-white text-[10px] flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
@@ -105,7 +145,7 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
           {(Object.keys(priceMap) as PriceTab[]).map((tab) => (
             <button
               key={tab}
-              onClick={() => setPriceTab(tab)}
+              onClick={(e) => { e.stopPropagation(); setPriceTab(tab); }}
               className={`flex-1 py-1.5 text-[10px] font-bold transition-all duration-200 ${
                 priceTab === tab
                   ? 'bg-deal-gold text-deal-navy shadow-sm'
@@ -122,7 +162,7 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
           <span className="price-tag text-sm" style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)', boxShadow: '0 3px 0 0 #D97706' }}>
             {priceMap[priceTab]?.toLocaleString()} {t.common.currency}
           </span>
-          <button className="btn-3d-sm btn-3d-gold text-deal-navy text-xs">
+          <button className="btn-3d-sm btn-3d-gold text-deal-navy text-xs pulse-ring">
             {t.equipment.book}
           </button>
         </div>

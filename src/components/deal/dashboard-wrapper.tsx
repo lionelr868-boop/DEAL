@@ -98,11 +98,11 @@ export default function DashboardWrapper() {
     );
   }
 
-  const role = currentUser.role as Role;
-  const sidebarItems = getSidebarItems(role);
+  const normalizedRole = (currentUser.role || '').toLowerCase() as Role;
+  const sidebarItems = getSidebarItems(normalizedRole);
 
   const renderDashboard = () => {
-    switch (role) {
+    switch (normalizedRole) {
       case 'customer':
         return <CustomerDashboard />;
       case 'craftsman':
@@ -117,6 +117,8 @@ export default function DashboardWrapper() {
         return <CustomerDashboard />;
     }
   };
+
+
 
   const handleReturnHome = () => {
     setShowDashboard(false);
