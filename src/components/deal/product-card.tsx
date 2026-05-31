@@ -96,7 +96,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnter}
-      className="card-3d rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
+      className="card-3d glow-effect rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
       style={tiltStyle}
     >
       {/* Spotlight overlay */}
@@ -178,7 +178,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 relative z-[1]">
         <h3 className="font-bold text-sm leading-tight text-deal-navy line-clamp-2 min-h-[2.5rem]">
           {getLocalizedValue(product.title, product.titleFr)}
         </h3>

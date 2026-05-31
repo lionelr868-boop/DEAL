@@ -111,7 +111,7 @@ function HowItWorksSection() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: i * 0.2 }}
-                className="relative z-10 flex flex-col items-center text-center w-full max-w-[200px]"
+                className="relative z-10 flex flex-col items-center text-center w-full max-w-[200px] glass-card rounded-2xl p-5"
               >
                 {/* Number circle with icon */}
                 <motion.div
@@ -203,8 +203,22 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+      {/* Animated mesh gradient background */}
+      <div className="absolute inset-0 mesh-gradient" style={{ zIndex: 0 }}>
+        <motion.div
+          animate={{
+            backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,53,0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(13,148,136,0.18) 0%, transparent 50%), radial-gradient(ellipse at 40% 80%, rgba(245,158,11,0.14) 0%, transparent 50%)',
+            backgroundSize: '200% 200%',
+          }}
+        />
+      </div>
       {/* Background layers with parallax */}
-      <motion.div className="absolute inset-0 bg-gradient-to-br from-deal-navy via-deal-navy-dark to-deal-navy" style={{ y: bgY }} />
+      <motion.div className="absolute inset-0 bg-gradient-to-br from-deal-navy via-deal-navy-dark to-deal-navy" style={{ y: bgY, zIndex: 1 }} />
       <motion.div className="absolute inset-0 hero-pattern opacity-60" style={{ y: bgY }} />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
 
@@ -336,9 +350,9 @@ export default function Hero() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
           >
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.06, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="btn-3d text-white bg-deal-orange text-base px-8 py-4 rounded-2xl font-bold"
+              className="btn-3d shine-effect text-white bg-deal-orange text-base px-8 py-4 rounded-2xl font-bold glow-effect"
               onClick={() => {
                 const el = document.getElementById('services-section');
                 el?.scrollIntoView({ behavior: 'smooth' });
@@ -347,9 +361,9 @@ export default function Hero() {
               {t.hero.cta1}
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.06, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="btn-3d btn-3d-teal text-white text-base px-8 py-4 rounded-2xl font-bold"
+              className="btn-3d btn-3d-teal shine-effect text-white text-base px-8 py-4 rounded-2xl font-bold"
             >
               {t.hero.cta2}
             </motion.button>

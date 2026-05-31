@@ -112,7 +112,7 @@ export default function Navbar() {
                 className="relative w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:border-red-300 hover:bg-red-50 transition-colors shadow-sm"
               >
                 <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center notif-bounce">
                   {favorites.length}
                 </span>
               </motion.button>

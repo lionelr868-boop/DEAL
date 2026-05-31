@@ -90,7 +90,7 @@ export async function PATCH(
       'name', 'nameFr', 'phone', 'bio', 'bioFr',
       'city', 'wilaya', 'specialties', 'experience',
       'hourlyRate', 'shopName', 'shopNameFr',
-      'isVerified', 'avatar',
+      'isVerified', 'avatar', 'hasDelivery',
     ];
 
     for (const field of allowedFields) {

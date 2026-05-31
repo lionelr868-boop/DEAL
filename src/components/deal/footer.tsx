@@ -84,6 +84,13 @@ export default function Footer() {
 
   return (
     <footer className="relative bg-deal-navy text-white mt-auto">
+      {/* Wave divider between content and footer */}
+      <div className="wave-divider text-deal-navy" style={{ marginTop: '-2px' }}>
+        <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill="currentColor" d="M0,40 C360,100 720,0 1080,60 C1260,80 1380,50 1440,40 L1440,100 L0,100 Z" opacity="0.6" />
+          <path fill="currentColor" d="M0,60 C240,20 480,80 720,50 C960,20 1200,80 1440,50 L1440,100 L0,100 Z" opacity="0.3" />
+        </svg>
+      </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-deal-orange/5 via-transparent to-deal-teal/5 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-t from-deal-navy-dark/50 via-transparent to-transparent pointer-events-none" />
@@ -126,7 +133,7 @@ export default function Footer() {
                     transition={{ delay: i * 0.1 }}
                     whileHover={{ scale: 1.2, y: -4 }}
                     whileTap={{ scale: 0.9 }}
-                    className={`w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all duration-300 cursor-pointer ${social.hoverBg} ${social.hoverShadow} hover:shadow-lg`}
+                    className={`w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all duration-300 cursor-pointer social-icon-rotate ${social.hoverBg} ${social.hoverShadow} hover:shadow-lg`}
                     title={social.label}
                   >
                     <IconComp />
@@ -247,13 +254,18 @@ export default function Footer() {
             initial={{ opacity: 0, scale: 0.5, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: 20 }}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ scale: 1.1, y: -4 }}
             whileTap={{ scale: 0.9 }}
             onClick={scrollToTop}
-            className="fixed bottom-6 end-6 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-deal-orange to-deal-orange-dark text-white shadow-lg shadow-deal-orange/30 flex items-center justify-center hover:shadow-xl hover:shadow-deal-orange/40 transition-shadow"
+            className="fixed bottom-6 end-6 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-deal-orange to-deal-orange-dark text-white shadow-lg shadow-deal-orange/30 flex items-center justify-center back-to-top-animated"
             title={t.footer.backToTop}
           >
-            <ArrowUp className="w-5 h-5" />
+            <motion.div
+              animate={{ y: [0, -2, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <ArrowUp className="w-5 h-5" />
+            </motion.div>
           </motion.button>
         )}
       </AnimatePresence>

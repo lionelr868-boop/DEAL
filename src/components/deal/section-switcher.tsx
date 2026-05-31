@@ -163,12 +163,15 @@ export default function SectionSwitcher() {
               return (
                 <motion.button
                   key={tab.key}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  layout
+                  whileHover={{ scale: isActive ? 1.05 : 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  animate={isActive ? { scale: [0.97, 1.04, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   onClick={() => handleTabChange(tab.key)}
                   className={`relative flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                     isActive
-                      ? 'bg-deal-orange text-white shadow-lg shadow-deal-orange/30'
+                      ? 'tab-3d-active tab-underline-animated text-white'
                       : 'text-deal-navy hover:bg-gray-100'
                   }`}
                 >

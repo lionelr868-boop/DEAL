@@ -22,6 +22,7 @@ import {
   Loader2,
   ShieldCheck,
   ShieldX,
+  RefreshCw,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { AnimatedCounter } from '../animated-counter';
@@ -334,17 +335,28 @@ export default function AdminDashboard() {
         <div className="absolute -top-10 -end-10 w-48 h-48 rounded-full bg-deal-orange/20 blur-2xl" />
         <div className="absolute -bottom-10 -start-10 w-40 h-40 rounded-full bg-deal-teal/20 blur-2xl" />
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <Activity className="w-5 h-5 text-deal-teal" />
-            <span className="text-xs font-bold text-deal-teal bg-deal-teal/20 px-2 py-0.5 rounded-full">{t.auth.admin}</span>
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className="w-5 h-5 text-deal-teal" />
+              <span className="text-xs font-bold text-deal-teal bg-deal-teal/20 px-2 py-0.5 rounded-full">{t.auth.admin}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl sm:text-3xl font-black">
+                {t.dashboard.platformStats} 👑
+              </h2>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={statsLoading}
+                onClick={fetchStats}
+                className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 text-white ${statsLoading ? 'animate-spin' : ''}`} />
+              </motion.button>
+            </div>
+            <p className="mt-1 text-white/70 text-sm sm:text-base">
+              {t.dashboard.welcome} • {t.dashboard.today}
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black">
-            {t.dashboard.platformStats} 👑
-          </h2>
-          <p className="mt-1 text-white/70 text-sm sm:text-base">
-            {t.dashboard.welcome} • {t.dashboard.today}
-          </p>
-        </div>
       </motion.div>
 
       {/* Stats Grid */}

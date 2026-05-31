@@ -86,11 +86,14 @@ export default function NotificationCenter() {
         <Bell className="w-4 h-4 text-deal-navy" />
         {unreadCount > 0 && (
           <motion.span
-            initial={{ scale: 0 }}
+            key={unreadCount}
+            initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-deal-orange text-white text-[9px] font-bold flex items-center justify-center shadow-sm"
+            className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-deal-orange text-white text-[9px] font-bold flex items-center justify-center shadow-sm notif-bounce"
           >
-            {unreadCount > 9 ? '9+' : unreadCount}
+            <span className="notification-badge-pulse">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
           </motion.span>
         )}
       </motion.button>

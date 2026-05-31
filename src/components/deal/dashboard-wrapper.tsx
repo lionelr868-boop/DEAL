@@ -43,7 +43,9 @@ function getSidebarItems(role: Role): SidebarItem[] {
   const roleItems: Record<Role, SidebarItem[]> = {
     customer: [
       { key: 'bookings', labelAr: 'حجوزاتي', labelFr: 'Mes réservations', icon: CalendarCheck, color: 'text-deal-teal' },
-      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-gold-dark' },
+      { key: 'orders', labelAr: 'طلباتي', labelFr: 'Mes commandes', icon: ShoppingCart, color: 'text-deal-gold-dark' },
+      { key: 'favorites', labelAr: 'المفضلة', labelFr: 'Favoris', icon: Star, color: 'text-red-400' },
+      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-orange' },
     ],
     craftsman: [
       { key: 'services', labelAr: 'خدماتي', labelFr: 'Mes services', icon: Wrench, color: 'text-deal-teal' },

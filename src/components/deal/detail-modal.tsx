@@ -9,7 +9,7 @@ import {
   User, Store, PackageCheck, CheckCircle2, XCircle, Clock,
   Wrench, Zap, Droplets, HardHat, Hammer, Wind, PaintBucket, Home,
   Heart, Share2, MessageCircle, Star, ChevronLeft, ChevronRight, ImageIcon,
-  Loader2, CalendarDays, Send, PenLine,
+  Loader2, CalendarDays, Send, PenLine, ShoppingBag,
 } from 'lucide-react';
 import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
 import { services, products, equipmentList } from '@/lib/data/mock';
@@ -129,6 +129,13 @@ export default function DetailModal() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [userReviews, setUserReviews] = useState<Array<{ name: string; rating: number; text: string; date: string }>>([]);
 
+  // Order form state
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderDeliveryAddress, setOrderDeliveryAddress] = useState('');
+  const [orderNotes, setOrderNotes] = useState('');
+  const [orderLoading, setOrderLoading] = useState(false);
+
   // Contact form state
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactName, setContactName] = useState('');
@@ -191,6 +198,18 @@ export default function DetailModal() {
   const handleContact = (_name: { ar: string; fr: string }) => {
     setShowContactForm(true);
     setShowBookingForm(false);
+    setShowReviewForm(false);
+    setShowOrderForm(false);
+  };
+
+  const handleOrder = (_itemName: string) => {
+    if (!currentUser) {
+      toast.error(t.common.loginRequired);
+      return;
+    }
+    setShowOrderForm(true);
+    setShowBookingForm(false);
+    setShowContactForm(false);
     setShowReviewForm(false);
   };
 
@@ -276,6 +295,42 @@ export default function DetailModal() {
       toast.error(t.common.reviewError);
     } finally {
       setReviewLoading(false);
+    }
+  };
+
+  const submitOrder = async () => {
+    if (!currentUser || !product) return;
+    setOrderLoading(true);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: currentUser.id,
+          merchantId: currentUser.id,
+          productId: product.id,
+          quantity: orderQuantity,
+          deliveryAddress: orderDeliveryAddress,
+          notes: orderNotes,
+        }),
+      });
+      if (res.ok) {
+        addNotification({
+          message: { ar: `تم تقديم طلب: ${title}`, fr: `Commande passée: ${title}` },
+          type: 'booking',
+        });
+        toast.success(t.common.orderSuccess);
+        setShowOrderForm(false);
+        setOrderQuantity(1);
+        setOrderDeliveryAddress('');
+        setOrderNotes('');
+      } else {
+        toast.error(t.common.bookingError);
+      }
+    } catch {
+      toast.error(t.common.bookingError);
+    } finally {
+      setOrderLoading(false);
     }
   };
 
@@ -397,6 +452,71 @@ export default function DetailModal() {
               </motion.button>
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => setShowReviewForm(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-muted-foreground hover:bg-gray-50">
+                {t.common.cancel}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const OrderFormSection = () => (
+    <AnimatePresence>
+      {showOrderForm && product && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+          <div className="p-4 rounded-xl bg-deal-teal/5 border border-deal-teal/20 space-y-3">
+            <h5 className="text-sm font-bold text-deal-navy flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-deal-teal" />{locale === 'ar' ? 'نموذج الطلب' : "Formulaire de commande"}
+            </h5>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{locale === 'ar' ? 'الكمية' : 'Quantité'}</label>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
+                  className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors font-bold text-deal-navy">
+                  -
+                </button>
+                <span className="text-lg font-black text-deal-navy min-w-[2ch] text-center">{orderQuantity}</span>
+                <button type="button" onClick={() => setOrderQuantity(Math.min(100, orderQuantity + 1))}
+                  className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors font-bold text-deal-navy">
+                  +
+                </button>
+                <span className="ms-auto text-xs text-muted-foreground">
+                  {product.stock.toLocaleString()} {unitLabels[product.unit]?.[locale] || product.unit} {locale === 'ar' ? 'متوفر' : 'disponible'}
+                </span>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-deal-gold/10 border border-deal-gold/20">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-deal-navy">{locale === 'ar' ? 'المجموع' : 'Total'}</span>
+                <span className="text-lg font-black text-deal-teal">
+                  {(product.price * orderQuantity).toLocaleString()} {t.common.currency}
+                </span>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{locale === 'ar' ? 'عنوان التوصيل' : 'Adresse de livraison'}</label>
+              <input type="text" value={orderDeliveryAddress} onChange={(e) => setOrderDeliveryAddress(e.target.value)}
+                placeholder={locale === 'ar' ? 'أدخل عنوان التوصيل...' : "Entrez l'adresse de livraison..."}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t.common.bookingNotes}</label>
+              <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder={t.common.bookingNotesPlaceholder} rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" />
+            </div>
+            <div className="flex gap-2">
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                disabled={orderQuantity < 1 || orderLoading} onClick={submitOrder}
+                className="flex-1 btn-3d-sm text-white rounded-xl px-4 py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)', boxShadow: '0 4px 0 0 #0F766E, 0 6px 8px rgba(13,148,136,0.25)' }}>
+                {orderLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PackageCheck className="w-4 h-4" />}
+                {t.products.buyNow}
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={() => setShowOrderForm(false)}
                 className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-muted-foreground hover:bg-gray-50">
                 {t.common.cancel}
               </motion.button>
@@ -872,7 +992,7 @@ export default function DetailModal() {
 
             <ReviewsSection />
 
-            <BookingFormSection />
+            <OrderFormSection />
             <ContactFormSection />
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -887,10 +1007,10 @@ export default function DetailModal() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={product.stock <= 0}
-                onClick={() => { handleBooking(product.title); }}
+                onClick={() => { handleOrder(product.title); }}
                 className="btn-3d-sm btn-3d-teal text-white rounded-xl px-8 py-3 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {showBookingForm ? t.common.cancel : t.products.buyNow}
+                {showOrderForm ? t.common.cancel : t.products.buyNow}
               </motion.button>
             </div>
 

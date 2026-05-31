@@ -89,8 +89,7 @@ export default function SearchBar() {
         />
       ))}
         <div
-          className={`
-            relative flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 rounded-2xl
+          className={`search-focus-ring relative flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 rounded-2xl
             transition-all duration-300 ease-out
             ${isFocused
               ? 'bg-white/95 backdrop-blur-2xl search-glow ring-1 ring-deal-orange/30 scale-[1.02]'
@@ -199,10 +198,10 @@ export default function SearchBar() {
         <AnimatePresence>
           {showSuggestions && filteredSuggestions.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: -4, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, y: -8, scaleY: 0.95, scaleX: 0.98 }}
+              animate={{ opacity: 1, y: 0, scaleY: 1, scaleX: 1 }}
+              exit={{ opacity: 0, y: -8, scaleY: 0.95, scaleX: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className="absolute top-full mt-2 inset-x-0 glass-menu rounded-xl overflow-hidden z-50 shadow-xl"
             >
               {/* Suggestions header */}
