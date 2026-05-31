@@ -1,0 +1,354 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import {
+  ArrowRight,
+  LayoutDashboard,
+  CalendarCheck,
+  Package,
+  Truck,
+  Wrench,
+  ShoppingCart,
+  UserCog,
+  Settings,
+  Star,
+  BarChart3,
+  Users,
+  FolderTree,
+  X,
+} from 'lucide-react';
+import { useI18n, useAppStore } from '@/lib/store';
+import CustomerDashboard from './dashboard/customer-dashboard';
+import CraftsmanDashboard from './dashboard/craftsman-dashboard';
+import MerchantDashboard from './dashboard/merchant-dashboard';
+import EquipmentOwnerDashboard from './dashboard/equipment-owner-dashboard';
+import AdminDashboard from './dashboard/admin-dashboard';
+
+type Role = 'customer' | 'craftsman' | 'merchant' | 'equipment_owner' | 'admin';
+
+interface SidebarItem {
+  key: string;
+  labelAr: string;
+  labelFr: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color?: string;
+}
+
+function getSidebarItems(role: Role): SidebarItem[] {
+  const base: SidebarItem[] = [
+    { key: 'overview', labelAr: 'نظرة عامة', labelFr: 'Vue d\'ensemble', icon: LayoutDashboard, color: 'text-deal-orange' },
+  ];
+
+  const roleItems: Record<Role, SidebarItem[]> = {
+    customer: [
+      { key: 'bookings', labelAr: 'حجوزاتي', labelFr: 'Mes réservations', icon: CalendarCheck, color: 'text-deal-teal' },
+      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-gold-dark' },
+    ],
+    craftsman: [
+      { key: 'services', labelAr: 'خدماتي', labelFr: 'Mes services', icon: Wrench, color: 'text-deal-teal' },
+      { key: 'bookings', labelAr: 'حجوزاتي', labelFr: 'Mes réservations', icon: CalendarCheck, color: 'text-deal-gold-dark' },
+      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-orange' },
+    ],
+    merchant: [
+      { key: 'products', labelAr: 'منتجاتي', labelFr: 'Mes produits', icon: Package, color: 'text-deal-teal' },
+      { key: 'orders', labelAr: 'الطلبات', labelFr: 'Commandes', icon: ShoppingCart, color: 'text-deal-gold-dark' },
+      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-orange' },
+    ],
+    equipment_owner: [
+      { key: 'equipment', labelAr: 'معداتي', labelFr: 'Mes équipements', icon: Truck, color: 'text-deal-gold-dark' },
+      { key: 'rentals', labelAr: 'الإيجارات', labelFr: 'Locations', icon: CalendarCheck, color: 'text-deal-teal' },
+      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-orange' },
+    ],
+    admin: [
+      { key: 'users', labelAr: 'المستخدمون', labelFr: 'Utilisateurs', icon: Users, color: 'text-deal-teal' },
+      { key: 'categories', labelAr: 'الفئات', labelFr: 'Catégories', icon: FolderTree, color: 'text-deal-gold-dark' },
+      { key: 'reports', labelAr: 'التقارير', labelFr: 'Rapports', icon: BarChart3, color: 'text-deal-orange' },
+      { key: 'settings', labelAr: 'الإعدادات', labelFr: 'Paramètres', icon: Settings, color: 'text-deal-navy' },
+    ],
+  };
+
+  return [...base, ...roleItems[role]];
+}
+
+export default function DashboardWrapper() {
+  const { t, locale } = useI18n();
+  const { currentUser, setShowDashboard, dashboardActiveTab, setDashboardActiveTab } = useAppStore();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    // Prevent body scroll when sidebar is open on mobile
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground">{t.nav.login}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const role = currentUser.role as Role;
+  const sidebarItems = getSidebarItems(role);
+
+  const renderDashboard = () => {
+    switch (role) {
+      case 'customer':
+        return <CustomerDashboard />;
+      case 'craftsman':
+        return <CraftsmanDashboard />;
+      case 'merchant':
+        return <MerchantDashboard />;
+      case 'equipment_owner':
+        return <EquipmentOwnerDashboard />;
+      case 'admin':
+        return <AdminDashboard />;
+      default:
+        return <CustomerDashboard />;
+    }
+  };
+
+  const handleReturnHome = () => {
+    setShowDashboard(false);
+    setDashboardActiveTab('overview');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Top Header */}
+      <motion.header
+        initial={{ y: -60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="sticky top-0 z-40 glass border-b border-gray-200/50"
+      >
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              {/* Mobile menu toggle */}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden w-10 h-10 rounded-xl bg-deal-orange/10 flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 text-deal-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </motion.button>
+
+              {/* Logo */}
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center shadow-lg">
+                  <span className="text-white font-black text-sm">D</span>
+                </div>
+                <h1 className="text-xl font-black bg-gradient-to-r from-deal-orange via-deal-gold to-deal-teal bg-clip-text text-transparent hidden sm:block">
+                  {t.dashboard.dashboardTitle}
+                </h1>
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleReturnHome}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-deal-orange/10 text-deal-orange text-sm font-bold hover:bg-deal-orange/20 transition-colors"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span className="hidden sm:inline">{t.dashboard.returnHome}</span>
+              <span className="sm:hidden">{t.nav.home}</span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.header>
+
+      <div className="max-w-[1440px] mx-auto flex">
+        {/* Desktop Sidebar */}
+        <motion.aside
+          initial={{ x: -280, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+          className="hidden lg:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar"
+        >
+          <div className="p-4 space-y-1">
+            {/* User card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-deal-orange/5 to-deal-teal/5 border border-gray-100 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center shadow-md">
+                  <span className="text-white font-bold text-lg">
+                    {currentUser.name.charAt(0)}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm text-deal-navy truncate">{currentUser.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{currentUser.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nav items */}
+            {sidebarItems.map((item, i) => {
+              const Icon = item.icon;
+              const isActive = dashboardActiveTab === item.key;
+              return (
+                <motion.button
+                  key={item.key}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 + i * 0.05 }}
+                  onClick={() => setDashboardActiveTab(item.key)}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-deal-orange/10 to-deal-gold/10 text-deal-orange shadow-sm border border-deal-orange/20'
+                      : 'text-muted-foreground hover:bg-gray-100 hover:text-deal-navy'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-deal-orange' : item.color || ''}`} />
+                  <span>{locale === 'ar' ? item.labelAr : item.labelFr}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-indicator"
+                      className="ms-auto w-1.5 h-1.5 rounded-full bg-deal-orange"
+                    />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.aside>
+
+        {/* Main Content */}
+        <motion.main
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="flex-1 min-w-0 p-4 sm:p-6 pb-24 lg:pb-6"
+        >
+          {renderDashboard()}
+        </motion.main>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
+        >
+          <motion.div
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-72 h-full bg-white shadow-2xl"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center">
+                  <span className="text-white font-black text-xs">D</span>
+                </div>
+                <span className="font-black text-deal-navy">{t.dashboard.dashboardTitle}</span>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSidebarOpen(false)}
+                className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-deal-navy" />
+              </motion.button>
+            </div>
+
+            {/* User card */}
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center shadow-md">
+                  <span className="text-white font-bold">{currentUser.name.charAt(0)}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm text-deal-navy truncate">{currentUser.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{currentUser.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nav items */}
+            <div className="p-3 space-y-1">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = dashboardActiveTab === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setDashboardActiveTab(item.key);
+                      setSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-r from-deal-orange/10 to-deal-gold/10 text-deal-orange shadow-sm border border-deal-orange/20'
+                        : 'text-muted-foreground hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-deal-orange' : ''}`} />
+                    <span>{locale === 'ar' ? item.labelAr : item.labelFr}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Mobile Bottom Nav */}
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="fixed bottom-0 inset-x-0 z-40 glass border-t border-gray-200/50 lg:hidden pb-safe"
+      >
+        <div className="flex items-center justify-around px-2 py-2">
+          {sidebarItems.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const isActive = dashboardActiveTab === item.key;
+            return (
+              <motion.button
+                key={item.key}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setDashboardActiveTab(item.key)}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-colors ${
+                  isActive ? 'text-deal-orange' : 'text-muted-foreground'
+                }`}
+              >
+                <div className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-deal-orange/10' : ''}`}>
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-deal-orange' : ''}`} />
+                </div>
+                <span className={`text-[10px] font-semibold truncate max-w-[64px] ${isActive ? 'text-deal-orange' : ''}`}>
+                  {locale === 'ar' ? item.labelAr : item.labelFr}
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="bottom-nav-indicator"
+                    className="w-1 h-1 rounded-full bg-deal-orange"
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
+    </div>
+  );
+}

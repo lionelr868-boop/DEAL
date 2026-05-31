@@ -1,31 +1,32 @@
-'use client'
+'use client';
+
+import { motion } from 'framer-motion';
+import Navbar from '@/components/deal/navbar';
+import Hero from '@/components/deal/hero';
+import SectionSwitcher from '@/components/deal/section-switcher';
+import AuthModal from '@/components/deal/auth-modal';
+import Footer from '@/components/deal/footer';
+import DashboardWrapper from '@/components/deal/dashboard-wrapper';
+import { useAppStore } from '@/lib/store';
 
 export default function Home() {
+  const { showAuthModal, showDashboard } = useAppStore();
+
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      gap: '2rem',
-      padding: '1rem'
-    }}>
-      <div style={{
-        position: 'relative',
-        width: '6rem',
-        height: '6rem'
-      }}>
-        <img
-          src="/logo.svg"
-          alt="Z.ai Logo"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain'
-          }}
-        />
-      </div>
+    <div className="min-h-screen flex flex-col" style={{ fontFamily: "'Cairo', 'Inter', sans-serif" }}>
+      {showDashboard ? (
+        <DashboardWrapper />
+      ) : (
+        <>
+          <Navbar />
+          <main className="flex-1">
+            <Hero />
+            <SectionSwitcher />
+          </main>
+          <Footer />
+        </>
+      )}
+      <AuthModal />
     </div>
-  )
+  );
 }
