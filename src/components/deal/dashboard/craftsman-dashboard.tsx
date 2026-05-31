@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wrench,
   CalendarCheck,
@@ -20,6 +20,8 @@ import {
   Wind,
   PaintBucket,
   Home,
+  Loader2,
+  Inbox,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { services } from '@/lib/data/mock';
@@ -37,7 +39,7 @@ const fadeInUp = {
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   PENDING: { bg: 'bg-deal-orange/10', text: 'text-deal-orange', dot: 'bg-deal-orange' },
   ACCEPTED: { bg: 'bg-deal-teal/10', text: 'text-deal-teal', dot: 'bg-deal-teal' },
-  IN_PROGRESS: { bg: 'bg-blue-100', text: 'text-blue-600', dot: 'bg-blue-500' },
+  IN_PROGRESS: { bg: 'bg-amber-100', text: 'text-amber-600', dot: 'bg-amber-500' },
   COMPLETED: { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-500' },
   CANCELLED: { bg: 'bg-red-50', text: 'text-red-500', dot: 'bg-red-500' },
 };
@@ -53,11 +55,28 @@ const categoryIconMap: Record<string, React.ElementType> = {
   clean: Home,
 };
 
+interface ApiService {
+  id: string;
+  title: string;
+  titleFr?: string | null;
+  price: number;
+  isAvailable: boolean;
+  rating: number;
+  totalReviews: number;
+  category?: { id: string; name: string; nameFr?: string | null; icon?: string | null } | null;
+  provider?: { id: string; name: string; nameFr?: string | null } | null;
+}
+
 export default function CraftsmanDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
   const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId } = useAppStore();
 
-  const myServices = services.slice(0, 8);
+  // Real services state
+  const [myServices, setMyServices] = useState<ApiService[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesFetched, setServicesFetched] = useState(false);
+
+  const fallbackServices = services.slice(0, 8);
 
   const stats = [
     { label: t.dashboard.totalServices, value: '8', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', bg: 'bg-deal-orange/10' },
@@ -95,10 +114,39 @@ export default function CraftsmanDashboard() {
 
   const maxRevenue = Math.max(...revenueData.map((d) => d.value));
 
+  // Fetch services when switching to services tab
+  const fetchServices = useCallback(async () => {
+    if (!currentUser?.id) return;
+    setServicesLoading(true);
+    try {
+      const res = await fetch(`/api/services?providerId=${currentUser.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMyServices(data);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setServicesLoading(false);
+      setServicesFetched(true);
+    }
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (dashboardActiveTab === 'services' && currentUser?.id && !servicesFetched) {
+      fetchServices();
+    }
+  }, [dashboardActiveTab, currentUser?.id, servicesFetched, fetchServices]);
+
   const handleOpenService = (id: string) => {
     setSelectedItemId(id);
     setDetailType('service');
     setShowDetailModal(true);
+  };
+
+  const getServiceDisplayInfo = (svc: ApiService) => {
+    const title = getLocalizedValue(svc.title, svc.titleFr);
+    return { title };
   };
 
   // --- Services Tab ---
@@ -113,53 +161,84 @@ export default function CraftsmanDashboard() {
               <h2 className="text-2xl font-black">{t.dashboard.services} 🔧</h2>
               <p className="mt-1 text-white/80 text-sm">{locale === 'ar' ? 'إدارة وعرض خدماتك' : 'Gérer et afficher vos services'}</p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-3d-sm text-white text-xs"
-            >
-              <Plus className="w-4 h-4 inline-block me-1" />
-              {t.dashboard.addNewService}
-            </motion.button>
+            <div className="flex gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={fetchServices}
+                className="btn-3d-sm text-white text-xs"
+                style={{
+                  background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',
+                  boxShadow: '0 4px 0 0 #0F766E, 0 6px 8px rgba(13,148,136,0.25)',
+                }}
+              >
+                {t.dashboard.refresh}
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-3d-sm text-white text-xs"
+                style={{
+                  background: 'linear-gradient(180deg, #FF8C5A 0%, #FF6B35 100%)',
+                  boxShadow: '0 4px 0 0 #CC5529, 0 6px 8px rgba(255,107,53,0.25)',
+                }}
+              >
+                <Plus className="w-4 h-4 inline-block me-1" />
+                {t.dashboard.addNewService}
+              </motion.button>
+            </div>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {myServices.map((svc, i) => {
-            const CategoryIcon = categoryIconMap[svc.categoryId] || Wrench;
-            const title = getLocalizedValue(svc.title, svc.titleFr);
-            return (
-              <motion.div
-                key={svc.id}
-                custom={i}
-                variants={fadeInUp}
-                initial="hidden"
-                animate="visible"
-                whileHover={{ y: -4, scale: 1.02 }}
-                onClick={() => handleOpenService(svc.id)}
-                className="card-3d rounded-2xl p-4 bg-white cursor-pointer"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-deal-orange/10 flex items-center justify-center flex-shrink-0">
-                    <CategoryIcon className="w-5 h-5 text-deal-orange" />
+        {servicesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-deal-orange animate-spin" />
+            <span className="ms-3 text-sm text-muted-foreground">{t.common.loading}</span>
+          </div>
+        ) : myServices.length === 0 && servicesFetched ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Inbox className="w-12 h-12 text-gray-300 mb-3" />
+            <p className="text-sm font-bold text-muted-foreground">{t.common.noServices}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(myServices.length > 0 ? myServices : fallbackServices).map((svc, i) => {
+              const CategoryIcon = categoryIconMap[svc.category?.id || ''] || Wrench;
+              const title = 'title' in svc ? svc.title : getLocalizedValue((svc as { title: string; titleFr?: string | null }).title, (svc as { title: string; titleFr?: string | null }).titleFr);
+              const displayTitle = 'categoryId' in svc ? getLocalizedValue(svc.title, (svc as { titleFr?: string | null }).titleFr) : title;
+              return (
+                <motion.div
+                  key={svc.id}
+                  custom={i}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  onClick={() => handleOpenService(svc.id)}
+                  className="card-3d rounded-2xl p-4 bg-white cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-deal-orange/10 flex items-center justify-center flex-shrink-0">
+                      <CategoryIcon className="w-5 h-5 text-deal-orange" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-deal-navy truncate">{displayTitle}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {svc.rating} ⭐ • {svc.totalReviews} {t.common.reviewsCountPlural}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-deal-navy truncate">{title}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {svc.rating} ⭐ • {svc.totalReviews} {t.common.reviewsCountPlural}
-                    </p>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <span className="text-lg font-black text-deal-orange">{svc.price.toLocaleString()} <span className="text-xs">{t.common.currency}</span></span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${svc.isAvailable ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                      {svc.isAvailable ? t.services.available : t.services.unavailable}
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <span className="text-lg font-black text-deal-orange">{svc.price.toLocaleString()} <span className="text-xs">{t.common.currency}</span></span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${svc.isAvailable ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
-                    {svc.isAvailable ? t.services.available : t.services.unavailable}
-                  </span>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }

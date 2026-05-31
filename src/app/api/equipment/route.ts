@@ -5,8 +5,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const ownerId = searchParams.get('ownerId');
 
     const where: Record<string, unknown> = {};
+
+    if (ownerId) {
+      where.ownerId = ownerId;
+    }
 
     if (status) {
       where.status = status;

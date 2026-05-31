@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Store, PackageCheck, PackageX, Heart, Zap, Flame } from 'lucide-react';
+import { Store, PackageCheck, PackageX, Heart, Zap, Flame, Share2 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import RatingStars from './rating-stars';
 import type { ProductItem } from '@/lib/data/mock';
@@ -43,6 +43,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   const showNewBadge = index % 4 === 0;
   const showPopularBadge = !showNewBadge && index % 7 === 0;
+  const showRibbon = index < 2;
+
+  const tooltipFavorite = locale === 'ar' ? 'إضافة للمفضلة' : 'Ajouter aux favoris';
+  const tooltipShare = locale === 'ar' ? 'مشاركة' : 'Partager';
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -116,24 +120,45 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       {/* Image placeholder with gradient */}
       <div className={`relative h-40 bg-gradient-to-br ${gradient} flex items-center justify-center card-image-overlay overflow-hidden`}>
         <div className="absolute inset-0 hero-pattern opacity-40" />
-        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+        {/* Dot pattern overlay */}
+        <div className="card-dot-pattern" />
+        {/* NEW ribbon on first 2 items */}
+        {showRibbon && (
+          <div className="card-new-ribbon">
+            {locale === 'ar' ? 'جديد' : 'NEW'}
+          </div>
+        )}
+        {/* Floating icon */}
+        <div className="relative w-16 h-16 rounded-2xl bg-white/80 backdrop-blur flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500 card-icon-float">
           <PackageCheck className="w-8 h-8 text-deal-teal" />
         </div>
 
-        {/* Favorites button with bounce */}
+        {/* Favorites button with tooltip */}
         <motion.button
           animate={heartBounce ? { scale: [1, 1.4, 0.8, 1.15, 1] } : { scale: 1 }}
           transition={{ duration: 0.4, ease: 'easeInOut' }}
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.8 }}
           onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
-          className={`absolute top-3 end-3 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
+          data-tooltip={tooltipFavorite}
+          className={`deal-tooltip absolute top-3 end-3 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 heart-btn ${
             isFavorite
               ? 'bg-red-500 shadow-lg shadow-red-500/30 active'
               : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white'
           }`}
         >
           <Heart className={`w-4 h-4 transition-colors duration-200 ${isFavorite ? 'text-white fill-white' : 'text-deal-navy/60'}`} />
+        </motion.button>
+
+        {/* Share button with tooltip */}
+        <motion.button
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => { e.stopPropagation(); }}
+          data-tooltip={tooltipShare}
+          className="deal-tooltip absolute bottom-3 start-3 z-20 w-8 h-8 rounded-full flex items-center justify-center bg-white/80 backdrop-blur-sm shadow-md hover:bg-white transition-all duration-300"
+        >
+          <Share2 className="w-4 h-4 text-deal-navy/60" />
         </motion.button>
 
         {/* Category badge */}

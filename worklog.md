@@ -1,133 +1,137 @@
 ---
+Task ID: 7
+Agent: Main Agent + Subagents (frontend-styling-expert + full-stack-developer)
+Task: Profile Editing UI, Real Dashboard Data, Advanced Visual Polish
+
+Work Log:
+- Read worklog.md and assessed project status (Tasks 1-6 complete)
+- 0 lint errors (1 pre-existing font warning only), dev server stable
+- Performed QA via agent-browser + VLM analysis:
+  - Homepage: ✅ Hero with mesh gradient, stat counters, search bar, cards with NEW ribbons
+  - Section tabs: ✅ 3D active effect with animated underline
+  - Cards: ✅ 6 card-3d elements with glow-effect, 2 NEW ribbons, 12 tooltips
+  - APIs: ✅ All 15+ endpoints returning 200
+  - Services API with providerId filter: ✅ Returns 3 results
+  - Search API: ✅ Working with bilingual queries
+
+### Styling Improvements (via frontend-styling-expert subagent):
+9 files modified/created, 7 new CSS utility classes:
+
+1. **Animated Stats in Hero** (`hero.tsx`):
+   - Replaced static stats with `AnimatedCounter` + `whileInView` animation
+   - Stats animate count-up when hero scrolls into view
+   - Icons: Wrench (craftsmen), ShoppingBag (products), Truck (equipment), Star (satisfaction)
+   - Each stat in glass-card with glow border
+
+2. **Enhanced Category Grid** (`category-grid.tsx`):
+   - `category-chip-shimmer` — light sweep animation on hover
+   - `category-active-pressed` — 3D inset shadow for active category
+   - Stagger animation with scale bounce on mount
+   - Total count badge on "All" button
+   - Categories lift -4px on hover with enhanced shadow
+
+3. **Skeleton Loading States** (NEW `skeleton-card.tsx`):
+   - 3 variants: service, product, equipment
+   - Animated gradient shimmer effect
+   - Integrated into section-switcher with 500ms skeleton on tab switch
+   - Smooth AnimatePresence fade transition
+
+4. **CSS Tooltips on Cards** (service-card, product-card, equipment-card):
+   - `.deal-tooltip` CSS-only tooltip using `::after` + `content: attr()`
+   - Arrow pointing to button via `::before` border triangle
+   - Bilingual tooltips: "إضافة للمفضلة" / "Ajouter aux favoris", "مشاركة" / "Partager"
+   - 12 tooltip elements rendered across all card types
+
+5. **Number Formatting** (`animated-counter.tsx`):
+   - Added `formatNumber()` — comma formatting for >1000 (e.g., "15,000")
+   - Fixed decimal animation (4.8 animates correctly through decimals)
+   - Added `startOnView` + `isInView` props
+
+6. **Enhanced Card Image Areas** (service-card, product-card, equipment-card):
+   - `card-icon-float` — 3s floating animation with gentle rotation
+   - `card-new-ribbon` — diagonal NEW ribbon badge on first 2 items
+   - `card-dot-pattern` — subtle dot grid overlay in image placeholders
+
+7. **New CSS Classes** (`globals.css`):
+   - `.category-chip-shimmer`, `.category-active-pressed`
+   - `.skeleton-shimmer`, `.deal-tooltip`
+   - `.card-icon-float`, `.card-new-ribbon`, `.card-dot-pattern`
+
+### New Features (via full-stack-developer subagent):
+
+1. **Profile Editing UI** (`profile-modal.tsx`):
+   - Tabbed interface: View Profile / Edit Profile (Tabs from shadcn)
+   - Edit tab visible only when viewing own profile
+   - Form fields: Name, NameFr, Phone, Bio, BioFr, Specialties, Experience, Hourly Rate
+   - Fetches real data via GET /api/users/[id] with skeleton loading
+   - Saves via PATCH /api/users/[id] with toast notifications
+   - Updates Zustand store's currentUser after save
+
+2. **Merchant Dashboard → Real Orders API** (`merchant-dashboard.tsx`):
+   - Orders tab fetches from `/api/orders?merchantId={id}` on tab switch
+   - Maps API order data to display format
+   - Status badges, loading spinner, empty state
+   - Refresh button for re-fetching
+
+3. **Craftsman Dashboard → Real Services API** (`craftsman-dashboard.tsx`):
+   - Added `providerId` query param to `/api/services` API
+   - Services tab fetches filtered services on tab switch
+   - Displays real titles, prices, ratings, availability
+   - Falls back to mock data if no API data
+
+4. **Equipment Owner Dashboard → Real Equipment API** (`equipment-owner-dashboard.tsx`):
+   - Added `ownerId` query param to `/api/equipment` API
+   - Equipment tab fetches filtered equipment
+   - Status mini-cards computed from real data
+   - Falls back to mock data if no API data
+
+5. **Bonus Fixes**:
+   - Fixed React Compiler memoization error in section-switcher.tsx
+   - Fixed hero.tsx parsing error (moved inline useTransform hooks out of JSX)
+
+### Stage Summary:
+- ✅ 0 lint errors (1 pre-existing font warning only)
+- ✅ 1 new component file (skeleton-card.tsx)
+- ✅ 9 files modified
+- ✅ 7 new CSS utility classes
+- ✅ Profile editing UI with real API integration
+- ✅ 3 dashboards connected to real APIs (merchant orders, craftsman services, equipment owner equipment)
+- ✅ Animated hero stats with count-up effect
+- ✅ Skeleton loading states on tab switch
+- ✅ CSS tooltips on card action buttons
+- ✅ NEW ribbons on featured items
+- ✅ Enhanced card image areas with floating icons and dot patterns
+- ✅ Number formatting with commas for thousands
+- ✅ Dev server compiling successfully, all APIs returning 200
+
+### Unresolved / Known Issues:
+- Detail modal is long — forms require scrolling within the modal
+- Skeleton loading shows for very brief time (500ms) — could be extended for slower connections
+
+### Recommended Next Steps (Priority Order):
+1. **Image upload system** — Allow providers to upload photos for services/products/equipment
+2. **Real-time notifications** — WebSocket-based system for booking/order updates
+3. **Mobile responsiveness polish** — Test all dashboards on mobile viewport (320px, 375px, 768px)
+4. **SEO optimization** — Meta tags, JSON-LD structured data, Open Graph for social sharing
+5. **Payment integration** — CIB/Edahabia payment gateway for Algerian market
+6. **Performance optimization** — Lazy loading for dashboard components, image optimization
+7. **Admin user management** — Enable/disable users, view detailed user profiles
+8. **Provider onboarding flow** — Step-by-step wizard for new providers to set up their profiles
+9. **Advanced search** — Faceted search with filters (price range, location, rating)
+10. **Review moderation** — Admin tools for managing user reviews
+
+---
 Task ID: 6
 Agent: Main Agent + Subagents (frontend-styling-expert + full-stack-developer)
 Task: Comprehensive QA, Advanced Styling, New Features & API Development
 
-Work Log:
-- Read worklog.md and assessed project status (Tasks 1-5 complete)
-- 0 lint errors (1 pre-existing font warning only), dev server stable
-- Performed comprehensive QA via agent-browser + VLM analysis:
-  - Homepage: ✅ Hero with mesh gradient, search bar, section tabs, cards
-  - Section switching: ✅ Services → Products → Equipment tabs work
-  - Card rendering: ✅ Gradient headers, prices, ratings all visible
-  - Detail modal: ✅ Gallery, reviews, contact form, booking form all render
-  - API endpoints: ✅ All returning 200 (services, products, equipment, stats, login, search)
-  - Footer: ✅ Wave divider, social icons, newsletter section
-
-- **Bug Fixed: Search API `mode: 'insensitive'` error**
-  - SQLite doesn't support Prisma's `mode: 'insensitive'` filter option
-  - Fixed by removing the `mode` property from the searchFilter in `/api/search/route.ts`
-  - Search API now works correctly: `/api/search?q=إنارة` returns matching services
-
-### Styling Improvements (via frontend-styling-expert subagent):
-8 files modified, 14 new CSS utilities, 10 new keyframe animations:
-
-1. **Global CSS Enhancements** (`globals.css`):
-   - `.glass-card` — Full glassmorphism with blur, saturation, inset highlights
-   - `.glow-effect` — Neon glow pseudo-element on hover (orange/teal/gold gradients)
-   - `.wave-divider` — SVG wave separator container
-   - `.mesh-gradient` — Animated multi-radial-gradient background (12s drift)
-   - `.shine-effect` — Skewed light sweep on button hover
-   - Enhanced `.card-3d` — Added `::after` gradient overlay, border-radius transition
-   - `.notification-badge-pulse` — Pulsing ring animation
-   - `.notif-bounce` — Bounce keyframe for count changes
-   - `.tab-underline-animated` — Shifting gradient underline on active tabs
-   - `.search-focus-ring` — Gradient focus ring with pulsing blur
-   - `.social-icon-rotate` — 15° rotation + lift on hover
-   - `.back-to-top-animated` — Multi-layer glow ring on hover
-   - `.tab-3d-active` — Full 3D button look with bottom shadow edge
-
-2. **Card Components** (service-card, product-card, equipment-card):
-   - Added `glow-effect` class for neon glow on hover
-   - Content divs use `relative z-[1]` to sit above pseudo-elements
-
-3. **Section Switcher** (`section-switcher.tsx`):
-   - Active tab uses `tab-3d-active` + `tab-underline-animated`
-   - Spring bounce animation on tab switch
-
-4. **Hero Section** (`hero.tsx`):
-   - Animated mesh gradient background layer
-   - CTA buttons use `shine-effect` + `glow-effect`
-   - How it Works step cards wrapped in `glass-card`
-
-5. **Search Bar** (`search-bar.tsx`):
-   - `search-focus-ring` animated gradient ring on focus
-   - Spring animation for suggestion dropdown entrance
-
-6. **Footer** (`footer.tsx`):
-   - Wave divider SVG between content and footer
-   - Social icons use `social-icon-rotate` hover effect
-   - Back-to-top button with glow ring animation
-
-7. **Notification Center** (`notification-center.tsx`):
-   - Badge uses `notif-bounce` + `notification-badge-pulse`
-
-8. **Navbar** (`navbar.tsx`):
-   - Favorites count badge uses `notif-bounce`
-
-### New Features (via full-stack-developer subagent):
-
-1. **Orders API** (`src/app/api/orders/route.ts`):
-   - GET: List orders filtered by customerId or merchantId
-   - POST: Create order with quantity, delivery address, notes, total price calculation
-   - Validates product existence, quantity range (1-100)
-
-2. **Search API** (`src/app/api/search/route.ts`):
-   - GET: Search across services, products, equipment by query
-   - Supports type filter (service|product|equipment|all) and category filter
-   - Searches AR and FR titles/descriptions
-   - Returns normalized results with category info
-
-3. **Product Ordering in Detail Modal** (`detail-modal.tsx`):
-   - New `OrderFormSection` with quantity selector (+/- buttons)
-   - Delivery address input, notes field
-   - Real-time total price calculation
-   - Submit to /api/orders with success toast
-
-4. **Enhanced Customer Dashboard** (`customer-dashboard.tsx`):
-   - Overview: Stats computed from real API bookings
-   - "My Bookings" tab: Real bookings from /api/bookings with cancel button
-   - "My Orders" tab: Orders from /api/orders with status badges
-   - Loading spinners, empty states
-
-5. **Admin Dashboard Refresh** (`admin-dashboard.tsx`):
-   - RefreshCw button in overview header to re-fetch stats
-
-6. **Profile Editing Enhancement** (`users/[id]/route.ts`):
-   - Added `hasDelivery` to PATCH handler's allowed fields
-
-7. **Translation Keys** (12 new keys in both ar.json and fr.json):
-   - refresh, confirmed, delivered, processing, shipped
-   - cancelBooking, orderCancelled, orderForm, quantity, deliveryAddress, total
-
-### Stage Summary:
-- ✅ 0 lint errors (1 pre-existing font warning only)
-- ✅ 2 new API endpoints: /api/orders (GET+POST), /api/search (GET)
-- ✅ 14 new CSS utility classes + 10 new animations
-- ✅ 8 files modified for styling enhancements
-- ✅ Product ordering flow with quantity selector
-- ✅ Customer dashboard connected to real API (bookings + orders)
-- ✅ Search API with bilingual support
-- ✅ Admin dashboard refresh button
-- ✅ Wave divider, glass cards, mesh gradient, glow effects
-- ✅ Total API endpoints: 15
-- ✅ Dev server compiling successfully, all GET/POST returning 200
-
-### Unresolved / Known Issues:
-- agent-browser cannot properly type into React-controlled inputs inside Radix Dialog portals (testing limitation, not code bug)
-- Detail modal is long — forms require scrolling within the modal
-
-### Recommended Next Steps (Priority Order):
-1. **Image upload system** — Allow providers to upload photos for services/products/equipment via multipart form
-2. **Profile editing UI** — Build frontend profile editing form connected to PATCH /api/users/[id]
-3. **Merchant dashboard orders tab** — Connect merchant dashboard to /api/orders for real order management
-4. **Equipment owner dashboard rentals** — Connect to /api/bookings for rental management
-5. **Craftsman dashboard real data** — Connect services/bookings tabs to real APIs
-6. **Mobile responsiveness polish** — Test all dashboards on mobile viewport
-7. **Real-time notifications** — WebSocket-based notification system for booking updates
-8. **SEO optimization** — Meta tags, structured data (JSON-LD), Open Graph tags
-9. **Performance** — Lazy loading for dashboard components, image optimization
-10. **Payment integration** — CIB/Edahabia payment gateway for Algerian market
+Stage Summary:
+- 0 lint errors, 15 API endpoints, 24+ components
+- 14 new CSS utilities, 10 new animations
+- Orders API, Search API, Product ordering flow
+- Customer dashboard connected to real booking/order APIs
+- Wave divider, glass cards, mesh gradient, glow effects
+- 12 new translation keys
 
 ---
 Task ID: 5
@@ -139,7 +143,6 @@ Stage Summary:
 - Advanced styling: loading screen, 3D tilt cards, floating particles, animated counters
 - Backend: stats API, contact API, booking/review APIs
 - Detail modal: booking form, review form, contact form, image gallery
-- Favorites system, notification center, profile modal
 
 ---
 Task ID: 4
@@ -182,25 +185,26 @@ Stage Summary:
 ## Current Project Assessment
 
 ### Status: STABLE + PRODUCTION-READY
-The DEAL platform is in a highly functional, visually polished state after 6 rounds of development. It features 24+ component files, 15 API endpoints, 3 main browsable sections (Services, Products, Equipment Rental), 5 role-based dashboards with real API connections, product ordering flow, search functionality, and rich micro-interactions.
+The DEAL platform is in a highly functional, visually polished state after 7 rounds of development. It features 25+ component files, 15 API endpoints, 3 main browsable sections (Services, Products, Equipment Rental), 5 role-based dashboards with real API connections, product ordering flow, search functionality, profile editing, and rich micro-interactions.
 
-### Completed in This Phase (Task 6):
-1. 14 new CSS utility classes (glass-card, glow-effect, mesh-gradient, shine-effect, wave-divider, etc.)
-2. 10 new keyframe animations (notification pulse, bounce, gradient shift, etc.)
-3. 2 new API endpoints (/api/orders, /api/search)
-4. Product ordering flow with quantity selector in detail modal
-5. Customer dashboard connected to real booking/order APIs
-6. Admin dashboard refresh button for live stats
-7. Wave divider SVG in footer
-8. Mesh gradient animated background in hero
-9. 3D tab styling with gradient underline
-10. Search API with bilingual AR/FR support
-11. 12 new translation keys (both languages)
+### Completed in This Phase (Task 7):
+1. Profile editing UI with real API integration (GET + PATCH /api/users/[id])
+2. Merchant dashboard connected to real orders API
+3. Craftsman dashboard connected to real services API (with providerId filter)
+4. Equipment owner dashboard connected to real equipment API (with ownerId filter)
+5. Animated hero stats with count-up effect
+6. Skeleton loading states on tab switch (500ms perceived performance)
+7. CSS tooltips on card action buttons (bilingual AR/FR)
+8. NEW ribbon badges on first 2 items per section
+9. Enhanced card image areas with floating icons and dot patterns
+10. Number formatting with comma support for thousands
+11. Category grid enhancements (shimmer, pressed effect, stagger animation)
+12. 7 new CSS utility classes
 
 ### Total API Endpoints (15):
 - POST /api/auth/login, POST /api/auth/register
 - GET /api/users, GET+PATCH /api/users/[id]
-- GET /api/services, GET /api/products, GET /api/equipment
+- GET /api/services (with providerId filter), GET /api/products, GET /api/equipment (with ownerId filter)
 - GET+POST /api/bookings, PATCH /api/bookings
 - GET+POST /api/reviews
 - GET /api/stats
@@ -208,9 +212,12 @@ The DEAL platform is in a highly functional, visually polished state after 6 rou
 - GET+POST /api/orders
 - GET /api/search
 
-### Total Component Files: 24+
+### Total Component Files: 25+
 - Core: page.tsx, layout.tsx, globals.css
-- Components: navbar, hero, footer, search-bar, section-switcher, category-grid, service-card, product-card, equipment-card, rating-stars, detail-modal, auth-modal, notification-center, profile-modal, dashboard-wrapper, animated-counter
+- Components: navbar, hero, footer, search-bar, section-switcher, category-grid, service-card, product-card, equipment-card, rating-stars, detail-modal, auth-modal, notification-center, profile-modal, dashboard-wrapper, animated-counter, skeleton-card
 - Dashboards: admin, craftsman, customer, merchant, equipment-owner
 - Utilities: data/mock, store, utils, hooks
 - UI: 40+ shadcn/ui components
+
+### Total CSS Utility Classes: 30+
+Including: btn-3d, card-3d, glass, glass-card, glow-effect, glow-orange, glow-teal, gradient-animated, gradient-border, mesh-gradient, shine-effect, wave-divider, shimmer, badge-3d, badge-shimmer, pulse-ring, text-gradient, custom-scrollbar, category-3d, card-image-overlay, social-icon, deal-tooltip, card-icon-float, card-new-ribbon, card-dot-pattern, skeleton-shimmer, category-chip-shimmer, category-active-pressed, and more.

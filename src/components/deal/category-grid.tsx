@@ -74,8 +74,8 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
 export default function CategoryGrid({
@@ -87,6 +87,8 @@ export default function CategoryGrid({
   const { getLocalizedValue, t } = useI18n();
   const colors = colorSchemes[colorScheme];
 
+  const totalCount = categories.reduce((sum, cat) => sum + (cat.count || 0), 0);
+
   return (
     <motion.div
       variants={containerVariants}
@@ -97,15 +99,18 @@ export default function CategoryGrid({
       {/* All category button */}
       <motion.button
         variants={itemVariants}
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.03, y: -4 }}
         whileTap={{ scale: 0.97 }}
         onClick={() => onSelectCategory(null)}
-        className={`category-card category-3d flex flex-col items-center gap-2 p-4 transition-all duration-300
+        className={`category-card category-3d group flex flex-col items-center gap-2 p-4 transition-all duration-300 overflow-hidden relative
           ${!activeCategory
-            ? `${colors.active} shadow-lg`
+            ? `category-active-pressed ${colors.active} shadow-lg`
             : `border-gray-200 bg-white ${colors.hover} hover:shadow-md`
           }`}
       >
+        {/* Shimmer overlay on hover */}
+        <div className="absolute inset-0 category-chip-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-deal-orange/10 to-deal-gold/10 ${!activeCategory ? colors.icon : 'text-gray-500'} transition-all duration-300`}>
           <Layers className="w-6 h-6" />
         </div>
@@ -113,28 +118,35 @@ export default function CategoryGrid({
           {t.categories.all}
         </span>
         <span className="text-lg leading-none">📋</span>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${colors.count}`}>
+          {totalCount}
+        </span>
       </motion.button>
 
       {categories.map((cat, i) => {
         const IconComp = iconMap[cat.icon];
         const emoji = emojiMap[cat.icon] || '📦';
+        const isActive = activeCategory === cat.id;
         return (
           <motion.button
             key={cat.id}
             variants={itemVariants}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.03, y: -4 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onSelectCategory(cat.id === activeCategory ? null : cat.id)}
-            className={`category-card category-3d flex flex-col items-center gap-2 p-4 transition-all duration-300 overflow-hidden relative
-              ${activeCategory === cat.id
-                ? `${colors.active} shadow-lg`
+            className={`category-card category-3d group flex flex-col items-center gap-2 p-4 transition-all duration-300 overflow-hidden relative
+              ${isActive
+                ? `category-active-pressed ${colors.active} shadow-lg`
                 : `border-gray-200 bg-white ${colors.hover} hover:shadow-md`
               }`}
           >
             {/* Subtle gradient that shifts on hover */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-0 transition-opacity duration-500 ${activeCategory === cat.id ? 'opacity-100' : 'group-hover:opacity-100'}`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-0 transition-opacity duration-500 ${isActive ? 'opacity-100' : 'group-hover:opacity-100'}`} />
 
-            <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-deal-orange/10 to-deal-gold/10 ${activeCategory === cat.id ? colors.icon : 'text-gray-500'} transition-all duration-300`}>
+            {/* Shimmer overlay on hover */}
+            <div className="absolute inset-0 category-chip-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-[1]" />
+
+            <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-deal-orange/10 to-deal-gold/10 ${isActive ? colors.icon : 'text-gray-500'} transition-all duration-300`}>
               {IconComp && <IconComp className="w-6 h-6" />}
             </div>
             <span className="relative text-sm font-semibold text-center leading-tight">

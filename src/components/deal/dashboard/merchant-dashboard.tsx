@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Package,
   ShoppingCart,
@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   TrendingUp,
   PackageCheck,
-  ImageIcon,
+  Loader2,
+  Inbox,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { products } from '@/lib/data/mock';
@@ -31,11 +32,32 @@ const fadeInUp = {
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   PENDING: { bg: 'bg-deal-orange/10', text: 'text-deal-orange', dot: 'bg-deal-orange' },
   ACCEPTED: { bg: 'bg-deal-teal/10', text: 'text-deal-teal', dot: 'bg-deal-teal' },
-  PROCESSING: { bg: 'bg-blue-100', text: 'text-blue-600', dot: 'bg-blue-500' },
+  PROCESSING: { bg: 'bg-amber-100', text: 'text-amber-600', dot: 'bg-amber-500' },
   SHIPPED: { bg: 'bg-purple-100', text: 'text-purple-600', dot: 'bg-purple-500' },
   COMPLETED: { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-500' },
   CANCELLED: { bg: 'bg-red-50', text: 'text-red-500', dot: 'bg-red-500' },
 };
+
+interface ApiOrder {
+  id: string;
+  quantity: number;
+  totalPrice: number;
+  status: string;
+  createdAt: string;
+  product: {
+    id: string;
+    title: string;
+    titleFr?: string | null;
+    price: number;
+    category?: { name: string; nameFr?: string | null } | null;
+  } | null;
+  customer: {
+    id: string;
+    name: string;
+    nameFr?: string | null;
+    phone?: string | null;
+  } | null;
+}
 
 export default function MerchantDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
@@ -52,13 +74,34 @@ export default function MerchantDashboard() {
 
   const statsReady = useMemo(() => true, []);
 
-  const orders = [
-    { id: 'ORD-001', product: { ar: 'أسمنت بوورتلاند 50كغ', fr: 'Ciment Portland 50kg' }, customer: { ar: 'أحمد بلقاسم', fr: 'Ahmed Belkacem' }, qty: '50', date: '2025-01-15', status: 'PROCESSING', total: 75000 },
-    { id: 'ORD-002', product: { ar: 'طوب أحمر', fr: 'Briques rouges' }, customer: { ar: 'محمد العربي', fr: 'Mohamed Larbi' }, qty: '2000', date: '2025-01-14', status: 'PENDING', total: 120000 },
-    { id: 'ORD-003', product: { ar: 'حديد تسليح 12مم', fr: 'Fer à béton 12mm' }, customer: { ar: 'كريم بوزيد', fr: 'Karim Bouzid' }, qty: '100', date: '2025-01-13', status: 'SHIPPED', total: 95000 },
-    { id: 'ORD-004', product: { ar: 'دهان أبيض 20لتر', fr: 'Peinture blanche 20L' }, customer: { ar: 'سمير حمادي', fr: 'Samir Hamadi' }, qty: '10', date: '2025-01-12', status: 'COMPLETED', total: 45000 },
-    { id: 'ORD-005', product: { ar: 'أنابيب PVC 110مم', fr: 'Tuyaux PVC 110mm' }, customer: { ar: 'نادر مراد', fr: 'Nadir Mourad' }, qty: '30', date: '2025-01-11', status: 'CANCELLED', total: 18000 },
-  ];
+  // Real orders state
+  const [orders, setOrders] = useState<ApiOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersFetched, setOrdersFetched] = useState(false);
+
+  const fetchOrders = useCallback(async () => {
+    if (!currentUser?.id) return;
+    setOrdersLoading(true);
+    try {
+      const res = await fetch(`/api/orders?merchantId=${currentUser.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      }
+    } catch {
+      // silently fail, keep empty array
+    } finally {
+      setOrdersLoading(false);
+      setOrdersFetched(true);
+    }
+  }, [currentUser?.id]);
+
+  // Fetch orders when switching to orders tab
+  useEffect(() => {
+    if (dashboardActiveTab === 'orders' && currentUser?.id && !ordersFetched) {
+      fetchOrders();
+    }
+  }, [dashboardActiveTab, currentUser?.id, ordersFetched, fetchOrders]);
 
   const lowStockProducts = [
     { name: { ar: 'مسامير 6مم', fr: 'Vis 6mm' }, stock: 15, threshold: 50 },
@@ -77,6 +120,17 @@ export default function MerchantDashboard() {
     setSelectedItemId(id);
     setDetailType('product');
     setShowDetailModal(true);
+  };
+
+  const getOrderDisplay = (order: ApiOrder) => {
+    const productName = order.product
+      ? getLocalizedValue(order.product.title, order.product.titleFr)
+      : (locale === 'ar' ? 'منتج غير معروف' : 'Produit inconnu');
+    const customerName = order.customer
+      ? getLocalizedValue(order.customer.name, order.customer.nameFr)
+      : (locale === 'ar' ? 'عميل غير معروف' : 'Client inconnu');
+    const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ') : '';
+    return { productName, customerName, date };
   };
 
   // --- Products Tab ---
@@ -150,46 +204,73 @@ export default function MerchantDashboard() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-orange via-deal-orange-dark to-deal-gold p-6 text-white">
           <div className="absolute inset-0 hero-pattern opacity-20" />
           <div className="absolute -top-10 -end-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative z-10">
-            <h2 className="text-2xl font-black">{t.dashboard.orders} 🛒</h2>
-            <p className="mt-1 text-white/80 text-sm">{locale === 'ar' ? 'جميع الطلبات الواردة' : 'Toutes les commandes reçues'}</p>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-black">{t.dashboard.orders} 🛒</h2>
+              <p className="mt-1 text-white/80 text-sm">{locale === 'ar' ? 'جميع الطلبات الواردة' : 'Toutes les commandes reçues'}</p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={fetchOrders}
+              className="btn-3d-sm text-white text-xs"
+              style={{
+                background: 'linear-gradient(180deg, #FF8C5A 0%, #FF6B35 100%)',
+                boxShadow: '0 4px 0 0 #CC5529, 0 6px 8px rgba(255,107,53,0.25)',
+              }}
+            >
+              {t.dashboard.refresh}
+            </motion.button>
           </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6">
-          <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
-            {orders.map((order, i) => {
-              const status = statusConfig[order.status] || statusConfig.PENDING;
-              return (
-                <motion.div
-                  key={order.id}
-                  custom={i}
-                  variants={fadeInUp}
-                  initial="hidden"
-                  animate="visible"
-                  whileHover={{ x: 4 }}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-bold text-muted-foreground bg-gray-200 px-1.5 py-0.5 rounded">{order.id}</span>
+          {ordersLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-deal-orange animate-spin" />
+              <span className="ms-3 text-sm text-muted-foreground">{t.common.loading}</span>
+            </div>
+          ) : orders.length === 0 && ordersFetched ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Inbox className="w-12 h-12 text-gray-300 mb-3" />
+              <p className="text-sm font-bold text-muted-foreground">{t.dashboard.noOrders}</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+              {orders.map((order, i) => {
+                const status = statusConfig[order.status] || statusConfig.PENDING;
+                const { productName, customerName, date } = getOrderDisplay(order);
+                return (
+                  <motion.div
+                    key={order.id}
+                    custom={i}
+                    variants={fadeInUp}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover={{ x: 4 }}
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold text-muted-foreground bg-gray-200 px-1.5 py-0.5 rounded">{order.id.slice(-6)}</span>
+                      </div>
+                      <p className="font-bold text-sm text-deal-navy truncate mt-1">{productName}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {customerName} • {t.common.currency} {order.quantity} • {date}
+                      </p>
                     </div>
-                    <p className="font-bold text-sm text-deal-navy truncate mt-1">{getLocalizedValue(order.product.ar, order.product.fr)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {getLocalizedValue(order.customer.ar, order.customer.fr)} • {t.common.currency} {order.qty} • {order.date}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                    <span className="text-sm font-bold text-deal-navy hidden sm:block">{order.total.toLocaleString()} {t.common.currency}</span>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold ${status.bg} ${status.text}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                      {order.status}
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                      <span className="text-sm font-bold text-deal-navy hidden sm:block">{order.totalPrice.toLocaleString()} {t.common.currency}</span>
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold ${status.bg} ${status.text}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                        {t.dashboard[order.status.toLowerCase() as keyof typeof t.dashboard] || order.status}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </div>
     );
@@ -256,39 +337,51 @@ export default function MerchantDashboard() {
             <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.orders}</h3>
             <ShoppingCart className="w-5 h-5 text-muted-foreground" />
           </div>
-          <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-            {orders.slice(0, 4).map((order, i) => {
-              const status = statusConfig[order.status] || statusConfig.PENDING;
-              return (
-                <motion.div
-                  key={order.id}
-                  custom={i}
-                  variants={fadeInUp}
-                  initial="hidden"
-                  animate="visible"
-                  whileHover={{ x: 4 }}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-bold text-muted-foreground bg-gray-200 px-1.5 py-0.5 rounded">{order.id}</span>
+          {ordersLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-deal-orange animate-spin" />
+            </div>
+          ) : orders.length === 0 && ordersFetched ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Inbox className="w-10 h-10 text-gray-300 mb-2" />
+              <p className="text-sm font-bold text-muted-foreground">{t.dashboard.noOrders}</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
+              {orders.slice(0, 4).map((order, i) => {
+                const status = statusConfig[order.status] || statusConfig.PENDING;
+                const { productName, customerName, date } = getOrderDisplay(order);
+                return (
+                  <motion.div
+                    key={order.id}
+                    custom={i}
+                    variants={fadeInUp}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover={{ x: 4 }}
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold text-muted-foreground bg-gray-200 px-1.5 py-0.5 rounded">{order.id.slice(-6)}</span>
+                      </div>
+                      <p className="font-bold text-sm text-deal-navy truncate mt-1">{productName}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {customerName} • {t.common.currency} {order.quantity} • {date}
+                      </p>
                     </div>
-                    <p className="font-bold text-sm text-deal-navy truncate mt-1">{getLocalizedValue(order.product.ar, order.product.fr)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {getLocalizedValue(order.customer.ar, order.customer.fr)} • {t.common.currency} {order.qty} • {order.date}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                    <span className="text-sm font-bold text-deal-navy hidden sm:block">{order.total.toLocaleString()} {t.common.currency}</span>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold ${status.bg} ${status.text}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                      {order.status}
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                      <span className="text-sm font-bold text-deal-navy hidden sm:block">{order.totalPrice.toLocaleString()} {t.common.currency}</span>
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold ${status.bg} ${status.text}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                        {t.dashboard[order.status.toLowerCase() as keyof typeof t.dashboard] || order.status}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         {/* Low Stock */}

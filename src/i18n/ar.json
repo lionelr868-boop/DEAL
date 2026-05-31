@@ -307,6 +307,12 @@
     "hourlyRate": "السعر بالساعة",
     "saving": "جاري الحفظ...",
     "sendReview": "إرسال",
-    "reviews": "التقييمات"
+    "reviews": "التقييمات",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "noServices": "لا توجد خدمات",
+    "noEquipment": "لا توجد معدات",
+    "profileView": "عرض الملف",
+    "fetchingData": "جاري تحميل البيانات..."
   }
 }

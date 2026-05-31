@@ -307,6 +307,12 @@
     "hourlyRate": "Tarif horaire",
     "saving": "Enregistrement en cours...",
     "sendReview": "Envoyer",
-    "reviews": "Avis"
+    "reviews": "Avis",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "noServices": "Aucun service",
+    "noEquipment": "Aucun équipement",
+    "profileView": "Voir le profil",
+    "fetchingData": "Chargement des données..."
   }
 }

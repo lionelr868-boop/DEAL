@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Wrench, ShoppingBag, Truck, ChevronDown, ChevronUp } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
@@ -9,6 +9,7 @@ import CategoryGrid from './category-grid';
 import ServiceCard from './service-card';
 import ProductCard from './product-card';
 import EquipmentCard from './equipment-card';
+import { SkeletonCard } from './skeleton-card';
 import { services, products, equipmentList, serviceCategories, productCategories } from '@/lib/data/mock';
 
 const tabs = [
@@ -40,7 +41,9 @@ export default function SectionSwitcher() {
   const { activeSection, setActiveSection, searchQuery } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start end', 'end start'],
@@ -117,12 +120,24 @@ export default function SectionSwitcher() {
     : activeSection === 'products' ? visibleProducts.length
     : visibleEquipment.length;
 
-  // Reset show more when switching tabs or changing search
-  const handleTabChange = (key: 'services' | 'products' | 'equipment') => {
+  // Reset show more when switching tabs or changing search, show skeleton for 500ms
+  const handleTabChange = useCallback((key: 'services' | 'products' | 'equipment') => {
     setActiveSection(key);
     setSelectedCategory(null);
     setShowAll(false);
-  };
+    setIsLoading(true);
+    if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
+    loadingTimerRef.current = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+  }, [setActiveSection]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
+    };
+  }, []);
 
   const handleShowMore = () => setShowAll(true);
   const handleShowLess = () => setShowAll(false);
@@ -204,8 +219,25 @@ export default function SectionSwitcher() {
 
         {/* Content area */}
         <AnimatePresence mode="wait">
+          {/* Loading skeleton */}
+          {isLoading && (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+            >
+              <SkeletonCard
+                variant={activeSection === 'services' ? 'service' : activeSection === 'products' ? 'product' : 'equipment'}
+                count={ITEMS_PER_PAGE}
+              />
+            </motion.div>
+          )}
+
           {/* Services Tab */}
-          {activeSection === 'services' && (
+          {!isLoading && activeSection === 'services' && (
             <motion.div
               key="services"
               id="services-section"
@@ -243,7 +275,7 @@ export default function SectionSwitcher() {
           )}
 
           {/* Products Tab */}
-          {activeSection === 'products' && (
+          {!isLoading && activeSection === 'products' && (
             <motion.div
               key="products"
               id="products-section"
@@ -281,7 +313,7 @@ export default function SectionSwitcher() {
           )}
 
           {/* Equipment Tab */}
-          {activeSection === 'equipment' && (
+          {!isLoading && activeSection === 'equipment' && (
             <motion.div
               key="equipment"
               id="equipment-section"
@@ -312,7 +344,7 @@ export default function SectionSwitcher() {
         </AnimatePresence>
 
         {/* Show more / Show less button */}
-        {needsShowMore && (
+        {!isLoading && needsShowMore && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

@@ -2,14 +2,15 @@
 
 import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { ArrowDown, Users, ShoppingBag, Truck, ThumbsUp, Search, CheckCircle } from 'lucide-react';
+import { ArrowDown, Users, ShoppingBag, Truck, Search, CheckCircle, Wrench, Star } from 'lucide-react';
 import { useI18n } from '@/lib/store';
+import { AnimatedCounter } from './animated-counter';
 
-function StatCard({ stat, statValue, statLabel, index }: {
-  stat: { key: string; icon: typeof Users; color: string; delay: number };
-  statValue: string;
+function StatCard({ stat, statLabel, index, isInView }: {
+  stat: { key: string; icon: typeof Users; color: string; delay: number; target: string | number };
   statLabel: string;
   index: number;
+  isInView: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const IconComp = stat.icon;
@@ -24,8 +25,9 @@ function StatCard({ stat, statValue, statLabel, index }: {
     <motion.div
       key={stat.key}
       initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 1 + stat.delay }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: stat.delay }}
       whileHover={{ y: -8 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -49,7 +51,7 @@ function StatCard({ stat, statValue, statLabel, index }: {
           : { backgroundPosition: '0% 50%' }
         }
         transition={{ duration: 2, ease: 'linear' }}
-        className="absolute inset-0 rounded-2xl opacity-0"
+        className="absolute inset-0 rounded-2xl"
         style={{
           background: `linear-gradient(90deg, transparent, ${glowColors[stat.key] || 'rgba(255,107,53,0.15)'}, transparent)`,
           backgroundSize: '200% 100%',
@@ -62,7 +64,16 @@ function StatCard({ stat, statValue, statLabel, index }: {
           <IconComp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         <div className="text-2xl sm:text-3xl font-black text-deal-navy">
-          {statValue}
+          {isInView ? (
+            <AnimatedCounter
+              target={stat.target}
+              duration={1500}
+              startOnView={true}
+              isInView={true}
+            />
+          ) : (
+            <span>{typeof stat.target === 'string' ? stat.target.match(/^[^0-9]*/)?.[0] || '0' : '0'}</span>
+          )}
         </div>
         <div className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
           {statLabel}
@@ -171,28 +182,26 @@ function HowItWorksSection() {
 export default function Hero() {
   const { t } = useI18n();
   const heroRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const statsInView = useInView(statsRef, { once: true, margin: '-50px' });
+
   const { scrollY } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
   });
 
   const bgY = useTransform(scrollY, [0, 500], [0, 150]);
+  const tealBlobY = useTransform(scrollY, [0, 500], [0, 100]);
+  const goldBlobY = useTransform(scrollY, [0, 500], [0, 80]);
   const contentY = useTransform(scrollY, [0, 500], [0, 60]);
   const opacity = useTransform(scrollY, [0, 350], [1, 0]);
 
   const stats = [
-    { key: 'craftsmen', icon: Users, color: 'from-deal-orange to-deal-orange-dark', delay: 0 },
-    { key: 'products', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.2 },
-    { key: 'equipment', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.4 },
-    { key: 'satisfaction', icon: ThumbsUp, color: 'from-deal-orange to-deal-gold', delay: 0.6 },
+    { key: 'craftsmen', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', delay: 0, target: '+200' },
+    { key: 'products', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.15, target: '+500' },
+    { key: 'equipment', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.3, target: '+100' },
+    { key: 'satisfaction', icon: Star, color: 'from-deal-orange to-deal-gold', delay: 0.45, target: '98%' },
   ];
-
-  const statValues: Record<string, string> = {
-    craftsmen: '+200',
-    products: '+500',
-    equipment: '+100',
-    satisfaction: '98%',
-  };
 
   const statLabels: Record<string, string> = {
     craftsmen: t.hero.stats.craftsmen,
@@ -232,31 +241,32 @@ export default function Hero() {
       <motion.div
         animate={{ x: [0, -40, 20, 0], y: [0, 20, -30, 0], scale: [1, 0.9, 1.2, 1] }}
         transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-        style={{ y: useTransform(scrollY, [0, 500], [0, 100]) }}
+        style={{ y: tealBlobY }}
         className="absolute bottom-20 end-10 w-96 h-96 rounded-full bg-deal-teal/20 blur-3xl"
       />
       <motion.div
         animate={{ x: [0, 20, -10, 0], y: [0, -20, 10, 0] }}
         transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-        style={{ y: useTransform(scrollY, [0, 500], [0, 80]) }}
+        style={{ y: goldBlobY }}
         className="absolute top-1/2 start-1/3 w-64 h-64 rounded-full bg-deal-gold/15 blur-3xl"
       />
 
       {/* Floating decorative circles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
-          className={`absolute rounded-full border border-white/10 ${
-            i % 3 === 0 ? 'w-3 h-3' : i % 3 === 1 ? 'w-2 h-2' : 'w-4 h-4'
-          }`}
-          style={{
-            top: `${15 + i * 15}%`,
-            left: `${10 + i * 15}%`,
-          }}
-        />
-      ))}
+      {[...Array(6)].map((_, i) => {
+        const sizeClass = i % 3 === 0 ? 'w-3 h-3' : i % 3 === 1 ? 'w-2 h-2' : 'w-4 h-4';
+        return (
+          <motion.div
+            key={i}
+            animate={{ y: [0, -20, 0] }}
+            transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
+            className={`absolute rounded-full border border-white/10 ${sizeClass}`}
+            style={{
+              top: `${15 + i * 15}%`,
+              left: `${10 + i * 15}%`,
+            }}
+          />
+        );
+      })}
 
       {/* Floating particle dots */}
       {(() => {
@@ -370,20 +380,22 @@ export default function Hero() {
           </motion.div>
         </motion.div>
 
-        {/* Stat cards */}
+        {/* Stat cards - animate when in view */}
         <motion.div
+          ref={statsRef}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
           className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto"
         >
           {stats.map((stat, i) => (
             <StatCard
               key={stat.key}
               stat={stat}
-              statValue={statValues[stat.key]}
               statLabel={statLabels[stat.key]}
               index={i}
+              isInView={statsInView}
             />
           ))}
         </motion.div>
@@ -404,5 +416,4 @@ export default function Hero() {
     </section>
   );
 }
-
 
