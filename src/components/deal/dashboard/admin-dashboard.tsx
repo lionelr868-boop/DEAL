@@ -241,6 +241,19 @@ export default function AdminDashboard() {
     );
   }, [dbUsers, userSearch]);
 
+  // User role counts for stats cards
+  const userRoleCounts = useMemo(() => {
+    const counts: Record<string, { total: number; active: number; suspended: number }> = {};
+    for (const u of dbUsers) {
+      const role = u.role.toLowerCase();
+      if (!counts[role]) counts[role] = { total: 0, active: 0, suspended: 0 };
+      counts[role].total++;
+      if (u.isActive) counts[role].active++;
+      else counts[role].suspended++;
+    }
+    return counts;
+  }, [dbUsers]);
+
   // Fallback stats
   const fallbackStats = [
     { label: t.dashboard.customers, value: '0', icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange', key: 'customers' },
@@ -306,6 +319,55 @@ export default function AdminDashboard() {
             <p className="mt-1 text-white/70 text-sm">{locale === 'ar' ? 'إدارة جميع المستخدمين المسجلين' : 'Gérer tous les utilisateurs inscrits'}</p>
           </div>
         </motion.div>
+
+        {/* User Count Stats by Role */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { role: 'customer', icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange' },
+            { role: 'craftsman', icon: Wrench, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal' },
+            { role: 'merchant', icon: Package, bg: 'bg-deal-gold/10', iconColor: 'text-deal-gold-dark' },
+            { role: 'equipment_owner', icon: Truck, bg: 'bg-purple-50', iconColor: 'text-purple-500' },
+          ].map((card, i) => {
+            const data = userRoleCounts[card.role] || { total: 0, active: 0, suspended: 0 };
+            const Icon = card.icon;
+            return (
+              <motion.div
+                key={card.role}
+                custom={i}
+                variants={fadeInUp}
+                initial="hidden"
+                animate="visible"
+                whileHover={{ y: -2 }}
+                className="rounded-xl p-3 bg-white border border-gray-100"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center`}>
+                    <Icon className={`w-4 h-4 ${card.iconColor}`} />
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground">
+                    {locale === 'ar' ? (roleLabels[card.role]?.ar || card.role) : (roleLabels[card.role]?.fr || card.role)}
+                  </span>
+                </div>
+                <div className="flex items-end gap-3">
+                  <div>
+                    <p className="text-lg font-black text-deal-navy">{data.total}</p>
+                    <p className="text-[9px] text-muted-foreground">{locale === 'ar' ? 'إجمالي' : 'Total'}</p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-600">
+                      {data.active} {locale === 'ar' ? 'نشط' : 'Act.'}
+                    </span>
+                    {data.suspended > 0 && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-50 text-red-500">
+                        {data.suspended} {locale === 'ar' ? 'معطل' : 'Susp.'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
 
         {/* Search & Filter Bar */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-4 sm:p-5">

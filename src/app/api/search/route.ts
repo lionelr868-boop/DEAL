@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 
+type SortOption = 'price-asc' | 'price-desc' | 'rating' | 'newest' | 'popular';
+
+function buildOrderBy(sort: SortOption): Record<string, string> {
+  switch (sort) {
+    case 'price-asc': return { price: 'asc' };
+    case 'price-desc': return { price: 'desc' };
+    case 'rating': return { rating: 'desc' };
+    case 'newest': return { createdAt: 'desc' };
+    case 'popular': return { totalReviews: 'desc' };
+    default: return { rating: 'desc' };
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,14 +24,47 @@ export async function GET(request: NextRequest) {
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const minRating = searchParams.get('minRating');
+    const available = searchParams.get('available');
+    const sort = (searchParams.get('sort') || 'rating') as SortOption;
 
     if (!q) {
-      return NextResponse.json({ results: [], total: 0 });
+      return NextResponse.json({
+        services: [],
+        products: [],
+        equipment: [],
+        total: 0,
+      });
     }
 
-    const results: Array<{
+    const searchFilter: Prisma.StringFilter = {
+      contains: q,
+    };
+
+    // Build price filter
+    const priceFilter: Prisma.FloatFilter | undefined = (() => {
+      const conditions: Prisma.FloatFilter[] = [];
+      if (minPrice) {
+        conditions.push({ gte: parseFloat(minPrice) });
+      }
+      if (maxPrice) {
+        conditions.push({ lte: parseFloat(maxPrice) });
+      }
+      if (conditions.length === 0) return undefined;
+      return { ...conditions[0], ...(conditions[1] || {}) };
+    })();
+
+    // Build rating filter
+    const ratingFilter: Prisma.FloatFilter | undefined = minRating
+      ? { gte: parseFloat(minRating) }
+      : undefined;
+
+    // Build availability filter
+    const availabilityFilter = available === 'true' ? true : undefined;
+
+    // --- Services ---
+    const services: Array<{
       id: string;
-      type: 'service' | 'product' | 'equipment';
+      type: 'service';
       title: string;
       titleFr: string | null;
       description: string;
@@ -32,76 +78,39 @@ export async function GET(request: NextRequest) {
       categoryFr?: string | null;
     }> = [];
 
-    const searchFilter: Prisma.StringFilter = {
-      contains: q,
-    };
-
-    // Build price and rating filters
-    const priceFilter: Prisma.FloatFilter | undefined = (() => {
-      const conditions: Prisma.FloatFilter[] = [];
-      if (minPrice) {
-        conditions.push({ gte: parseFloat(minPrice) });
-      }
-      if (maxPrice) {
-        conditions.push({ lte: parseFloat(maxPrice) });
-      }
-      if (conditions.length === 0) return undefined;
-      return { ...conditions[0], ...(conditions[1] || {}) };
-    })();
-
-    const ratingFilter: Prisma.FloatFilter | undefined = minRating
-      ? { gte: parseFloat(minRating) }
-      : undefined;
-
-    const serviceWhere: Prisma.ServiceWhereInput = {
-      OR: [
-        { title: searchFilter },
-        { titleFr: searchFilter },
-        { description: searchFilter },
-        { descriptionFr: searchFilter },
-      ],
-      ...(category ? { categoryId: category } : {}),
-      ...(priceFilter ? { price: priceFilter } : {}),
-      ...(ratingFilter ? { rating: ratingFilter } : {}),
-      isAvailable: true,
-    };
-
-    const productWhere: Prisma.ProductWhereInput = {
-      OR: [
-        { title: searchFilter },
-        { titleFr: searchFilter },
-        { description: searchFilter },
-        { descriptionFr: searchFilter },
-      ],
-      ...(category ? { categoryId: category } : {}),
-      ...(priceFilter ? { price: priceFilter } : {}),
-      ...(ratingFilter ? { rating: ratingFilter } : {}),
-      isAvailable: true,
-    };
-
-    const equipmentWhere: Prisma.EquipmentWhereInput = {
-      OR: [
-        { title: searchFilter },
-        { titleFr: searchFilter },
-        { description: searchFilter },
-        { descriptionFr: searchFilter },
-      ],
-      ...(priceFilter ? { dailyPrice: priceFilter } : {}),
-      ...(ratingFilter ? { rating: ratingFilter } : {}),
-      status: 'AVAILABLE',
-    };
-
-    // Search services
     if (type === 'all' || type === 'service') {
-      const services = await db.service.findMany({
+      const serviceWhere: Prisma.ServiceWhereInput = {
+        OR: [
+          { title: searchFilter },
+          { titleFr: searchFilter },
+          { description: searchFilter },
+          { descriptionFr: searchFilter },
+        ],
+        ...(category ? { categoryId: category } : {}),
+        ...(priceFilter ? { price: priceFilter } : {}),
+        ...(ratingFilter ? { rating: ratingFilter } : {}),
+        ...(availabilityFilter !== undefined ? { isAvailable: availabilityFilter } : {}),
+        isAvailable: true,
+      };
+
+      const serviceOrderBy = (() => {
+        const base = buildOrderBy(sort);
+        if (sort === 'price-asc' || sort === 'price-desc') return { price: base.price };
+        if (sort === 'rating') return { rating: base.rating };
+        if (sort === 'newest') return { createdAt: base.createdAt };
+        if (sort === 'popular') return { totalReviews: base.totalReviews };
+        return { rating: 'desc' };
+      })();
+
+      const serviceResults = await db.service.findMany({
         where: serviceWhere,
         include: { category: { select: { name: true, nameFr: true } } },
-        orderBy: { rating: 'desc' },
-        take: 20,
+        orderBy: serviceOrderBy,
+        take: 30,
       });
 
-      for (const s of services) {
-        results.push({
+      for (const s of serviceResults) {
+        services.push({
           id: s.id,
           type: 'service',
           title: s.title,
@@ -119,17 +128,56 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Search products
+    // --- Products ---
+    const products: Array<{
+      id: string;
+      type: 'product';
+      title: string;
+      titleFr: string | null;
+      description: string;
+      descriptionFr: string | null;
+      price: number;
+      rating: number;
+      totalReviews: number;
+      isAvailable: boolean;
+      createdAt: string;
+      category?: string;
+      categoryFr?: string | null;
+    }> = [];
+
     if (type === 'all' || type === 'product') {
-      const products = await db.product.findMany({
+      const productWhere: Prisma.ProductWhereInput = {
+        OR: [
+          { title: searchFilter },
+          { titleFr: searchFilter },
+          { description: searchFilter },
+          { descriptionFr: searchFilter },
+        ],
+        ...(category ? { categoryId: category } : {}),
+        ...(priceFilter ? { price: priceFilter } : {}),
+        ...(ratingFilter ? { rating: ratingFilter } : {}),
+        ...(availabilityFilter !== undefined ? { isAvailable: availabilityFilter } : {}),
+        isAvailable: true,
+      };
+
+      const productOrderBy = (() => {
+        const base = buildOrderBy(sort);
+        if (sort === 'price-asc' || sort === 'price-desc') return { price: base.price };
+        if (sort === 'rating') return { rating: base.rating };
+        if (sort === 'newest') return { createdAt: base.createdAt };
+        if (sort === 'popular') return { totalReviews: base.totalReviews };
+        return { rating: 'desc' };
+      })();
+
+      const productResults = await db.product.findMany({
         where: productWhere,
         include: { category: { select: { name: true, nameFr: true } } },
-        orderBy: { rating: 'desc' },
-        take: 20,
+        orderBy: productOrderBy,
+        take: 30,
       });
 
-      for (const p of products) {
-        results.push({
+      for (const p of productResults) {
+        products.push({
           id: p.id,
           type: 'product',
           title: p.title,
@@ -147,16 +195,54 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Search equipment
+    // --- Equipment ---
+    const equipment: Array<{
+      id: string;
+      type: 'equipment';
+      title: string;
+      titleFr: string | null;
+      description: string;
+      descriptionFr: string | null;
+      price: number;
+      rating: number;
+      totalReviews: number;
+      isAvailable: boolean;
+      createdAt: string;
+      category?: string;
+      categoryFr?: string | null;
+    }> = [];
+
     if (type === 'all' || type === 'equipment') {
-      const equipmentList = await db.equipment.findMany({
+      const equipmentWhere: Prisma.EquipmentWhereInput = {
+        OR: [
+          { title: searchFilter },
+          { titleFr: searchFilter },
+          { description: searchFilter },
+          { descriptionFr: searchFilter },
+        ],
+        ...(priceFilter ? { dailyPrice: priceFilter } : {}),
+        ...(ratingFilter ? { rating: ratingFilter } : {}),
+        ...(availabilityFilter !== undefined ? { status: 'AVAILABLE' } : {}),
+        status: 'AVAILABLE',
+      };
+
+      const equipmentOrderBy = (() => {
+        const base = buildOrderBy(sort);
+        if (sort === 'price-asc' || sort === 'price-desc') return { dailyPrice: base.price };
+        if (sort === 'rating') return { rating: base.rating };
+        if (sort === 'newest') return { createdAt: base.createdAt };
+        if (sort === 'popular') return { totalReviews: base.totalReviews };
+        return { rating: 'desc' };
+      })();
+
+      const equipmentResults = await db.equipment.findMany({
         where: equipmentWhere,
-        orderBy: { rating: 'desc' },
-        take: 20,
+        orderBy: equipmentOrderBy,
+        take: 30,
       });
 
-      for (const e of equipmentList) {
-        results.push({
+      for (const e of equipmentResults) {
+        equipment.push({
           id: e.id,
           type: 'equipment',
           title: e.title,
@@ -172,7 +258,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ results, total: results.length });
+    const total = services.length + products.length + equipment.length;
+
+    return NextResponse.json({
+      services,
+      products,
+      equipment,
+      total,
+    });
   } catch (error) {
     console.error('Search error:', error);
     return NextResponse.json(

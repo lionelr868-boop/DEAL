@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/deal/navbar';
 import Hero from '@/components/deal/hero';
 import SectionSwitcher from '@/components/deal/section-switcher';
+import TestimonialsSection from '@/components/deal/testimonials-section';
+import FAQSection from '@/components/deal/faq-section';
 import AuthModal from '@/components/deal/auth-modal';
 import DetailModal from '@/components/deal/detail-modal';
 import ProfileModal from '@/components/deal/profile-modal';
@@ -206,6 +208,34 @@ export default function Home() {
               <main className="flex-1">
                 <Hero />
                 <SectionSwitcher />
+
+                {/* Wave divider after sections */}
+                <div className="wave-section-divider">
+                  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,30 C360,60 720,0 1080,30 C1260,45 1380,50 1440,40 L1440,60 L0,60 Z" fill="rgba(255,107,53,0.04)" />
+                    <path d="M0,40 C360,15 720,55 1080,25 C1260,15 1380,35 1440,45 L1440,60 L0,60 Z" fill="rgba(13,148,136,0.03)" />
+                  </svg>
+                </div>
+
+                <TestimonialsSection />
+
+                {/* Wave divider between testimonials and FAQ */}
+                <div className="wave-section-divider" style={{ transform: 'scaleY(-1)' }}>
+                  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,20 C480,50 960,0 1440,30 L1440,60 L0,60 Z" fill="rgba(245,158,11,0.03)" />
+                    <path d="M0,35 C480,10 960,50 1440,20 L1440,60 L0,60 Z" fill="rgba(13,148,136,0.04)" />
+                  </svg>
+                </div>
+
+                <FAQSection />
+
+                {/* Wave divider before footer */}
+                <div className="wave-section-divider">
+                  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,25 C240,55 480,5 720,30 C960,55 1200,10 1440,35 L1440,60 L0,60 Z" fill="rgba(30,41,59,0.04)" />
+                    <path d="M0,40 C240,15 480,50 720,25 C960,5 1200,45 1440,20 L1440,60 L0,60 Z" fill="rgba(255,107,53,0.03)" />
+                  </svg>
+                </div>
               </main>
               <Footer />
             </motion.div>

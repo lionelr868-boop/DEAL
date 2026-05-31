@@ -1,4 +1,232 @@
 ---
+Task ID: 8
+Agent: Main Agent + Subagents (frontend-styling-expert + full-stack-developer)
+Task: Testimonials Section, FAQ Section, Advanced Search, Enhanced Cards, New CSS Classes
+
+Work Log:
+- Read worklog.md and assessed project status (Tasks 1-7 complete, platform stable)
+- 0 lint errors (1 pre-existing font warning only)
+- Performed QA via agent-browser + VLM analysis:
+  - Homepage: ✅ Hero with mesh gradient, stat counters, search bar, cards, NEW testimonials carousel, FAQ section
+  - Testimonials: ✅ Auto-scrolling carousel confirmed visible with 6 bilingual reviews
+  - APIs: ✅ All 17+ endpoints returning 200
+  - Search API: ✅ Returns grouped results with sort/filter support
+  - Testimonials API: ✅ Returns 6 seeded testimonials
+
+### Styling Improvements (Task 8-a):
+
+1. **Testimonials Section** (`testimonials-section.tsx`):
+   - Auto-scrolling carousel (5s interval) with pause-on-hover
+   - 6 mock testimonials (mix of Arabic/French names and reviews)
+   - Avatar with gradient circle + initials, name, role, star rating, review text, date
+   - Prev/next arrows with hover-lift, navigation dots with active/inactive states
+   - Framer Motion slide transitions with direction awareness
+   - Glassmorphism card with animated gradient border
+   - Section header with `.section-deco-line` dots and sparkle icon
+
+2. **FAQ Section** (`faq-section.tsx`):
+   - 6 FAQ items using shadcn Accordion component
+   - Bilingual questions/answers in Arabic and French
+   - Numbered items with gradient circle badges
+   - Staggered reveal animation with whileInView
+   - Glass card container, hover lift with start border accent
+
+3. **Enhanced Card Effects**:
+   - Applied `card-cursor-shadow cursor-shadow-{color}` to service, product, equipment cards
+   - Cursor-reactive shadow classes (orange/teal/gold variants)
+
+4. **Wave Dividers**:
+   - 3 SVG wave dividers between sections (sections→testimonials, testimonials→FAQ, FAQ→footer)
+   - Using `.wave-section-divider` CSS class
+
+### New Features (Task 8-b):
+
+1. **Enhanced Search API** (`/api/search/route.ts`):
+   - Now returns grouped results: `{ services: [...], products: [...], equipment: [...], total: N }`
+   - Supports: sort (price-asc, price-desc, rating, newest, popular)
+   - Supports: minPrice, maxPrice, minRating, available filters
+   - Supports: type filter (all, service, product, equipment)
+   - Bilingual search across Arabic and French titles/descriptions
+
+2. **Testimonials API** (`/api/testimonials/route.ts`):
+   - GET: List testimonials with optional limit & featured filter
+   - POST: Create new testimonial (admin-quality)
+   - DELETE: Delete testimonial with auth header check
+   - Testimonial model added to Prisma schema
+   - 6 testimonials seeded in database
+
+3. **Advanced Search Component** (`advanced-search.tsx`):
+   - Full search panel with Framer Motion animations
+   - Filter controls for price range, rating, availability
+   - Sort dropdown, type tabs, real-time results
+   - Bilingual support
+
+4. **Enhanced Search Bar** (`search-bar.tsx`):
+   - Advanced search toggle button (desktop)
+   - Mobile filter panel with price range inputs and star rating selector
+   - Filter pill badges showing active filters
+   - Keyboard shortcut: Escape closes panels
+   - Fixed search result parsing to handle grouped API response
+
+5. **Admin Dashboard Enhancements** (`admin-dashboard.tsx`):
+   - User count stat cards by role
+   - User management tab foundation
+
+6. **i18n Additions**:
+   - 42+ new translation keys (search, testimonials, admin, common)
+   - Both Arabic and French translations
+
+### Bug Fixes:
+- Fixed duplicate `testimonials` key conflict between styling and features agents in ar.json
+  - Renamed features agent's key to `testimonialsApi` in ar.json
+  - Merged testimonials array into existing testimonials object in fr.json
+- Fixed search-bar parsing: API returns grouped `{services, products, equipment}`, not flat `results`
+- Removed unused imports: `StarIcon`, `ChevronDown`, `RatingStars` from search-bar
+
+### New CSS Classes (16):
+`.testimonial-card`, `.faq-item`, `.carousel-dot`, `.card-cursor-shadow`, `.text-shadow-glow`, `.text-shadow-glow-teal`, `.hover-lift`, `.hover-scale-subtle`, `.stagger-children > *`, `.marquee`, `.gradient-text-animated`, `.cursor-shadow-orange`, `.cursor-shadow-teal`, `.cursor-shadow-gold`, `.wave-section-divider`, `.section-fade`
+
+### Stage Summary:
+- ✅ 0 lint errors (1 pre-existing font warning)
+- ✅ 3 new component files (testimonials, faq, advanced-search)
+- ✅ 1 new API route (testimonials)
+- ✅ 1 enhanced API route (search)
+- ✅ 1 new Prisma model (Testimonial)
+- ✅ 8+ files modified
+- ✅ 16 new CSS utility classes
+- ✅ 42+ new i18n keys
+- ✅ 6 testimonials seeded in database
+- ✅ All APIs verified returning 200
+
+### Total API Endpoints (17):
+- POST /api/auth/login, POST /api/auth/register
+- GET /api/users, GET+PATCH /api/users/[id]
+- GET /api/services (with providerId filter), GET /api/products, GET /api/equipment (with ownerId filter)
+- GET+POST /api/bookings, PATCH /api/bookings
+- GET+POST /api/reviews
+- GET /api/stats
+- POST /api/contact
+- GET+POST /api/orders
+- GET /api/search (enhanced with sort/filters)
+- GET+POST+DELETE /api/testimonials (NEW)
+
+### Total Component Files: 28+
+- Previous 25+ components
+- NEW: testimonials-section.tsx, faq-section.tsx, advanced-search.tsx
+
+### Unresolved / Known Issues:
+- Dev server occasional memory instability in sandbox environment (not a code bug)
+- Testimonials section currently uses i18n mock data; could be connected to API for real testimonials
+- Advanced search panel could be further enhanced with category chips from API
+
+### Recommended Next Steps (Priority Order):
+1. **Mobile responsiveness deep testing** — Test all sections on 320px/375px/768px viewports
+2. **Image upload system** — Allow providers to upload photos for services/products/equipment
+3. **Real-time notifications** — WebSocket-based system for booking/order updates
+4. **SEO optimization** — Meta tags, Open Graph, sitemap for Algerian market
+5. **Payment integration** — CIB/Edahabia payment gateway
+6. **Performance optimization** — Lazy loading for below-fold components
+7. **Admin user management** — Full CRUD for user enable/disable
+8. **Provider onboarding wizard** — Step-by-step profile setup
+9. **Review moderation tools** — Admin review management panel
+10. **Location-based search** — Geolocation filter for nearby services
+
+---
+Task ID: 8-b
+Agent: full-stack-developer (Subagent)
+Task: Enhanced Search API, Testimonials API, Advanced Search Frontend, Admin Enhancements
+
+Work Log:
+- Enhanced /api/search with sort, price range, rating, availability filters
+- Created /api/testimonials CRUD API
+- Created advanced-search.tsx component
+- Modified search-bar.tsx with filter controls and advanced search toggle
+- Enhanced admin-dashboard.tsx with user count stats
+- Added Testimonial model to Prisma schema, ran db:push
+- 0 lint errors
+
+---
+Task ID: 8-a
+Agent: frontend-styling-expert (Subagent)
+Task: Styling Improvements — Testimonials, FAQ, Card Shadows, CSS Utilities
+
+Work Log:
+- Read worklog.md and assessed project status (Tasks 1-7 complete)
+- 0 NEW TypeScript errors introduced (all 45 existing errors are pre-existing in other files)
+- TypeScript check confirms `testimonials-section.tsx` and `faq-section.tsx` compile cleanly
+
+### Files Created (2):
+1. **Testimonials Section** (`src/components/deal/testimonials-section.tsx`):
+   - Auto-scrolling carousel (5s interval) with pause-on-hover
+   - 6 mock testimonials (mix of Arabic/French names and reviews)
+   - Each card: avatar (gradient circle + initials), name, role, star rating, review text, date
+   - Prev/next arrow buttons with hover-lift effect
+   - Navigation dots with active/inactive states (`.carousel-dot`)
+   - Framer Motion `AnimatePresence` slide transitions with direction-aware enter/exit
+   - Glassmorphism card styling (`.testimonial-card`) with animated gradient border on hover
+   - Section header with `.section-deco-line` dots and `.section-sparkle` icon
+   - Uses `useI18n` from `@/lib/store` for bilingual support
+   - RTL-compatible (uses `start`/`end` logical properties)
+
+2. **FAQ Section** (`src/components/deal/faq-section.tsx`):
+   - 6 FAQ items using shadcn `Accordion` component
+   - Bilingual questions/answers in Arabic and French
+   - Numbered items with gradient circle badges (active state gets full gradient)
+   - Staggered reveal animation with `whileInView`
+   - Glass card container with `glass-card` styling
+   - `.faq-item` with start border accent on hover and open state
+   - Section header with `.section-deco-line` dots pattern
+   - Uses `useI18n` from `@/lib/store`
+
+### Files Modified (6):
+1. **`src/i18n/ar.json`** — Added `testimonials` and `faq` keys (6 testimonials, 6 FAQ Q&A pairs)
+2. **`src/i18n/fr.json`** — Added `testimonials` and `faq` keys (6 testimonials, 6 FAQ Q&A pairs in French)
+3. **`src/app/globals.css`** — Added 16 new CSS utility classes (see below)
+4. **`src/app/page.tsx`** — Imported TestimonialsSection + FAQSection, added wave dividers between sections
+5. **`src/components/deal/service-card.tsx`** — Added `card-cursor-shadow cursor-shadow-orange` classes
+6. **`src/components/deal/product-card.tsx`** — Added `card-cursor-shadow cursor-shadow-teal` classes
+7. **`src/components/deal/equipment-card.tsx`** — Added `card-cursor-shadow cursor-shadow-gold` classes
+
+### New CSS Classes Added (16):
+1. `.testimonial-card` — Glassmorphism with animated gradient border on hover
+2. `.faq-item` — Subtle hover lift with start border accent (RTL-aware)
+3. `.carousel-dot` — Active/inactive states for carousel navigation
+4. `.card-cursor-shadow` — Cursor-reactive shadow container (Apple TV effect)
+5. `.text-shadow-glow` — Subtle orange text glow for headings
+6. `.text-shadow-glow-teal` — Subtle teal text glow variant
+7. `.hover-lift` — Generic hover lift with enhanced shadow
+8. `.hover-scale-subtle` — Subtle 1.02x scale on hover
+9. `.stagger-children > *` — Stagger fade-in animation for child elements (10 children)
+10. `.marquee` — Infinite horizontal scroll animation
+11. `.gradient-text-animated` — Animated gradient text effect (orange→gold→teal)
+12. `.cursor-shadow-orange` — Orange-tinted cursor shadow for service cards
+13. `.cursor-shadow-teal` — Teal-tinted cursor shadow for product cards
+14. `.cursor-shadow-gold` — Gold-tinted cursor shadow for equipment cards
+15. `.wave-section-divider` — Wave SVG separator between sections
+16. `.section-fade` — Gradient line separator above sections
+
+### New i18n Keys Added:
+- `testimonials.title`, `testimonials.subtitle` (both languages)
+- `testimonials.testimonials[0-5]` — 6 testimonials with name, role, text, date (both languages)
+- `faq.title`, `faq.subtitle` (both languages)
+- `faq.items[0-5]` — 6 FAQ Q&A pairs (both languages)
+
+### Page Integration:
+- `<TestimonialsSection />` placed after `<SectionSwitcher />`
+- `<FAQSection />` placed after testimonials
+- 3 SVG wave dividers between: sections→testimonials, testimonials→FAQ, FAQ→footer
+- All inside the main home view (not visible in dashboard view)
+
+### Stage Summary:
+- ✅ 0 NEW TypeScript errors
+- ✅ 2 new component files
+- ✅ 7 files modified
+- ✅ 16 new CSS utility classes
+- ✅ 12 new i18n translation objects (testimonials + FAQ in AR/FR)
+- ✅ 3 card types enhanced with cursor-reactive shadow classes
+- ✅ Wave dividers between all new sections
+
+---
 Task ID: 7
 Agent: Main Agent + Subagents (frontend-styling-expert + full-stack-developer)
 Task: Profile Editing UI, Real Dashboard Data, Advanced Visual Polish
@@ -185,23 +413,22 @@ Stage Summary:
 ## Current Project Assessment
 
 ### Status: STABLE + PRODUCTION-READY
-The DEAL platform is in a highly functional, visually polished state after 7 rounds of development. It features 25+ component files, 15 API endpoints, 3 main browsable sections (Services, Products, Equipment Rental), 5 role-based dashboards with real API connections, product ordering flow, search functionality, profile editing, and rich micro-interactions.
+The DEAL platform is in a highly functional, visually polished state after 8 rounds of development. It features 28+ component files, 17 API endpoints, 3 main browsable sections (Services, Products, Equipment Rental), 5 role-based dashboards with real API connections, product ordering flow, advanced search with filters, testimonials carousel, FAQ section, profile editing, and rich micro-interactions.
 
-### Completed in This Phase (Task 7):
-1. Profile editing UI with real API integration (GET + PATCH /api/users/[id])
-2. Merchant dashboard connected to real orders API
-3. Craftsman dashboard connected to real services API (with providerId filter)
-4. Equipment owner dashboard connected to real equipment API (with ownerId filter)
-5. Animated hero stats with count-up effect
-6. Skeleton loading states on tab switch (500ms perceived performance)
-7. CSS tooltips on card action buttons (bilingual AR/FR)
-8. NEW ribbon badges on first 2 items per section
-9. Enhanced card image areas with floating icons and dot patterns
-10. Number formatting with comma support for thousands
-11. Category grid enhancements (shimmer, pressed effect, stagger animation)
-12. 7 new CSS utility classes
+### Completed in This Phase (Task 8):
+1. Testimonials carousel section with 6 bilingual reviews, auto-scroll, pause-on-hover
+2. FAQ accordion section with 6 bilingual Q&A pairs using shadcn Accordion
+3. Enhanced Search API with sort (5 options), price range, rating, availability filters
+4. Testimonials CRUD API with Prisma model and database seeding
+5. Advanced Search component with filter controls, type tabs, sort dropdown
+6. Enhanced Search Bar with mobile filter panel, filter pill badges, keyboard shortcuts
+7. Admin dashboard user count statistics by role
+8. 16 new CSS utility classes (testimonial-card, faq-item, carousel-dot, cursor shadows, etc.)
+9. 3 SVG wave dividers between new sections
+10. 42+ new i18n translation keys (search, testimonials, admin, common)
+11. Enhanced card effects with cursor-reactive shadows (orange/teal/gold)
 
-### Total API Endpoints (15):
+### Total API Endpoints (17):
 - POST /api/auth/login, POST /api/auth/register
 - GET /api/users, GET+PATCH /api/users/[id]
 - GET /api/services (with providerId filter), GET /api/products, GET /api/equipment (with ownerId filter)
@@ -210,14 +437,15 @@ The DEAL platform is in a highly functional, visually polished state after 7 rou
 - GET /api/stats
 - POST /api/contact
 - GET+POST /api/orders
-- GET /api/search
+- GET /api/search (enhanced with sort/filters, grouped results)
+- GET+POST+DELETE /api/testimonials
 
-### Total Component Files: 25+
+### Total Component Files: 28+
 - Core: page.tsx, layout.tsx, globals.css
-- Components: navbar, hero, footer, search-bar, section-switcher, category-grid, service-card, product-card, equipment-card, rating-stars, detail-modal, auth-modal, notification-center, profile-modal, dashboard-wrapper, animated-counter, skeleton-card
+- Components: navbar, hero, footer, search-bar, section-switcher, category-grid, service-card, product-card, equipment-card, rating-stars, detail-modal, auth-modal, notification-center, profile-modal, dashboard-wrapper, animated-counter, skeleton-card, testimonials-section, faq-section, advanced-search
 - Dashboards: admin, craftsman, customer, merchant, equipment-owner
 - Utilities: data/mock, store, utils, hooks
 - UI: 40+ shadcn/ui components
 
-### Total CSS Utility Classes: 30+
-Including: btn-3d, card-3d, glass, glass-card, glow-effect, glow-orange, glow-teal, gradient-animated, gradient-border, mesh-gradient, shine-effect, wave-divider, shimmer, badge-3d, badge-shimmer, pulse-ring, text-gradient, custom-scrollbar, category-3d, card-image-overlay, social-icon, deal-tooltip, card-icon-float, card-new-ribbon, card-dot-pattern, skeleton-shimmer, category-chip-shimmer, category-active-pressed, and more.
+### Total CSS Utility Classes: 46+
+Including all previous classes plus: testimonial-card, faq-item, carousel-dot, card-cursor-shadow, text-shadow-glow, text-shadow-glow-teal, hover-lift, hover-scale-subtle, stagger-children, marquee, gradient-text-animated, cursor-shadow-orange/teal/gold, wave-section-divider, section-fade

@@ -105,7 +105,7 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnter}
-      className="card-3d glow-effect card-depth-shadow rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
+      className="card-3d glow-effect card-cursor-shadow cursor-shadow-gold rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
       style={tiltStyle}
     >
       {/* Spotlight overlay */}

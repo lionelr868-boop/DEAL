@@ -180,3 +180,17 @@ model Review {
   author    User      @relation("AuthorReviews", fields: [authorId], references: [id])
   target    User      @relation("TargetReviews", fields: [targetId], references: [id])
 }
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  authorName  String
+  authorNameFr String?
+  role        String
+  roleFr      String?
+  rating      Int
+  content     String
+  contentFr   String?
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

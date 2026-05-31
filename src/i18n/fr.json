@@ -229,6 +229,128 @@
     "backToTop": "Retour en haut",
     "resultsCount": "résultat(s)"
   },
+  "search": {
+    "advancedSearch": "Recherche avancée",
+    "filterResults": "Filtrer les résultats",
+    "priceRange": "Fourchette de prix",
+    "minPrice": "Min",
+    "maxPrice": "Max",
+    "minRating": "Note minimum",
+    "allRatings": "Tous",
+    "availability": "Disponibilité",
+    "availableOnly": "Disponible uniquement",
+    "sortBy": "Trier par",
+    "sortPriceAsc": "Prix: croissant",
+    "sortPriceDesc": "Prix: décroissant",
+    "sortRating": "Mieux notés",
+    "sortNewest": "Plus récents",
+    "sortPopular": "Plus populaires",
+    "results": "résultats",
+    "service": "Service",
+    "product": "Produit",
+    "equipmentItem": "Équipement",
+    "resetFilters": "Réinitialiser",
+    "activeFilters": "Filtres actifs",
+    "searching": "Recherche...",
+    "searchIn": "Rechercher dans",
+    "allTypes": "Tous"
+  },
+  "testimonials": {
+    "title": "Avis de nos Clients",
+    "subtitle": "Ce que nos utilisateurs disent de DEAL",
+    "viewAll": "Voir tout",
+    "addTestimonial": "Ajouter un témoignage",
+    "deleteTestimonial": "Supprimer le témoignage",
+    "featured": "Témoignage en vedette",
+    "apiTitle": "Témoignages clients",
+    "testimonials": [
+      {
+        "name": "Mohamed Ben Omar",
+        "role": "Électricien",
+        "text": "DEAL a complètement changé ma façon de travailler. Je reçois maintenant des clients régulièrement et la gestion des réservations est très simple.",
+        "date": "Décembre 2024"
+      },
+      {
+        "name": "Fatima Zahra",
+        "role": "Cliente",
+        "text": "J'ai trouvé le meilleur plombier de la région en quelques minutes. Le service était excellent et le prix très raisonnable.",
+        "date": "Janvier 2025"
+      },
+      {
+        "name": "Jean-Pierre Dubois",
+        "role": "Entrepreneur BTP",
+        "text": "Excellente plateforme pour trouver des artisans qualifiés. La commande de matériaux est rapide et fiable.",
+        "date": "Février 2025"
+      },
+      {
+        "name": "Karim Belkacem",
+        "role": "Négociant matériaux",
+        "text": "Mes ventes ont augmenté de 40% depuis mon inscription sur DEAL. L'interface est facile à utiliser et les clients viennent de partout.",
+        "date": "Novembre 2024"
+      },
+      {
+        "name": "Samira Hadj-Ahmed",
+        "role": "Loueuse d'équipements",
+        "text": "Gérer mes locations d'équipements n'a jamais été aussi simple. DEAL est un outil indispensable pour mon activité.",
+        "date": "Mars 2025"
+      },
+      {
+        "name": "Abdelrahman Messaoudi",
+        "role": "Client",
+        "text": "J'ai loué du matériel de construction aux meilleurs prix et la livraison était à temps. Service excellent du début à la fin.",
+        "date": "Avril 2025"
+      }
+    ]
+  },
+  "admin": {
+    "userManagement": "Gestion des utilisateurs",
+    "activeUsers": "Utilisateurs actifs",
+    "suspendedUsers": "Utilisateurs désactivés",
+    "totalActive": "Total actifs",
+    "totalSuspended": "Total désactivés",
+    "activateAccount": "Activer le compte",
+    "deactivateAccount": "Désactiver le compte",
+    "accountActivated": "Compte activé",
+    "accountDeactivated": "Compte désactivé",
+    "joinDate": "Date d'inscription",
+    "status": "Statut",
+    "active": "Actif",
+    "suspended": "Désactivé",
+    "actions": "Actions",
+    "searchUsers": "Rechercher par nom ou email...",
+    "allRoles": "Tous les rôles",
+    "userDetails": "Détails de l'utilisateur"
+  },
+  "faq": {
+    "title": "Questions Fréquentes",
+    "subtitle": "Tout ce que vous devez savoir sur DEAL",
+    "items": [
+      {
+        "question": "Comment s'inscrire sur la plateforme DEAL ?",
+        "answer": "Vous pouvez vous inscrire facilement via le formulaire d'inscription sur le site. Choisissez votre type de compte (client, artisan, commerçant ou loueur d'équipements) et entrez vos informations de base. L'inscription est entièrement gratuite."
+      },
+      {
+        "question": "Y a-t-il des frais pour utiliser la plateforme ?",
+        "answer": "L'inscription et la navigation sont entièrement gratuites. Nous prenons une petite commission uniquement lorsqu'une transaction est complétée entre les parties. Il n'y a pas de frais d'abonnement mensuel ni de frais cachés."
+      },
+      {
+        "question": "Comment le paiement se fait-il ?",
+        "answer": "Vous pouvez payer en espèces à la livraison ou par virement bancaire. Nous travaillons actuellement sur l'ajout du paiement électronique via carte CCP et Baridimob pour faciliter encore plus le processus."
+      },
+      {
+        "question": "Comment ajouter mes services ou produits sur la plateforme ?",
+        "answer": "Après connexion, accédez au tableau de bord et choisissez 'Ajouter un service' ou 'Ajouter un produit'. Remplissez les détails requis comme le prix, la description et les photos, et votre annonce sera publiée après une vérification rapide."
+      },
+      {
+        "question": "Puis-je louer des équipements pour différentes durées ?",
+        "answer": "Oui ! Vous pouvez louer des équipements au jour, à la semaine ou au mois. Les prix varient selon la durée de location et plus la durée est longue, meilleur est le tarif."
+      },
+      {
+        "question": "Quelles sont les zones couvertes ?",
+        "answer": "Nous couvrons actuellement la wilaya de Souk Ahras et les wilayas voisines comme Oum El Bouaghi, Sétif et Tiarèt. Nous travaillons sur l'expansion pour couvrir tout l'est algérien prochainement."
+      }
+    ]
+  },
   "common": {
     "search": "Rechercher",
     "filter": "Filtrer",

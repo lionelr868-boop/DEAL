@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Globe, SlidersHorizontal, X, Sparkles,
   RotateCw, Wrench, ShoppingBag, Truck, Star, Loader2,
-  ChevronDown, StarIcon,
+  Filter,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
-import RatingStars from './rating-stars';
+import AdvancedSearch from './advanced-search';
 
 interface SearchResult {
   id: string;
@@ -31,6 +31,7 @@ export default function SearchBar() {
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
   const [iconRotating, setIconRotating] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +78,14 @@ export default function SearchBar() {
       const res = await fetch(`/api/search?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setSearchResults(data.results || []);
+        // API returns grouped results: { services, products, equipment, total }
+        const grouped = data as { services?: SearchResult[]; products?: SearchResult[]; equipment?: SearchResult[]; total?: number };
+        const flat = [
+          ...(grouped.services || []),
+          ...(grouped.products || []),
+          ...(grouped.equipment || []),
+        ];
+        setSearchResults(flat);
       }
     } catch {
       console.error('Search failed');
@@ -97,7 +105,7 @@ export default function SearchBar() {
     };
   }, [searchQuery, minPrice, maxPrice, minRating, performSearch]);
 
-  // Focus input when Ctrl+K is pressed
+  // Focus input when Ctrl+K is pressed, Escape closes advanced search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -105,6 +113,10 @@ export default function SearchBar() {
         inputRef.current?.focus();
         setIconRotating(true);
         setTimeout(() => setIconRotating(false), 500);
+      }
+      if (e.key === 'Escape') {
+        setShowAdvancedSearch(false);
+        setShowFilters(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -140,14 +152,23 @@ export default function SearchBar() {
     setMinPrice(null);
     setMaxPrice(null);
     setMinRating(0);
+    setShowAdvancedSearch(false);
     inputRef.current?.focus();
   };
+
+  const handleInputKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      setShowSuggestions(false);
+      setShowAdvancedSearch(true);
+    }
+  }, [searchQuery]);
 
   const openResult = (result: SearchResult) => {
     setSelectedItemId(result.id);
     setDetailType(result.type);
     setShowDetailModal(true);
     setShowSuggestions(false);
+    setShowAdvancedSearch(false);
   };
 
   const getTypeIcon = (type: string) => {
@@ -223,6 +244,7 @@ export default function SearchBar() {
             onChange={handleInputChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            onKeyDown={handleInputKeyDown}
             placeholder={t.nav.search}
             className="flex-1 bg-transparent outline-none text-sm sm:text-base text-deal-navy placeholder:text-slate-400 font-medium min-w-0"
             dir={locale === 'ar' ? 'rtl' : 'ltr'}
@@ -273,24 +295,34 @@ export default function SearchBar() {
             <Globe className="w-4 h-4 text-deal-teal group-hover:rotate-180 transition-transform duration-500" />
           </motion.button>
 
-          {/* Filters toggle button */}
+          {/* Advanced Search toggle button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => { setShowAdvancedSearch(!showAdvancedSearch); setShowFilters(false); }}
             className={`hidden sm:flex flex-shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-              showFilters || minPrice || maxPrice || minRating > 0
+              showAdvancedSearch
                 ? 'bg-deal-orange text-white'
                 : 'bg-deal-orange/5 text-deal-orange hover:bg-deal-orange/10'
             }`}
+            title={t.search.advancedSearch}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>{t.common.filter}</span>
-            {(minPrice || maxPrice || minRating > 0) && (
-              <span className="w-4 h-4 rounded-full bg-white text-deal-orange text-[9px] font-bold flex items-center justify-center">
-                {[minPrice, maxPrice, minRating > 0 ? 1 : 0].filter(Boolean).length}
-              </span>
-            )}
+            <Filter className="w-3.5 h-3.5" />
+            <span>{t.search.advancedSearch}</span>
+          </motion.button>
+
+          {/* Simple Filters toggle button (mobile) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { setShowFilters(!showFilters); setShowAdvancedSearch(false); }}
+            className={`sm:hidden flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+              showFilters || minPrice || maxPrice || minRating > 0
+                ? 'bg-deal-orange text-white'
+                : 'bg-deal-orange/5 text-deal-orange'
+            }`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
           </motion.button>
 
           {/* Keyboard shortcut hint (desktop only) - enhanced */}
@@ -535,6 +567,12 @@ export default function SearchBar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Advanced Search Panel */}
+      <AdvancedSearch
+        isOpen={showAdvancedSearch}
+        onClose={() => setShowAdvancedSearch(false)}
+      />
     </motion.div>
   );
 }
