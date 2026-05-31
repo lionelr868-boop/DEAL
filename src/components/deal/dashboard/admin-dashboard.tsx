@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Users,
@@ -23,9 +23,22 @@ import {
   ShieldCheck,
   ShieldX,
   RefreshCw,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Phone,
+  Mail,
+  Award,
+  Briefcase,
+  Eye,
+  Power,
+  PowerOff,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { AnimatedCounter } from '../animated-counter';
+import { toast } from 'sonner';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -59,11 +72,21 @@ interface DBUser {
   nameFr: string | null;
   phone: string | null;
   role: string;
+  avatar: string | null;
   isVerified: boolean;
+  isActive: boolean;
   rating: number | null;
   totalReviews: number;
   specialties: string | null;
   experience: number | null;
+  hourlyRate: number | null;
+  bio: string | null;
+  bioFr: string | null;
+  city: string;
+  wilaya: string;
+  shopName: string | null;
+  shopNameFr: string | null;
+  hasDelivery: boolean;
   createdAt: string;
 }
 
@@ -75,14 +98,24 @@ export default function AdminDashboard() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // User management filters
+  const [userSearch, setUserSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [expandedUserDetail, setExpandedUserDetail] = useState<DBUser | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   // Stats from API
   const [apiStats, setApiStats] = useState<{ users: Record<string, number>; services: number; products: number; equipment: number; bookings: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (search?: string, role?: string) => {
     setLoadingUsers(true);
     try {
-      const res = await fetch('/api/users');
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (role && role !== 'all') params.set('role', role);
+      const res = await fetch(`/api/users?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setDbUsers(data);
@@ -111,13 +144,37 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (dashboardActiveTab === 'users') {
-      fetchUsers();
+      fetchUsers(userSearch || undefined, roleFilter);
     }
-  }, [dashboardActiveTab, fetchUsers]);
+  }, [dashboardActiveTab, fetchUsers, userSearch, roleFilter]);
 
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  const handleToggleActive = async (userId: string, currentState: boolean) => {
+    setActionLoading(userId);
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentState }),
+      });
+      if (res.ok) {
+        toast.success(
+          !currentState
+            ? (locale === 'ar' ? 'تم تفعيل الحساب' : 'Compte activé')
+            : (locale === 'ar' ? 'تم تعطيل الحساب' : 'Compte désactivé')
+        );
+        await fetchUsers(userSearch || undefined, roleFilter);
+        if (expandedUserId === userId) setExpandedUserId(null);
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleApproveUser = async (userId: string) => {
     setActionLoading(userId);
@@ -127,7 +184,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isVerified: true }),
       });
-      await fetchUsers();
+      await fetchUsers(userSearch || undefined, roleFilter);
     } catch {
       // silently fail
     } finally {
@@ -143,7 +200,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isVerified: false }),
       });
-      await fetchUsers();
+      await fetchUsers(userSearch || undefined, roleFilter);
     } catch {
       // silently fail
     } finally {
@@ -151,7 +208,40 @@ export default function AdminDashboard() {
     }
   };
 
-  // Fallback stats (shown while loading or if API fails)
+  const handleExpandUser = async (userId: string) => {
+    if (expandedUserId === userId) {
+      setExpandedUserId(null);
+      setExpandedUserDetail(null);
+      return;
+    }
+    setExpandedUserId(userId);
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/users/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setExpandedUserDetail(data as DBUser);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user detail:', err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  // Filtered users for display
+  const filteredUsers = useMemo(() => {
+    if (!userSearch) return dbUsers;
+    const q = userSearch.toLowerCase();
+    return dbUsers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) ||
+        (u.nameFr && u.nameFr.toLowerCase().includes(q)) ||
+        u.email.toLowerCase().includes(q)
+    );
+  }, [dbUsers, userSearch]);
+
+  // Fallback stats
   const fallbackStats = [
     { label: t.dashboard.customers, value: '0', icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange', key: 'customers' },
     { label: t.dashboard.craftsmen, value: '0', icon: Wrench, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal', key: 'craftsmen' },
@@ -161,7 +251,6 @@ export default function AdminDashboard() {
     { label: t.dashboard.totalRevenueCount, value: '0', icon: DollarSign, bg: 'bg-emerald-50', iconColor: 'text-emerald-500', key: 'revenue' },
   ];
 
-  // Real stats from API
   const platformStats = apiStats
     ? [
         { label: t.dashboard.customers, value: String(apiStats.users.customers || 0), icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange', key: 'customers' },
@@ -218,104 +307,343 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
 
+        {/* Search & Filter Bar */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${locale === 'ar' ? 'start-3' : 'start-3'}`} />
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                placeholder={locale === 'ar' ? 'ابحث بالاسم أو البريد...' : 'Rechercher par nom ou email...'}
+                className="w-full ps-9 pe-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange text-deal-navy placeholder:text-muted-foreground"
+                dir={locale === 'ar' ? 'rtl' : 'ltr'}
+              />
+            </div>
+            {/* Role Filter */}
+            <div className="relative">
+              <Filter className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${locale === 'ar' ? 'start-3' : 'start-3'}`} />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="ps-9 pe-8 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange text-deal-navy appearance-none cursor-pointer min-w-[140px]"
+              >
+                <option value="all">{locale === 'ar' ? 'جميع الأدوار' : 'Tous les rôles'}</option>
+                <option value="customer">{locale === 'ar' ? 'عملاء' : 'Clients'}</option>
+                <option value="craftsman">{locale === 'ar' ? 'حرفيون' : 'Artisans'}</option>
+                <option value="merchant">{locale === 'ar' ? 'تجار' : 'Commerçants'}</option>
+                <option value="equipment_owner">{locale === 'ar' ? 'مؤجر معدات' : 'Loueurs'}</option>
+                <option value="admin">{locale === 'ar' ? 'مديرون' : 'Admins'}</option>
+              </select>
+              <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${locale === 'ar' ? 'end-3' : 'end-3'}`} />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Users Table */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6">
           {loadingUsers ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-deal-orange animate-spin" />
               <span className="ms-3 text-sm text-muted-foreground">{t.common.loading}</span>
             </div>
-          ) : dbUsers.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">{t.common.noResults}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'الاسم' : 'Nom'}</th>
-                    <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground hidden sm:table-cell">Email</th>
-                    <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'الدور' : 'Rôle'}</th>
-                    <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'الحالة' : 'Statut'}</th>
-                    <th className="text-end py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'إجراء' : 'Action'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dbUsers.map((user, i) => {
-                    const role = roleColors[user.role] || roleColors.customer;
-                    const roleName = roleLabels[user.role] || roleLabels.customer;
-                    const userName = locale === 'fr' && user.nameFr ? user.nameFr : user.name;
-                    return (
-                      <motion.tr
-                        key={user.id}
-                        custom={i}
-                        variants={fadeInUp}
-                        initial="hidden"
-                        animate="visible"
-                        className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-3 px-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-xs font-bold">{userName.charAt(0)}</span>
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {filteredUsers.length} {locale === 'ar' ? 'مستخدم' : 'utilisateurs'}
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'الاسم' : 'Nom'}</th>
+                      <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground hidden sm:table-cell">Email</th>
+                      <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'الدور' : 'Rôle'}</th>
+                      <th className="text-start py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'الحالة' : 'Statut'}</th>
+                      <th className="text-end py-3 px-2 text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'إجراءات' : 'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user, i) => {
+                      const role = roleColors[user.role] || roleColors.customer;
+                      const roleName = roleLabels[user.role] || roleLabels.customer;
+                      const userName = locale === 'fr' && user.nameFr ? user.nameFr : user.name;
+                      const isExpanded = expandedUserId === user.id;
+                      return (
+                        <motion.tr
+                          key={user.id}
+                          custom={i}
+                          variants={fadeInUp}
+                          initial="hidden"
+                          animate="visible"
+                          className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                        >
+                          <td className="py-3 px-2">
+                            <button
+                              onClick={() => handleExpandUser(user.id)}
+                              className="flex items-center gap-2 hover:gap-3 transition-all"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-xs font-bold">{userName.charAt(0)}</span>
+                              </div>
+                              <div className="text-start min-w-0">
+                                <span className="font-semibold text-deal-navy text-xs truncate block max-w-[120px]">{userName}</span>
+                                <span className="text-[10px] text-muted-foreground sm:hidden truncate block max-w-[120px]">{user.email}</span>
+                              </div>
+                            </button>
+                          </td>
+                          <td className="py-3 px-2 text-xs text-muted-foreground hidden sm:table-cell truncate max-w-[160px]">{user.email}</td>
+                          <td className="py-3 px-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${role.bg} ${role.text}`}>
+                              {locale === 'ar' ? roleName.ar : roleName.fr}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-2">
+                              {user.isActive ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                                  <ShieldCheck className="w-3 h-3" />
+                                  {locale === 'ar' ? 'نشط' : 'Actif'}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500">
+                                  <ShieldX className="w-3 h-3" />
+                                  {locale === 'ar' ? 'معطل' : 'Désactivé'}
+                                </span>
+                              )}
                             </div>
-                            <span className="font-semibold text-deal-navy text-xs truncate max-w-[120px]">{userName}</span>
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center justify-end gap-1">
+                              {/* View button */}
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => handleExpandUser(user.id)}
+                                className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                                title={t.common.viewDetails}
+                              >
+                                <Eye className="w-3 h-3 text-gray-500" />
+                              </motion.button>
+                              {/* Toggle active */}
+                              {user.role !== 'admin' && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  disabled={actionLoading === user.id}
+                                  onClick={() => handleToggleActive(user.id, user.isActive)}
+                                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 ${
+                                    user.isActive
+                                      ? 'bg-amber-100 hover:bg-amber-200'
+                                      : 'bg-emerald-100 hover:bg-emerald-200'
+                                  }`}
+                                  title={user.isActive
+                                    ? (locale === 'ar' ? 'تعطيل الحساب' : 'Désactiver')
+                                    : (locale === 'ar' ? 'تفعيل الحساب' : 'Activer')
+                                  }
+                                >
+                                  {actionLoading === user.id ? (
+                                    <Loader2 className="w-3 h-3 text-gray-500 animate-spin" />
+                                  ) : user.isActive ? (
+                                    <PowerOff className="w-3 h-3 text-amber-600" />
+                                  ) : (
+                                    <Power className="w-3 h-3 text-emerald-600" />
+                                  )}
+                                </motion.button>
+                              )}
+                              {/* Verify/Unverify */}
+                              {!user.isVerified && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  disabled={actionLoading === user.id}
+                                  onClick={() => handleApproveUser(user.id)}
+                                  className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                                  title={locale === 'ar' ? 'قبول' : 'Approuver'}
+                                >
+                                  {actionLoading === user.id ? <Loader2 className="w-3 h-3 text-white animate-spin" /> : <Check className="w-3 h-3 text-white" />}
+                                </motion.button>
+                              )}
+                              {user.isVerified && user.role !== 'admin' && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  disabled={actionLoading === user.id}
+                                  onClick={() => handleSuspendUser(user.id)}
+                                  className="w-7 h-7 rounded-lg bg-red-500 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors disabled:opacity-50"
+                                  title={locale === 'ar' ? 'سحب التوثيق' : 'Retirer vérification'}
+                                >
+                                  {actionLoading === user.id ? <Loader2 className="w-3 h-3 text-white animate-spin" /> : <Ban className="w-3 h-3 text-white" />}
+                                </motion.button>
+                              )}
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Expanded User Detail */}
+              <AnimatePresence>
+                {expandedUserId && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    {loadingDetail ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 text-deal-orange animate-spin" />
+                      </div>
+                    ) : expandedUserDetail ? (
+                      <div className="mt-4 p-5 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 space-y-5">
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-deal-navy flex items-center gap-2">
+                            <Award className="w-4 h-4 text-deal-orange" />
+                            {locale === 'ar' ? 'تفاصيل المستخدم' : 'Détails de l\'utilisateur'}
+                          </h4>
+                          <button
+                            onClick={() => setExpandedUserId(null)}
+                            className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                          >
+                            <ChevronUp className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* User info */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">
+                                  {getLocalizedValue(expandedUserDetail.name, expandedUserDetail.nameFr).charAt(0)}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-bold text-deal-navy text-sm">
+                                  {getLocalizedValue(expandedUserDetail.name, expandedUserDetail.nameFr)}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${(roleColors[expandedUserDetail.role] || roleColors.customer).bg} ${(roleColors[expandedUserDetail.role] || roleColors.customer).text}`}>
+                                    {locale === 'ar' ? (roleLabels[expandedUserDetail.role] || roleLabels.customer).ar : (roleLabels[expandedUserDetail.role] || roleLabels.customer).fr}
+                                  </span>
+                                  {expandedUserDetail.isVerified && (
+                                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Contact Info */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>{expandedUserDetail.email}</span>
+                              </div>
+                              {expandedUserDetail.phone && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Phone className="w-3.5 h-3.5" />
+                                  <span dir="ltr">{expandedUserDetail.phone}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <MapPin className="w-3.5 h-3.5" />
+                                <span>{expandedUserDetail.wilaya}, {expandedUserDetail.city}</span>
+                              </div>
+                            </div>
                           </div>
-                        </td>
-                        <td className="py-3 px-2 text-xs text-muted-foreground hidden sm:table-cell truncate max-w-[160px]">{user.email}</td>
-                        <td className="py-3 px-2">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${role.bg} ${role.text}`}>
-                            {locale === 'ar' ? roleName.ar : roleName.fr}
+
+                          {/* Professional Info */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-xs">
+                              <Star className="w-3.5 h-3.5 text-deal-gold fill-deal-gold" />
+                              <span className="font-bold text-deal-navy">{expandedUserDetail.rating || 0}</span>
+                              <span className="text-muted-foreground">
+                                ({expandedUserDetail.totalReviews} {t.common.reviewsCount})
+                              </span>
+                            </div>
+
+                            {expandedUserDetail.specialties && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Briefcase className="w-3.5 h-3.5" />
+                                <span>{expandedUserDetail.specialties}</span>
+                              </div>
+                            )}
+
+                            {expandedUserDetail.experience && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>{expandedUserDetail.experience} {locale === 'ar' ? 'سنوات خبرة' : "ans d'expérience"}</span>
+                              </div>
+                            )}
+
+                            {expandedUserDetail.hourlyRate && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <DollarSign className="w-3.5 h-3.5" />
+                                <span>{expandedUserDetail.hourlyRate.toLocaleString()} {t.common.currency}/{locale === 'ar' ? 'ساعة' : 'h'}</span>
+                              </div>
+                            )}
+
+                            {(expandedUserDetail.shopName || expandedUserDetail.shopNameFr) && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Package className="w-3.5 h-3.5" />
+                                <span>{getLocalizedValue(expandedUserDetail.shopName, expandedUserDetail.shopNameFr)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Bio */}
+                        {(expandedUserDetail.bio || expandedUserDetail.bioFr) && (
+                          <div className="pt-3 border-t border-gray-100">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {getLocalizedValue(expandedUserDetail.bio, expandedUserDetail.bioFr)}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Registration Date */}
+                        <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">
+                            {locale === 'ar' ? 'تاريخ التسجيل' : 'Inscrit le'}: {new Date(expandedUserDetail.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-FR')}
                           </span>
-                        </td>
-                        <td className="py-3 px-2">
-                          {user.isVerified ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-                              <ShieldCheck className="w-3 h-3" />
-                              {locale === 'ar' ? 'موثق' : 'Vérifié'}
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              expandedUserDetail.isActive
+                                ? 'bg-emerald-100 text-emerald-600'
+                                : 'bg-red-100 text-red-500'
+                            }`}>
+                              {expandedUserDetail.isActive
+                                ? (locale === 'ar' ? 'حساب نشط' : 'Compte actif')
+                                : (locale === 'ar' ? 'حساب معطل' : 'Compte désactivé')
+                              }
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600">
-                              <ShieldX className="w-3 h-3" />
-                              {locale === 'ar' ? 'غير موثق' : 'Non vérifié'}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-2">
-                          <div className="flex items-center justify-end gap-1">
-                            {!user.isVerified && (
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                disabled={actionLoading === user.id}
-                                onClick={() => handleApproveUser(user.id)}
-                                className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm hover:bg-emerald-600 transition-colors disabled:opacity-50"
-                                title={locale === 'ar' ? 'قبول' : 'Approuver'}
-                              >
-                                {actionLoading === user.id ? <Loader2 className="w-3 h-3 text-white animate-spin" /> : <Check className="w-3 h-3 text-white" />}
-                              </motion.button>
-                            )}
-                            {user.isVerified && user.role !== 'admin' && (
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                disabled={actionLoading === user.id}
-                                onClick={() => handleSuspendUser(user.id)}
-                                className="w-7 h-7 rounded-lg bg-red-500 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors disabled:opacity-50"
-                                title={locale === 'ar' ? 'تعليق' : 'Suspendre'}
-                              >
-                                {actionLoading === user.id ? <Loader2 className="w-3 h-3 text-white animate-spin" /> : <Ban className="w-3 h-3 text-white" />}
-                              </motion.button>
-                            )}
                           </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-4 text-center text-xs text-muted-foreground">
+                        {locale === 'ar' ? 'لم يتم العثور على التفاصيل' : 'Détails non trouvés'}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
         </motion.div>
       </div>

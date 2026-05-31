@@ -58,12 +58,13 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -10;
-    const rotateY = ((x - centerX) / centerX) * 10;
+    const rotateX = ((y - centerY) / centerY) * -5;
+    const rotateY = ((x - centerX) / centerX) * 5;
 
     setTiltStyle({
       transform: `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
       transition: 'transform 0.1s ease-out',
+      boxShadow: `${(x - centerX) * -0.1}px ${(centerY - y) * -0.1}px 24px rgba(0, 0, 0, 0.12), 0 0 30px rgba(245, 158, 11, 0.08)`,
     });
 
     setSpotlightStyle({
@@ -77,6 +78,7 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
     setTiltStyle({
       transform: 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
       transition: 'transform 0.5s ease-out',
+      boxShadow: '',
     });
     setSpotlightStyle({ opacity: 0, transition: 'opacity 0.5s ease' });
     setGlowBorder(false);
@@ -103,7 +105,7 @@ export default function EquipmentCard({ equipment, index = 0 }: EquipmentCardPro
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnter}
-      className="card-3d glow-effect rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
+      className="card-3d glow-effect card-depth-shadow rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl cursor-pointer group relative"
       style={tiltStyle}
     >
       {/* Spotlight overlay */}

@@ -127,12 +127,55 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
   );
 }
 
+// JSON-LD structured data for DEAL platform
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: 'DEAL',
+  alternateName: 'منصة DEAL',
+  description: 'DEAL هي منصة رقمية متكاملة تربط الحرفيين والتجار وأصحاب المعدات والمستخدمين في سوق أهراس والولايات المجاورة',
+  url: 'https://deal.dz',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Centre Ville',
+    addressLocality: 'Souk Ahras',
+    addressRegion: 'Souk Ahras',
+    postalCode: '41000',
+    addressCountry: 'DZ',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 35.2833,
+    longitude: 7.9667,
+  },
+  telephone: '+213-37-00-00-00',
+  email: 'contact@deal.dz',
+  areaServed: {
+    '@type': 'GeoCircle',
+    geoMidpoint: { '@type': 'GeoCoordinates', latitude: 35.2833, longitude: 7.9667 },
+    geoRadius: '100000',
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    opens: '08:00',
+    closes: '18:00',
+  },
+  priceRange: '$$',
+  sameAs: [],
+};
+
 export default function Home() {
   const { showAuthModal, showDashboard } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
 
   return (
     <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <AnimatePresence mode="wait">
         {isLoading && <LoadingScreen key="loader" onDone={() => setIsLoading(false)} />}
       </AnimatePresence>

@@ -143,7 +143,7 @@ export default function DashboardWrapper() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden w-10 h-10 rounded-xl bg-deal-orange/10 flex items-center justify-center"
+                className="md:hidden w-11 h-11 rounded-xl bg-deal-orange/10 flex items-center justify-center"
               >
                 <svg className="w-5 h-5 text-deal-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -181,7 +181,7 @@ export default function DashboardWrapper() {
           initial={{ x: -280, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
-          className="hidden lg:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar"
+          className="hidden md:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar"
         >
           <div className="p-4 space-y-1">
             {/* User card */}
@@ -237,7 +237,7 @@ export default function DashboardWrapper() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="flex-1 min-w-0 p-4 sm:p-6 pb-24 lg:pb-6"
+          className="flex-1 min-w-0 p-3 sm:p-6 pb-24 md:pb-6"
         >
           {renderDashboard()}
         </motion.main>
@@ -250,7 +250,7 @@ export default function DashboardWrapper() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
         >
           <motion.div
             initial={{ x: -300 }}
@@ -320,11 +320,11 @@ export default function DashboardWrapper() {
       <motion.div
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
-        className="fixed bottom-0 inset-x-0 z-40 glass border-t border-gray-200/50 lg:hidden pb-safe"
+        transition={{ delay: 0.4, duration: 0.4, type: 'spring', stiffness: 200, damping: 20 }}
+        className="fixed bottom-0 inset-x-0 z-40 glass border-t border-gray-200/50 md:hidden pb-safe"
       >
         <div className="flex items-center justify-around px-2 py-2">
-          {sidebarItems.slice(0, 5).map((item) => {
+          {sidebarItems.slice(0, Math.min(sidebarItems.length, 5)).map((item) => {
             const Icon = item.icon;
             const isActive = dashboardActiveTab === item.key;
             return (

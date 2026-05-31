@@ -31,6 +31,7 @@ export async function GET(
         shopName: true,
         shopNameFr: true,
         hasDelivery: true,
+        isActive: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -90,7 +91,7 @@ export async function PATCH(
       'name', 'nameFr', 'phone', 'bio', 'bioFr',
       'city', 'wilaya', 'specialties', 'experience',
       'hourlyRate', 'shopName', 'shopNameFr',
-      'isVerified', 'avatar', 'hasDelivery',
+      'isVerified', 'avatar', 'hasDelivery', 'isActive',
     ];
 
     for (const field of allowedFields) {
@@ -130,6 +131,7 @@ export async function PATCH(
         shopName: true,
         shopNameFr: true,
         hasDelivery: true,
+        isActive: true,
         createdAt: true,
         updatedAt: true,
       },

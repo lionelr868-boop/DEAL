@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Phone, Mail, Heart, ArrowUp, Send, Sparkles, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Heart, ArrowUp, Send, Sparkles, CheckCircle2, Users, Wrench, Package, Truck, Shield, Award, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/store';
+import { AnimatedCounter } from './animated-counter';
 
 // SVG Social Icons as components
 function FacebookIcon() {
@@ -50,6 +51,8 @@ export default function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [platformStats, setPlatformStats] = useState<{ users: number; services: number; products: number; equipment: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Show back to top button on scroll
   useEffect(() => {
@@ -58,6 +61,30 @@ export default function Footer() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Fetch platform stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      setStatsLoading(true);
+      try {
+        const res = await fetch('/api/stats');
+        if (res.ok) {
+          const data = await res.json();
+          setPlatformStats({
+            users: data.users?.total || 0,
+            services: data.services || 0,
+            products: data.products || 0,
+            equipment: data.equipment || 0,
+          });
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   const quickLinks = [
@@ -230,6 +257,124 @@ export default function Footer() {
                 </motion.p>
               )}
             </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Animated divider with dots */}
+        <div className="animated-divider-dots mb-8">
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-line" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+          <div className="divider-dot" />
+        </div>
+
+        {/* Platform Stats Live */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-10"
+        >
+          <div className="flex items-center justify-center gap-2 mb-5">
+            <Zap className="w-4 h-4 text-deal-orange" />
+            <h3 className="text-lg font-bold text-center">
+              {locale === 'ar' ? 'إحصائيات المنصة المباشرة' : 'Statistiques en Direct'}
+            </h3>
+            <Zap className="w-4 h-4 text-deal-orange" />
+          </div>
+          {statsLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="footer-stat-skeleton h-20" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+                <Users className="w-6 h-6 text-deal-orange mx-auto mb-2" />
+                <p className="text-2xl font-black text-white">
+                  <AnimatedCounter target={platformStats?.users?.toLocaleString() || '0'} duration={1200} />
+                </p>
+                <p className="text-[11px] text-white/50 font-medium mt-0.5">
+                  {locale === 'ar' ? 'مستخدم' : 'Utilisateurs'}
+                </p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+                <Wrench className="w-6 h-6 text-deal-teal mx-auto mb-2" />
+                <p className="text-2xl font-black text-white">
+                  <AnimatedCounter target={platformStats?.services?.toLocaleString() || '0'} duration={1200} />
+                </p>
+                <p className="text-[11px] text-white/50 font-medium mt-0.5">
+                  {locale === 'ar' ? 'خدمة' : 'Services'}
+                </p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+                <Package className="w-6 h-6 text-deal-gold mx-auto mb-2" />
+                <p className="text-2xl font-black text-white">
+                  <AnimatedCounter target={platformStats?.products?.toLocaleString() || '0'} duration={1200} />
+                </p>
+                <p className="text-[11px] text-white/50 font-medium mt-0.5">
+                  {locale === 'ar' ? 'منتج' : 'Produits'}
+                </p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+                <Truck className="w-6 h-6 text-deal-orange-light mx-auto mb-2" />
+                <p className="text-2xl font-black text-white">
+                  <AnimatedCounter target={platformStats?.equipment?.toLocaleString() || '0'} duration={1200} />
+                </p>
+                <p className="text-[11px] text-white/50 font-medium mt-0.5">
+                  {locale === 'ar' ? 'معدة' : 'Équipements'}
+                </p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Animated divider with dots */}
+        <div className="animated-divider-dots mb-8">
+          <div className="divider-dot" style={{ background: '#0D9488' }} />
+          <div className="divider-dot" style={{ background: '#F59E0B' }} />
+          <div className="divider-dot" style={{ background: '#FF6B35' }} />
+          <div className="divider-dot" style={{ background: '#0D9488' }} />
+          <div className="divider-dot" style={{ background: '#F59E0B' }} />
+          <div className="divider-line" />
+          <div className="divider-dot" style={{ background: '#0D9488' }} />
+          <div className="divider-dot" style={{ background: '#F59E0B' }} />
+          <div className="divider-dot" style={{ background: '#FF6B35' }} />
+          <div className="divider-dot" style={{ background: '#0D9488' }} />
+          <div className="divider-dot" style={{ background: '#F59E0B' }} />
+        </div>
+
+        {/* Trusted By section */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-10"
+        >
+          <p className="text-center text-white/30 text-xs font-semibold mb-4 uppercase tracking-wider">
+            {locale === 'ar' ? 'موثوق من قبل' : 'Approuvé par'}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <div className="trust-badge">
+              <Shield className="w-4 h-4 text-deal-teal" />
+              <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'حماية البيانات' : 'SSL Sécurisé'}</span>
+            </div>
+            <div className="trust-badge">
+              <Award className="w-4 h-4 text-deal-gold" />
+              <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'معتميز الجودة' : 'Qualité Certifiée'}</span>
+            </div>
+            <div className="trust-badge">
+              <Zap className="w-4 h-4 text-deal-orange" />
+              <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'أداء عالي' : 'Haute Perf.'}</span>
+            </div>
           </div>
         </motion.div>
 

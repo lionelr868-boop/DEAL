@@ -68,8 +68,8 @@ export default function Navbar() {
             </span>
           </motion.div>
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop nav links - hide on small screens */}
+          <div className="hidden sm:flex items-center gap-1">
             {navLinks.map((link) => (
               <motion.button
                 key={link.key}
@@ -172,11 +172,11 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile hamburger */}
+            {/* Mobile hamburger - touch-friendly 44px */}
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center shadow-sm"
+              className="sm:hidden w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center shadow-sm"
             >
               {mobileOpen ? <X className="w-5 h-5 text-deal-navy" /> : <Menu className="w-5 h-5 text-deal-navy" />}
             </motion.button>
@@ -195,7 +195,19 @@ export default function Navbar() {
             className="md:hidden overflow-hidden glass border-t border-white/20"
           >
             <div className="px-4 py-4 space-y-2">
-              {navLinks.map((link) => (
+              {/* Essential nav links - only Home on very small screens */}
+              {navLinks.slice(0, 1).map((link) => (
+                <button
+                  key={link.key}
+                  onClick={() => { link.action(); setMobileOpen(false); }}
+                  className="w-full text-start px-4 py-3 rounded-xl text-sm font-semibold text-deal-navy hover:bg-deal-orange/10 hover:text-deal-orange transition-colors"
+                >
+                  {link.label}
+                </button>
+              ))}
+
+              {/* More nav links - shown below 640px */}
+              {navLinks.slice(1).map((link) => (
                 <button
                   key={link.key}
                   onClick={() => { link.action(); setMobileOpen(false); }}

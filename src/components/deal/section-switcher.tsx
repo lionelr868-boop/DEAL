@@ -156,12 +156,56 @@ export default function SectionSwitcher() {
           transition={{ duration: 0.6 }}
           className="text-center mb-10"
         >
-          <h2 className="text-3xl sm:text-4xl font-black text-deal-navy mb-3">
-            {sectionTitles[activeSection]}
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            {sectionSubtitles[activeSection]}
-          </p>
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mb-3">
+            {/* Left decorative line */}
+            <div className="section-deco-line">
+              <div className="dot" style={{ background: '#FF6B35' }} />
+              <div className="dot" style={{ background: '#F59E0B' }} />
+              <div className="dot" style={{ background: '#0D9488' }} />
+              <div className="dot" style={{ background: '#F59E0B' }} />
+              <div className="dot" style={{ background: '#FF6B35' }} />
+              <div className="line" />
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-deal-navy section-title-hover whitespace-nowrap">
+              {sectionTitles[activeSection]}
+            </h2>
+
+            {/* Right decorative line */}
+            <div className="section-deco-line">
+              <div className="line" />
+              <div className="dot" style={{ background: '#FF6B35' }} />
+              <div className="dot" style={{ background: '#F59E0B' }} />
+              <div className="dot" style={{ background: '#0D9488' }} />
+              <div className="dot" style={{ background: '#F59E0B' }} />
+              <div className="dot" style={{ background: '#FF6B35' }} />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-2">
+            <motion.span
+              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 0.9, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="section-sparkle text-deal-gold text-lg sm:text-xl"
+            >
+              ✦
+            </motion.span>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
+              {sectionSubtitles[activeSection]}
+            </p>
+            <motion.span
+              animate={{ rotate: [0, -15, 15, 0], scale: [1, 0.9, 1.2, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              className="section-sparkle text-deal-orange text-lg sm:text-xl"
+            >
+              ✦
+            </motion.span>
+          </div>
+
+          {/* Item count badge */}
+          <div className="mt-3 flex justify-center">
+            <span className="section-count-badge">{currentCount}</span>
+          </div>
         </motion.div>
 
         {/* Tab switcher */}

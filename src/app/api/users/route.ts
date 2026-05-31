@@ -5,11 +5,20 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
+    const search = searchParams.get('search');
 
     const where: Record<string, unknown> = {};
 
     if (role) {
       where.role = role;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { nameFr: { contains: search } },
+        { email: { contains: search } },
+      ];
     }
 
     const users = await db.user.findMany({
@@ -35,6 +44,7 @@ export async function GET(request: NextRequest) {
         shopName: true,
         shopNameFr: true,
         hasDelivery: true,
+        isActive: true,
         createdAt: true,
         updatedAt: true,
       },

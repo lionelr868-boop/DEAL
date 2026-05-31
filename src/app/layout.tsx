@@ -9,18 +9,28 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "DEAL - المنصة المتكاملة لسوق أهراس",
-  description: "منصة رقمية متكاملة تربط الحرفيين، التجار، ولوحي المعدات بالمستخدمين في سوق أهراس والولايات المجاورة",
-  keywords: ["DEAL", "سوق أهراس", "حرفيين", "تجار", "معدات", "Souk Ahras", "artisans", "Algérie"],
+  title: 'DEAL - منصة الحرفيين والتجار في سوق أهراس | Souk Ahras',
+  description: 'DEAL هي منصة رقمية متكاملة تربط الحرفيين والتجار وأصحاب المعدات والمستخدمين في سوق أهراس والولايات المجاورة. ابحث عن أفضل الخدمات والمنتجات والمعدات.',
+  keywords: 'سوق أهراس, حرفيين, تجار, معدات, خدمات, منتجات, Souk Ahras, DEAL, artisans, commerçants, Algérie',
   authors: [{ name: "DEAL Team" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "DEAL - المنصة المتكاملة لسوق أهراس",
-    description: "الحرفيون والتجار في متناول يدك",
-    siteName: "DEAL",
-    type: "website",
+    title: 'DEAL - منصة الحرفيين والتجار في سوق أهراس',
+    description: 'ابحث عن أفضل الخدمات والمنتجات والمعدات في سوق أهراس',
+    siteName: 'DEAL',
+    locale: 'ar_DZ',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DEAL - منصة الحرفيين والتجار',
+    description: 'ابحث عن أفضل الخدمات والمنتجات والمعدات في سوق أهراس',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
