@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -145,6 +145,55 @@ export default function DetailModal() {
   const [contactMessage, setContactMessage] = useState('');
   const [contactLoading, setContactLoading] = useState(false);
 
+  // Real item data from API (for provider IDs and reviews)
+  const [realItem, setRealItem] = useState<any>(null);
+  const [loadingItem, setLoadingItem] = useState(false);
+  const [apiReviews, setApiReviews] = useState<any[]>([]);
+
+  // Helper: get the provider/merchant/owner user ID from the real API item
+  const getProviderUserId = () => {
+    if (!realItem) return null;
+    if (realItem.provider?.id) return realItem.provider.id;
+    if (realItem.merchant?.id) return realItem.merchant.id;
+    if (realItem.owner?.id) return realItem.owner.id;
+    return null;
+  };
+
+  // Fetch real item from API when modal opens, to get provider IDs
+  useEffect(() => {
+    if (showDetailModal && selectedItemId && detailType) {
+      setRealItem(null);
+      setApiReviews([]);
+      setLoadingItem(true);
+      const endpoint = detailType === 'service' ? '/api/services' : detailType === 'product' ? '/api/products' : '/api/equipment';
+      fetch(endpoint)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && Array.isArray(data) && data.length > 0) {
+            // Try to match by title (Arabic or French)
+            const matched = data.find((d: any) => d.title === item?.title || d.titleFr === item?.titleFr);
+            setRealItem(matched || data[0]); // fallback to first item of same type
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingItem(false));
+    } else {
+      setRealItem(null);
+      setApiReviews([]);
+    }
+  }, [showDetailModal, selectedItemId, detailType]);
+
+  // Fetch real reviews for the provider when realItem is loaded
+  useEffect(() => {
+    const providerUserId = getProviderUserId();
+    if (providerUserId) {
+      fetch(`/api/reviews?targetId=${providerUserId}`)
+        .then(res => res.ok ? res.json() : [])
+        .then(data => setApiReviews(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }
+  }, [realItem]);
+
   // Find the item based on type and ID
   const service = detailType === 'service' ? services.find(s => s.id === selectedItemId) : null;
   const product = detailType === 'product' ? products.find(p => p.id === selectedItemId) : null;
@@ -211,44 +260,21 @@ export default function DetailModal() {
     setShowComplaintModal(true);
   };
 
-  const handleMessageProvider = (providerName: { ar: string; fr: string }) => {
+  const handleMessageProvider = () => {
     if (!currentUser) {
       toast.error(t.common.loginRequired);
       return;
     }
-    // Set messaging target to trigger the messaging widget to open
-    // We use provider name as a lookup key since we don't have providerId in mock data
-    const providerMap: Record<string, string> = {
-      'كريم بن أحمد': 'craftsman1',
-      'Karim Ben Ahmed': 'craftsman1',
-      'عمر بلقاسم': 'craftsman2',
-      'Omar Belkacem': 'craftsman2',
-      'يوسف مزياني': 'craftsman3',
-      'Youcef Meziani': 'craftsman3',
-      'علي شريف': 'craftsman4',
-      'Ali Cherif': 'craftsman4',
-      'محمد بن عيسى': 'craftsman5',
-      'Mohamed Ben Aissa': 'craftsman5',
-      'سالم بوحمد': 'craftsman6',
-      'Salim Bouhamed': 'craftsman6',
-      'مؤسسة البناء الحديث': 'merchant1',
-      'Bati Modern': 'merchant1',
-      'مؤسسة الكهرباء والأنوار': 'merchant2',
-      'Electro Lumière': 'merchant2',
-      'الأخشاب الطبيعية': 'merchant3',
-      'Bois Nature': 'merchant3',
-      'مؤسسة كراء المعدات الثقيلة': 'equip1',
-      'Location Matériel Lourd': 'equip1',
-      'مؤسسة الأدوات المهنية': 'equip2',
-      'Outils Professionnels': 'equip2',
-    };
-    const providerId = providerMap[providerName[locale]] || providerMap[Object.keys(providerMap).find(k => k === providerName.ar || k === providerName.fr)] || null;
-    if (providerId) {
-      setMessagingTargetUserId(providerId);
+    const providerUserId = getProviderUserId();
+    if (providerUserId) {
+      setMessagingTargetUserId(providerUserId);
       setShowDetailModal(false);
     } else {
-      // Fallback to contact form if provider ID not found
-      handleContact(providerName);
+      // Fallback to contact form if real item not loaded yet
+      setShowContactForm(true);
+      setShowBookingForm(false);
+      setShowReviewForm(false);
+      setShowOrderForm(false);
     }
   };
 
@@ -278,12 +304,13 @@ export default function DetailModal() {
     setBookingLoading(true);
     try {
       const price = service?.price || product?.price || equipment?.dailyPrice || 0;
+      const providerUserId = getProviderUserId();
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: currentUser.id,
-          providerId: currentUser.id,
+          providerId: providerUserId || currentUser.id,
           type: detailType === 'equipment' ? 'EQUIPMENT' : 'SERVICE',
           serviceId: service?.id || null,
           equipmentId: equipment?.id || null,
@@ -320,12 +347,13 @@ export default function DetailModal() {
     }
     setReviewLoading(true);
     try {
+      const providerUserId = getProviderUserId();
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           authorId: currentUser.id,
-          targetId: currentUser.id,
+          targetId: providerUserId || currentUser.id,
           targetType: detailType === 'service' ? 'SERVICE' : detailType === 'product' ? 'PRODUCT' : 'EQUIPMENT',
           rating: reviewRating,
           comment: reviewComment,
@@ -352,12 +380,13 @@ export default function DetailModal() {
     if (!currentUser || !product) return;
     setOrderLoading(true);
     try {
+      const providerUserId = getProviderUserId();
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: currentUser.id,
-          merchantId: currentUser.id,
+          merchantId: providerUserId || currentUser.id,
           productId: product.id,
           quantity: orderQuantity,
           deliveryAddress: orderDeliveryAddress,
@@ -633,7 +662,7 @@ export default function DetailModal() {
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-bold text-deal-navy flex items-center gap-2">
           <Star className="w-4 h-4 fill-deal-gold text-deal-gold" />
-          {t.common.reviews} ({totalReviews + userReviews.length})
+          {t.common.reviews} ({apiReviews.length + userReviews.length})
         </h4>
         {currentUser && !showReviewForm && (
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -661,22 +690,25 @@ export default function DetailModal() {
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{review.text}</p>
           </motion.div>
         ))}
-        {staticReviews.map((review, i) => (
-          <motion.div key={`static-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+        {apiReviews.map((review, i) => (
+          <motion.div key={`api-${review.id}-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="p-3 rounded-xl bg-gray-50 border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">{getLocalizedValue(review.name.ar, review.name.fr).charAt(0)}</span>
+                  <span className="text-white text-[10px] font-bold">{getLocalizedValue(review.author?.name, review.author?.nameFr).charAt(0)}</span>
                 </div>
-                <span className="text-xs font-bold text-deal-navy">{getLocalizedValue(review.name.ar, review.name.fr)}</span>
+                <span className="text-xs font-bold text-deal-navy">{getLocalizedValue(review.author?.name, review.author?.nameFr)}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground">{review.date}</span>
+              <span className="text-[10px] text-muted-foreground">{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}</span>
             </div>
             <RatingStars rating={review.rating} size="sm" showCount={false} />
-            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{getLocalizedValue(review.text.ar, review.text.fr)}</p>
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{getLocalizedValue(review.comment, review.commentFr)}</p>
           </motion.div>
         ))}
+        {apiReviews.length === 0 && userReviews.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-4">{t.dashboard.noReviews || (locale === 'ar' ? 'لا توجد تقييمات بعد' : 'Aucun avis pour le moment')}</p>
+        )}
       </div>
     </div>
   );
@@ -801,10 +833,10 @@ export default function DetailModal() {
               </div>
             </div>
 
-            {/* Provider info with clickable contact */}
+            {/* Provider info with clickable messaging */}
             <motion.div
               whileHover={{ scale: 1.01 }}
-              onClick={() => handleContact({ ar: service.providerName, fr: service.providerNameFr })}
+              onClick={handleMessageProvider}
               className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-deal-teal/10 flex items-center justify-center flex-shrink-0">
@@ -819,11 +851,11 @@ export default function DetailModal() {
 
             <RatingStars rating={rating} size="md" reviewCount={totalReviews} />
 
-            {/* Contact Provider Button */}
+            {/* Contact Provider Button — opens messaging directly */}
             <motion.button
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handleContact({ ar: service.providerName, fr: service.providerNameFr })}
+              onClick={handleMessageProvider}
               className="w-full btn-3d-sm text-white rounded-xl px-6 py-2.5 font-bold text-sm flex items-center justify-center gap-2"
               style={{
                 background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',
@@ -1007,10 +1039,10 @@ export default function DetailModal() {
               </div>
             </div>
 
-            {/* Merchant info */}
+            {/* Merchant info — click opens messaging */}
             <motion.div
               whileHover={{ scale: 1.01 }}
-              onClick={() => handleContact({ ar: product.merchantName, fr: product.merchantNameFr })}
+              onClick={handleMessageProvider}
               className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-deal-orange/10 flex items-center justify-center flex-shrink-0">
@@ -1025,11 +1057,11 @@ export default function DetailModal() {
 
             <RatingStars rating={rating} size="md" reviewCount={totalReviews} />
 
-            {/* Contact Provider Button */}
+            {/* Contact Provider Button — opens messaging directly */}
             <motion.button
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handleContact({ ar: product.merchantName, fr: product.merchantNameFr })}
+              onClick={handleMessageProvider}
               className="w-full btn-3d-sm text-white rounded-xl px-6 py-2.5 font-bold text-sm flex items-center justify-center gap-2"
               style={{
                 background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',
@@ -1242,10 +1274,10 @@ export default function DetailModal() {
               </div>
             </div>
 
-            {/* Owner info */}
+            {/* Owner info — click opens messaging */}
             <motion.div
               whileHover={{ scale: 1.01 }}
-              onClick={() => handleContact({ ar: equipment.ownerName, fr: equipment.ownerNameFr })}
+              onClick={handleMessageProvider}
               className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-deal-gold/10 flex items-center justify-center flex-shrink-0">
@@ -1260,11 +1292,11 @@ export default function DetailModal() {
 
             <RatingStars rating={rating} size="md" reviewCount={totalReviews} />
 
-            {/* Contact Provider Button */}
+            {/* Contact Provider Button — opens messaging directly */}
             <motion.button
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handleContact({ ar: equipment.ownerName, fr: equipment.ownerNameFr })}
+              onClick={handleMessageProvider}
               className="w-full btn-3d-sm text-white rounded-xl px-6 py-2.5 font-bold text-sm flex items-center justify-center gap-2"
               style={{
                 background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Truck,
@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import ProfileTabContent from './profile-tab-content';
 import { equipmentList } from '@/lib/data/mock';
 import { AnimatedCounter } from '../animated-counter';
 import { toast } from 'sonner';
@@ -87,7 +88,7 @@ interface ApiBooking {
 
 export default function EquipmentOwnerDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId } = useAppStore();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab } = useAppStore();
 
   // Real equipment state
   const [myEquipment, setMyEquipment] = useState<ApiEquipment[]>([]);
@@ -207,10 +208,49 @@ export default function EquipmentOwnerDashboard() {
     }
   }, [t.dashboard.accept, t.dashboard.cancelled, locale]);
 
+  // Add equipment form state
+  const [showAddEquipmentForm, setShowAddEquipmentForm] = useState(false);
+  const [addFormLoading, setAddFormLoading] = useState(false);
+  const [newEquipmentTitle, setNewEquipmentTitle] = useState('');
+  const [newEquipmentDesc, setNewEquipmentDesc] = useState('');
+  const [newEquipmentDailyPrice, setNewEquipmentDailyPrice] = useState('');
+
+  const handleSubmitAddEquipment = async () => {
+    if (!newEquipmentTitle.trim() || !newEquipmentDailyPrice.trim() || !currentUser?.id) return;
+    setAddFormLoading(true);
+    try {
+      const res = await fetch('/api/equipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newEquipmentTitle,
+          description: newEquipmentDesc,
+          dailyPrice: Number(newEquipmentDailyPrice),
+          ownerId: currentUser.id,
+        }),
+      });
+      if (res.ok) {
+        toast.success(locale === 'ar' ? t.dashboard.addedSuccessfully : t.dashboard.addedSuccessfully);
+        setShowAddEquipmentForm(false);
+        setNewEquipmentTitle('');
+        setNewEquipmentDesc('');
+        setNewEquipmentDailyPrice('');
+        setEquipmentFetched(false);
+        await fetchEquipment();
+      } else {
+        toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'خطأ في الاتصال' : 'Erreur de connexion');
+    } finally {
+      setAddFormLoading(false);
+    }
+  };
+
   const quickActions = [
-    { label: t.dashboard.addEquipment, icon: Plus, color: 'bg-deal-gold' },
-    { label: t.dashboard.viewRentals, icon: ClipboardList, color: 'bg-deal-teal' },
-    { label: t.dashboard.manageProfile, icon: UserCog, color: 'bg-deal-orange' },
+    { label: t.dashboard.addEquipment, icon: Plus, color: 'bg-deal-gold', action: () => setShowAddEquipmentForm(true) },
+    { label: t.dashboard.viewRentals, icon: ClipboardList, color: 'bg-deal-teal', action: () => setDashboardActiveTab('rentals') },
+    { label: t.dashboard.manageProfile, icon: UserCog, color: 'bg-deal-orange', action: () => setDashboardActiveTab('profile') },
   ];
 
   // Computed equipment status from real data
@@ -327,6 +367,11 @@ export default function EquipmentOwnerDashboard() {
     );
   };
 
+  // --- Profile Tab ---
+  if (dashboardActiveTab === 'profile') {
+    return <ProfileTabContent role="equipment_owner" />;
+  }
+
   // --- Equipment Status Tab ---
   if (dashboardActiveTab === 'equipment') {
     return (
@@ -355,6 +400,7 @@ export default function EquipmentOwnerDashboard() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => { setShowAddEquipmentForm(true); setDashboardActiveTab('overview'); }}
                 className="btn-3d-sm text-deal-navy text-xs"
                 style={{
                   background: 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)',
@@ -659,6 +705,7 @@ export default function EquipmentOwnerDashboard() {
                 animate="visible"
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={action.action}
                 className="btn-3d-sm text-white text-xs sm:text-sm"
                 style={{
                   background: action.color === 'bg-deal-orange'
@@ -680,6 +727,39 @@ export default function EquipmentOwnerDashboard() {
             );
           })}
         </div>
+        <AnimatePresence>
+          {showAddEquipmentForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-deal-navy">{t.dashboard.addEquipment}</h4>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowAddEquipmentForm(false)} className="text-xs text-muted-foreground hover:text-deal-navy">{t.common.cancel}</motion.button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input type="text" value={newEquipmentTitle} onChange={(e) => setNewEquipmentTitle(e.target.value)} placeholder={t.dashboard.titleField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-gold/30 focus:border-deal-gold" dir={locale === 'ar' ? 'rtl' : 'ltr'} />
+                  <input type="number" value={newEquipmentDailyPrice} onChange={(e) => setNewEquipmentDailyPrice(e.target.value)} placeholder={t.dashboard.dailyPriceField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-gold/30 focus:border-deal-gold" dir="ltr" />
+                  <input type="text" value={newEquipmentDesc} onChange={(e) => setNewEquipmentDesc(e.target.value)} placeholder={t.dashboard.descriptionField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-gold/30 focus:border-deal-gold sm:col-span-2" dir={locale === 'ar' ? 'rtl' : 'ltr'} />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={addFormLoading || !newEquipmentTitle.trim() || !newEquipmentDailyPrice.trim()}
+                  onClick={handleSubmitAddEquipment}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-deal-gold to-amber-500 text-deal-navy text-xs font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                >
+                  {addFormLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  {t.common.add}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

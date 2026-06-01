@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Package,
@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import ProfileTabContent from './profile-tab-content';
 import { products } from '@/lib/data/mock';
 import { AnimatedCounter } from '../animated-counter';
 import { toast } from 'sonner';
@@ -78,7 +79,7 @@ interface ApiProduct {
 
 export default function MerchantDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId } = useAppStore();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab } = useAppStore();
 
   const fallbackProducts = products.slice(0, 8);
 
@@ -208,10 +209,55 @@ export default function MerchantDashboard() {
     }
   }, [t.dashboard.accept, t.dashboard.cancelled, locale]);
 
+  // Add product form state
+  const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [addFormLoading, setAddFormLoading] = useState(false);
+  const [newProductTitle, setNewProductTitle] = useState('');
+  const [newProductDesc, setNewProductDesc] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState('building');
+  const [newProductPrice, setNewProductPrice] = useState('');
+  const [newProductStock, setNewProductStock] = useState('');
+
+  const handleSubmitAddProduct = async () => {
+    if (!newProductTitle.trim() || !newProductPrice.trim() || !currentUser?.id) return;
+    setAddFormLoading(true);
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newProductTitle,
+          description: newProductDesc,
+          categoryId: newProductCategory,
+          price: Number(newProductPrice),
+          stock: Number(newProductStock) || 0,
+          merchantId: currentUser.id,
+        }),
+      });
+      if (res.ok) {
+        toast.success(locale === 'ar' ? t.dashboard.addedSuccessfully : t.dashboard.addedSuccessfully);
+        setShowAddProductForm(false);
+        setNewProductTitle('');
+        setNewProductDesc('');
+        setNewProductCategory('building');
+        setNewProductPrice('');
+        setNewProductStock('');
+        setProductsFetched(false);
+        await fetchProducts();
+      } else {
+        toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'خطأ في الاتصال' : 'Erreur de connexion');
+    } finally {
+      setAddFormLoading(false);
+    }
+  };
+
   const quickActions = [
-    { label: t.dashboard.addProduct, icon: Plus, color: 'bg-deal-teal' },
-    { label: t.dashboard.manageOrders, icon: ClipboardList, color: 'bg-deal-orange' },
-    { label: t.dashboard.viewProfile, icon: UserCog, color: 'bg-deal-gold' },
+    { label: t.dashboard.addProduct, icon: Plus, color: 'bg-deal-teal', action: () => setShowAddProductForm(true) },
+    { label: t.dashboard.manageOrders, icon: ClipboardList, color: 'bg-deal-orange', action: () => setDashboardActiveTab('orders') },
+    { label: t.dashboard.viewProfile, icon: UserCog, color: 'bg-deal-gold', action: () => setDashboardActiveTab('profile') },
   ];
 
   const handleOpenProduct = (id: string) => {
@@ -290,6 +336,11 @@ export default function MerchantDashboard() {
     );
   };
 
+  // --- Profile Tab ---
+  if (dashboardActiveTab === 'profile') {
+    return <ProfileTabContent role="merchant" />;
+  }
+
   // --- Products Tab ---
   if (dashboardActiveTab === 'products') {
     return (
@@ -318,6 +369,7 @@ export default function MerchantDashboard() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => { setShowAddProductForm(true); setDashboardActiveTab('overview'); }}
                 className="btn-3d-sm text-white text-xs"
                 style={{
                   background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',
@@ -591,6 +643,7 @@ export default function MerchantDashboard() {
                 animate="visible"
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={action.action}
                 className="btn-3d-sm text-white text-xs sm:text-sm"
                 style={{
                   background: action.color === 'bg-deal-orange'
@@ -612,6 +665,48 @@ export default function MerchantDashboard() {
             );
           })}
         </div>
+        <AnimatePresence>
+          {showAddProductForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-deal-navy">{t.dashboard.addProduct}</h4>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowAddProductForm(false)} className="text-xs text-muted-foreground hover:text-deal-navy">{t.common.cancel}</motion.button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input type="text" value={newProductTitle} onChange={(e) => setNewProductTitle(e.target.value)} placeholder={t.dashboard.titleField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" dir={locale === 'ar' ? 'rtl' : 'ltr'} />
+                  <input type="number" value={newProductPrice} onChange={(e) => setNewProductPrice(e.target.value)} placeholder={t.dashboard.priceField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" dir="ltr" />
+                  <input type="number" value={newProductStock} onChange={(e) => setNewProductStock(e.target.value)} placeholder={locale === 'ar' ? 'الكمية' : 'Quantité'} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal" dir="ltr" />
+                  <select value={newProductCategory} onChange={(e) => setNewProductCategory(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal">
+                    <option value="building">{t.categories.building}</option>
+                    <option value="electrical_materials">{t.categories.electrical_materials}</option>
+                    <option value="wood">{t.categories.wood}</option>
+                    <option value="plumbing_materials">{t.categories.plumbing_materials}</option>
+                    <option value="paints">{t.categories.paints}</option>
+                    <option value="tools">{t.categories.tools}</option>
+                  </select>
+                  <input type="text" value={newProductDesc} onChange={(e) => setNewProductDesc(e.target.value)} placeholder={t.dashboard.descriptionField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal sm:col-span-2" dir={locale === 'ar' ? 'rtl' : 'ltr'} />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={addFormLoading || !newProductTitle.trim() || !newProductPrice.trim()}
+                  onClick={handleSubmitAddProduct}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-deal-teal to-teal-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                >
+                  {addFormLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  {t.common.add}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

@@ -43,6 +43,7 @@ import {
   Clock4,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import ProfileTabContent from './profile-tab-content';
 import { AnimatedCounter } from '../animated-counter';
 import { toast } from 'sonner';
 
@@ -149,7 +150,7 @@ const complaintStatusConfig: Record<string, { bg: string; text: string; icon: ty
 
 export default function AdminDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { dashboardActiveTab, currentUser } = useAppStore();
+  const { dashboardActiveTab, currentUser, setDashboardActiveTab } = useAppStore();
 
   const [dbUsers, setDbUsers] = useState<DBUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -519,10 +520,46 @@ export default function AdminDashboard() {
     { id: '8', icon: CalendarCheck, color: 'bg-deal-orange', text: { ar: 'حجز مؤكد: تركيب تكييف', fr: 'Réservation confirmée: Installation climatisation' }, time: { ar: 'منذ 6 ساعات', fr: 'Il y a 6h' } },
   ];
 
+  // Settings state
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [platformName, setPlatformName] = useState('DEAL');
+  const [contactEmail, setContactEmail] = useState('contact@deal.dz');
+  const [supportPhone, setSupportPhone] = useState('+213 37 XX XX XX');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  const handleSaveSettings = () => {
+    setSettingsLoading(true);
+    setTimeout(() => {
+      toast.success(locale === 'ar' ? t.dashboard.settingsSaved : t.dashboard.settingsSaved);
+      setSettingsLoading(false);
+    }, 800);
+  };
+
+  // Category data derived from i18n
+  const serviceCategoryList = useMemo(() => [
+    { id: 'elec', ar: t.categories.electrical, fr: t.categories.electrical, icon: '⚡', color: 'bg-deal-orange/10', textColor: 'text-deal-orange' },
+    { id: 'plumb', ar: t.categories.plumbing, fr: t.categories.plumbing, icon: '🔧', color: 'bg-deal-teal/10', textColor: 'text-deal-teal' },
+    { id: 'build', ar: t.categories.construction, fr: t.categories.construction, icon: '🏗️', color: 'bg-deal-gold/10', textColor: 'text-deal-gold-dark' },
+    { id: 'carp', ar: t.categories.carpentry, fr: t.categories.carpentry, icon: '🪚', color: 'bg-purple-100', textColor: 'text-purple-600' },
+    { id: 'hvac', ar: t.categories.hvac, fr: t.categories.hvac, icon: '❄️', color: 'bg-blue-100', textColor: 'text-blue-600' },
+    { id: 'metal', ar: t.categories.metalwork, fr: t.categories.metalwork, icon: '⚒️', color: 'bg-gray-100', textColor: 'text-gray-600' },
+    { id: 'paint', ar: t.categories.painting, fr: t.categories.painting, icon: '🎨', color: 'bg-pink-100', textColor: 'text-pink-600' },
+    { id: 'clean', ar: t.categories.cleaning, fr: t.categories.cleaning, icon: '🧹', color: 'bg-emerald-50', textColor: 'text-emerald-600' },
+  ], [t.categories]);
+
+  const productCategoryList = useMemo(() => [
+    { id: 'building', ar: t.categories.building, fr: t.categories.building, icon: '🧱', color: 'bg-deal-teal/10', textColor: 'text-deal-teal' },
+    { id: 'electrical_materials', ar: t.categories.electrical_materials, fr: t.categories.electrical_materials, icon: '🔌', color: 'bg-deal-orange/10', textColor: 'text-deal-orange' },
+    { id: 'wood', ar: t.categories.wood, fr: t.categories.wood, icon: '🪵', color: 'bg-amber-100', textColor: 'text-amber-600' },
+    { id: 'plumbing_materials', ar: t.categories.plumbing_materials, fr: t.categories.plumbing_materials, icon: '🚿', color: 'bg-blue-100', textColor: 'text-blue-600' },
+    { id: 'paints', ar: t.categories.paints, fr: t.categories.paints, icon: '🎨', color: 'bg-pink-100', textColor: 'text-pink-600' },
+    { id: 'tools', ar: t.categories.tools, fr: t.categories.tools, icon: '🔧', color: 'bg-gray-100', textColor: 'text-gray-600' },
+  ], [t.categories]);
+
   const quickActions = [
-    { label: t.dashboard.manageUsers, icon: UserCog, color: 'bg-deal-orange' },
-    { label: t.dashboard.manageCategories, icon: FolderTree, color: 'bg-deal-teal' },
-    { label: t.dashboard.viewReports, icon: BarChart3, color: 'bg-deal-gold' },
+    { label: t.dashboard.manageUsers, icon: UserCog, color: 'bg-deal-orange', action: () => setDashboardActiveTab('users') },
+    { label: t.dashboard.manageCategories, icon: FolderTree, color: 'bg-deal-teal', action: () => setDashboardActiveTab('categories') },
+    { label: t.dashboard.viewReports, icon: BarChart3, color: 'bg-deal-gold', action: () => setDashboardActiveTab('reports') },
   ];
 
   // --- Complaints Tab ---
@@ -944,6 +981,11 @@ export default function AdminDashboard() {
     );
   }
 
+  // --- Profile Tab ---
+  if (dashboardActiveTab === 'profile') {
+    return <ProfileTabContent role="admin" />;
+  }
+
   // --- Users Management Tab ---
   if (dashboardActiveTab === 'users') {
     return (
@@ -1348,6 +1390,332 @@ export default function AdminDashboard() {
               </AnimatePresence>
             </>
           )}
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- Categories Tab ---
+  if (dashboardActiveTab === 'categories') {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-navy via-deal-navy-dark to-deal-navy p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -top-10 -end-10 w-48 h-48 rounded-full bg-deal-teal/20 blur-2xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <FolderTree className="w-5 h-5 text-deal-teal" />
+              <span className="text-xs font-bold text-deal-teal bg-deal-teal/20 px-2 py-0.5 rounded-full">{t.dashboard.categoryDistribution}</span>
+            </div>
+            <h2 className="text-2xl font-black">{t.dashboard.manageCategories} 📂</h2>
+            <p className="mt-1 text-white/70 text-sm">{locale === 'ar' ? 'عرض فئات الخدمات والمنتجات' : 'Affichage des catégories de services et produits'}</p>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Service Categories */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.serviceCategories}</h3>
+              <Wrench className="w-5 h-5 text-deal-orange" />
+            </div>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+              {serviceCategoryList.map((cat, i) => (
+                <motion.div
+                  key={cat.id}
+                  custom={i}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <span className="text-2xl">{cat.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-deal-navy">{locale === 'ar' ? cat.ar : cat.fr}</p>
+                    <p className="text-[10px] text-muted-foreground">ID: {cat.id}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold ${cat.color} ${cat.textColor}`}>
+                    <span className={cat.textColor}>{locale === 'ar' ? 'خدمات' : 'Services'}</span>
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Product Categories */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.productCategories}</h3>
+              <Package className="w-5 h-5 text-deal-teal" />
+            </div>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+              {productCategoryList.map((cat, i) => (
+                <motion.div
+                  key={cat.id}
+                  custom={i}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <span className="text-2xl">{cat.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-deal-navy">{locale === 'ar' ? cat.ar : cat.fr}</p>
+                    <p className="text-[10px] text-muted-foreground">ID: {cat.id}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold ${cat.color} ${cat.textColor}`}>
+                    <span className={cat.textColor}>{locale === 'ar' ? 'منتجات' : 'Produits'}</span>
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Reports Tab ---
+  if (dashboardActiveTab === 'reports') {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-navy via-deal-navy-dark to-deal-navy p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -top-10 -end-10 w-48 h-48 rounded-full bg-deal-gold/20 blur-2xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className="w-5 h-5 text-deal-gold" />
+              <span className="text-xs font-bold text-deal-gold bg-deal-gold/20 px-2 py-0.5 rounded-full">{t.dashboard.viewReports}</span>
+            </div>
+            <h2 className="text-2xl font-black">{t.dashboard.platformStats} 📊</h2>
+            <p className="mt-1 text-white/70 text-sm">{locale === 'ar' ? 'إحصائيات شاملة للمنصة' : 'Statistiques complètes de la plateforme'}</p>
+          </div>
+        </motion.div>
+
+        {/* Stats Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statsLoading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-deal-gold animate-spin" />
+            </div>
+          ) : (
+            [
+              { label: t.dashboard.customers, value: String(apiStats?.users?.customers || 0), icon: Users, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange' },
+              { label: t.dashboard.craftsmen, value: String(apiStats?.users?.craftsmen || 0), icon: Wrench, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal' },
+              { label: t.dashboard.merchants, value: String(apiStats?.users?.merchants || 0), icon: Package, bg: 'bg-deal-gold/10', iconColor: 'text-deal-gold-dark' },
+              { label: t.dashboard.equipmentOwners, value: String(apiStats?.users?.equipmentOwners || 0), icon: Truck, bg: 'bg-purple-50', iconColor: 'text-purple-500' },
+              { label: t.dashboard.totalServicesCount, value: String(apiStats?.services || 0), icon: Wrench, bg: 'bg-deal-orange/10', iconColor: 'text-deal-orange' },
+              { label: t.dashboard.totalProductsCount, value: String(apiStats?.products || 0), icon: Package, bg: 'bg-deal-teal/10', iconColor: 'text-deal-teal' },
+              { label: t.dashboard.totalEquipmentCount, value: String(apiStats?.equipment || 0), icon: Truck, bg: 'bg-deal-gold/10', iconColor: 'text-deal-gold-dark' },
+              { label: t.dashboard.totalBookingsCount, value: String(apiStats?.bookings || 0), icon: ShoppingCart, bg: 'bg-amber-50', iconColor: 'text-amber-600' },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.label}
+                  custom={i}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="card-3d rounded-2xl p-4 sm:p-5 bg-white"
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.iconColor}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xl sm:text-2xl font-black text-deal-navy truncate"><AnimatedCounter target={stat.value} duration={1000} /></p>
+                      <p className="text-[11px] sm:text-sm text-muted-foreground font-medium truncate">{stat.label}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Activity Feed */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="card-3d rounded-2xl bg-white p-5 sm:p-6"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.activityFeed}</h3>
+              <Activity className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+              {activityFeed.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={item.id}
+                    custom={i}
+                    variants={fadeInUp}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-deal-navy">{locale === 'ar' ? item.text.ar : item.text.fr}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{locale === 'ar' ? item.time.ar : item.time.fr}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Revenue Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="card-3d rounded-2xl bg-white p-5 sm:p-6"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-deal-navy">{t.dashboard.revenue}</h3>
+              <DollarSign className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-deal-navy">{locale === 'ar' ? 'إجمالي المستخدمين' : 'Total utilisateurs'}</span>
+                  <span className="text-lg font-black text-emerald-600">{apiStats?.users?.total || 0}</span>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-deal-orange/10 to-amber-50 border border-deal-orange/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-deal-navy">{locale === 'ar' ? 'إجمالي الحجوزات' : 'Total réservations'}</span>
+                  <span className="text-lg font-black text-deal-orange">{apiStats?.bookings || 0}</span>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-deal-gold/10 to-yellow-50 border border-deal-gold/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-deal-navy">{locale === 'ar' ? 'الخدمات + المنتجات' : 'Services + Produits'}</span>
+                  <span className="text-lg font-black text-deal-gold-dark">{(apiStats?.services || 0) + (apiStats?.products || 0)}</span>
+                </div>
+ </div>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-deal-navy">{locale === 'ar' ? 'المعدات' : 'Équipements'}</span>
+                  <span className="text-lg font-black text-purple-600">{apiStats?.equipment || 0}</span>
+                </div>
+ </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Settings Tab ---
+  if (dashboardActiveTab === 'settings') {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-navy via-deal-navy-dark to-deal-navy p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -top-10 -end-10 w-48 h-48 rounded-full bg-purple-500/20 blur-2xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck className="w-5 h-5 text-purple-400" />
+              <span className="text-xs font-bold text-purple-400 bg-purple-400/20 px-2 py-0.5 rounded-full">{t.dashboard.platformSettings}</span>
+            </div>
+            <h2 className="text-2xl font-black">{t.dashboard.settings} ⚙️</h2>
+            <p className="mt-1 text-white/70 text-sm">{locale === 'ar' ? 'إعدادات المنصة العامة' : 'Paramètres généraux de la plateforme'}</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6 space-y-6">
+          <h3 className="text-lg font-bold text-deal-navy mb-4">{t.dashboard.platformSettings}</h3>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-deal-navy mb-1.5">{t.dashboard.platformName}</label>
+              <input
+                type="text"
+                value={platformName}
+                onChange={(e) => setPlatformName(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal text-deal-navy"
+                dir={locale === 'ar' ? 'rtl' : 'ltr'}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-deal-navy mb-1.5">{t.dashboard.contactEmail}</label>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal text-deal-navy"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-deal-navy mb-1.5">{t.dashboard.supportPhone}</label>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    value={supportPhone}
+                    onChange={(e) => setSupportPhone(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal text-deal-navy"
+                    dir="ltr"
+ />
+                </div>
+              </div>
+            </div>
+
+            {/* Maintenance Mode Toggle */}
+            <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg ${maintenanceMode ? 'bg-red-500' : 'bg-gray-200'} flex items-center justify-center transition-colors`}>
+                    {maintenanceMode ? <PowerOff className="w-5 h-5 text-white" /> : <Power className="w-5 h-5 text-gray-400" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-deal-navy">{t.dashboard.maintenanceMode}</p>
+                    <p className="text-[10px] text-muted-foreground">{maintenanceMode
+                      ? (locale === 'ar' ? 'الوضع النشط - المنصة غير متاحة للمستخدمين' : 'Mode actif - La plateforme est indisponible')
+                      : (locale === 'ar' ? 'الوضع العادي - المنصة متاحة' : 'Mode normal - Plateforme disponible')}
+                    </p>
+                  </div>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setMaintenanceMode(!maintenanceMode)}
+                  className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${maintenanceMode ? 'bg-red-500' : 'bg-gray-300'}`}
+                >
+                  <motion.div
+                    animate={{ x: maintenanceMode ? 28 : 4 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm"
+                  />
+                </motion.button>
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={settingsLoading}
+              onClick={handleSaveSettings}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-deal-teal to-deal-teal-dark text-white text-sm font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+            >
+              {settingsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {t.dashboard.saveSettings}
+            </motion.button>
+          </div>
         </motion.div>
       </div>
     );

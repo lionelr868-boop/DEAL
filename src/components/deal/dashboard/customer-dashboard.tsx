@@ -1,9 +1,10 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   CalendarCheck,
+  CalendarDays,
   PackageCheck,
   Star,
   Wrench,
@@ -11,13 +12,17 @@ import {
   Truck,
   Clock,
   ChevronLeft,
+  ChevronRight,
   Heart,
   Package,
   ImageIcon,
   Loader2,
   XCircle,
+  MapPin,
+  FileText,
 } from 'lucide-react';
 import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
+import ProfileTabContent from './profile-tab-content';
 import { services, products, equipmentList } from '@/lib/data/mock';
 import { AnimatedCounter } from '../animated-counter';
 import { toast } from 'sonner';
@@ -76,7 +81,7 @@ interface APIOrder {
 
 export default function CustomerDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, setActiveSection, setShowDetailModal, setDetailType, setSelectedItemId, dashboardActiveTab } = useAppStore();
+  const { currentUser, setActiveSection, setShowDetailModal, setDetailType, setSelectedItemId, dashboardActiveTab, setShowDashboard } = useAppStore();
   const { favorites, toggleFavorite } = useFavoritesStore();
 
   // API state for bookings
@@ -89,6 +94,10 @@ export default function CustomerDashboard() {
 
   // Cancel loading state
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
+
+  // Expandable detail states
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const fetchBookings = useCallback(async () => {
     if (!currentUser) return;
@@ -173,9 +182,9 @@ export default function CustomerDashboard() {
   const statsReady = useMemo(() => true, []);
 
   const quickActions = [
-    { label: t.dashboard.browseServices, icon: Wrench, color: 'bg-deal-orange', action: () => setActiveSection('services') },
-    { label: t.dashboard.browseProducts, icon: ShoppingBag, color: 'bg-deal-teal', action: () => setActiveSection('products') },
-    { label: t.dashboard.browseEquipment, icon: Truck, color: 'bg-deal-gold', action: () => setActiveSection('equipment') },
+    { label: t.dashboard.browseServices, icon: Wrench, color: 'bg-deal-orange', action: () => { setShowDashboard(false); setActiveSection('services'); } },
+    { label: t.dashboard.browseProducts, icon: ShoppingBag, color: 'bg-deal-teal', action: () => { setShowDashboard(false); setActiveSection('products'); } },
+    { label: t.dashboard.browseEquipment, icon: Truck, color: 'bg-deal-gold', action: () => { setShowDashboard(false); setActiveSection('equipment'); } },
   ];
 
   // Get favorited items
@@ -217,8 +226,13 @@ export default function CustomerDashboard() {
     return getLocalizedValue(booking.provider.name, booking.provider.nameFr);
   };
 
+  // --- Profile Tab ---
+  if (dashboardActiveTab === 'profile') {
+    return <ProfileTabContent role="customer" />;
+  }
+
   // --- Favorites Tab ---
-  if (dashboardActiveTab === 'favorites' || dashboardActiveTab === 'profile') {
+  if (dashboardActiveTab === 'favorites') {
     const favItems = getFavoritedItems();
 
     return (
@@ -333,61 +347,136 @@ export default function CustomerDashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
               {apiBookings.map((booking, i) => {
                 const status = bookingStatusConfig[booking.status] || bookingStatusConfig.PENDING;
                 const bType = getBookingType(booking);
                 const canCancel = ['PENDING', 'CONFIRMED', 'ACCEPTED'].includes(booking.status);
+                const isSelected = selectedBookingId === booking.id;
                 return (
-                  <motion.div
-                    key={booking.id}
-                    custom={i}
-                    variants={fadeInUp}
-                    initial="hidden"
-                    animate="visible"
-                    whileHover={{ x: 4 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group"
-                  >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      bType === 'service' ? 'bg-deal-orange/10' : 'bg-deal-gold/10'
-                    }`}>
-                      {bType === 'service' ? (
-                        <Wrench className="w-5 h-5 text-deal-orange" />
-                      ) : (
-                        <Truck className="w-5 h-5 text-deal-gold" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-deal-navy truncate">{getBookingName(booking)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {getProviderName(booking)} • {new Date(booking.startDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-sm font-bold text-deal-navy hidden sm:block">
-                        {booking.totalPrice.toLocaleString()} {t.common.currency}
-                      </span>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${status.bg} ${status.text}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                        {t.dashboard[booking.status.toLowerCase() as keyof typeof t.dashboard] || booking.status}
-                      </span>
-                      {canCancel && (
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          disabled={cancelLoading === booking.id}
-                          onClick={() => handleCancelBooking(booking.id)}
-                          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors disabled:opacity-50"
+                  <div key={booking.id}>
+                    <motion.div
+                      custom={i}
+                      variants={fadeInUp}
+                      initial="hidden"
+                      animate="visible"
+                      whileHover={{ x: 4 }}
+                      onClick={() => setSelectedBookingId(isSelected ? null : booking.id)}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group"
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        bType === 'service' ? 'bg-deal-orange/10' : 'bg-deal-gold/10'
+                      }`}>
+                        {bType === 'service' ? (
+                          <Wrench className="w-5 h-5 text-deal-orange" />
+                        ) : (
+                          <Truck className="w-5 h-5 text-deal-gold" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-deal-navy truncate">{getBookingName(booking)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {getProviderName(booking)} • {new Date(booking.startDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-sm font-bold text-deal-navy hidden sm:block">
+                          {booking.totalPrice.toLocaleString()} {t.common.currency}
+                        </span>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${status.bg} ${status.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                          {t.dashboard[booking.status.toLowerCase() as keyof typeof t.dashboard] || booking.status}
+                        </span>
+                        {canCancel && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            disabled={cancelLoading === booking.id}
+                            onClick={(e) => { e.stopPropagation(); handleCancelBooking(booking.id); }}
+                            className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors disabled:opacity-50"
+                          >
+                            {cancelLoading === booking.id ? (
+                              <Loader2 className="w-3 h-3 text-red-500 animate-spin" />
+                            ) : (
+                              <XCircle className="w-3 h-3 text-red-500" />
+                            )}
+                          </motion.button>
+                        )}
+                        <ChevronLeft className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSelected ? '-rotate-90' : ''}`} />
+                      </div>
+                    </motion.div>
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
                         >
-                          {cancelLoading === booking.id ? (
-                            <Loader2 className="w-3 h-3 text-red-500 animate-spin" />
-                          ) : (
-                            <XCircle className="w-3 h-3 text-red-500" />
-                          )}
-                        </motion.button>
+                          <div className="p-4 rounded-b-xl bg-white border border-t-0 border-gray-100 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'الخدمة / المعدة' : 'Service / Équipement'}</p>
+                                <p className="text-sm font-bold text-deal-navy">{getBookingName(booking)}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'مقدم الخدمة' : 'Prestataire'}</p>
+                                <p className="text-sm font-bold text-deal-navy">{getProviderName(booking)}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'تاريخ البدء' : 'Date de début'}</p>
+                                <p className="text-sm font-bold text-deal-navy flex items-center gap-1">
+                                  <CalendarDays className="w-3.5 h-3.5 text-deal-teal" />
+                                  {new Date(booking.startDate).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'السعر الإجمالي' : 'Prix total'}</p>
+                                <p className="text-sm font-black text-deal-orange">{booking.totalPrice.toLocaleString()} {t.common.currency}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'الحالة' : 'Statut'}</p>
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${status.bg} ${status.text}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                                  {t.dashboard[booking.status.toLowerCase() as keyof typeof t.dashboard] || booking.status}
+                                </span>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'النوع' : 'Type'}</p>
+                                <p className="text-sm font-bold text-deal-navy">{bType === 'service' ? (locale === 'ar' ? 'خدمة' : 'Service') : (locale === 'ar' ? 'معدة' : 'Équipement')}</p>
+                              </div>
+                            </div>
+                            {booking.notes && (
+                              <div className="pt-2 border-t border-gray-100 space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
+                                  {locale === 'ar' ? 'ملاحظات' : 'Notes'}
+                                </p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{booking.notes}</p>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                              <p className="text-[10px] text-muted-foreground">
+                                {locale === 'ar' ? 'تم الإنشاء:' : 'Créé le:'} {new Date(booking.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')}
+                              </p>
+                              {canCancel && (
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  disabled={cancelLoading === booking.id}
+                                  onClick={() => handleCancelBooking(booking.id)}
+                                  className="text-xs font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                >
+                                  {cancelLoading === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                  {locale === 'ar' ? 'إلغاء الحجز' : 'Annuler'}
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                    </div>
-                  </motion.div>
+                    </AnimatePresence>
+                  </div>
                 );
               })}
             </div>
@@ -425,7 +514,7 @@ export default function CustomerDashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
               {apiOrders.map((order, i) => {
                 const status = orderStatusConfig[order.status] || orderStatusConfig.PENDING;
                 const productName = getLocalizedValue(order.product.title, order.product.titleFr);
@@ -433,40 +522,112 @@ export default function CustomerDashboard() {
                   order.merchant.shopName || order.merchant.name,
                   order.merchant.shopNameFr || order.merchant.nameFr
                 );
+                const isSelected = selectedOrderId === order.id;
                 return (
-                  <motion.div
-                    key={order.id}
-                    custom={i}
-                    variants={fadeInUp}
-                    initial="hidden"
-                    animate="visible"
-                    whileHover={{ x: 4 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-deal-teal/10 flex items-center justify-center flex-shrink-0">
-                      <ShoppingBag className="w-5 h-5 text-deal-teal" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-deal-navy truncate">{productName}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {merchantName} • {order.quantity}x • {new Date(order.createdAt).toLocaleDateString()}
-                      </p>
-                      {order.deliveryAddress && (
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5 truncate">
-                          📍 {order.deliveryAddress}
+                  <div key={order.id}>
+                    <motion.div
+                      custom={i}
+                      variants={fadeInUp}
+                      initial="hidden"
+                      animate="visible"
+                      whileHover={{ x: 4 }}
+                      onClick={() => setSelectedOrderId(isSelected ? null : order.id)}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-deal-teal/10 flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag className="w-5 h-5 text-deal-teal" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-deal-navy truncate">{productName}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {merchantName} • {order.quantity}x • {new Date(order.createdAt).toLocaleDateString()}
                         </p>
+                        {order.deliveryAddress && (
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5 truncate">
+                            📍 {order.deliveryAddress}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-sm font-bold text-deal-navy hidden sm:block">
+                          {order.totalPrice.toLocaleString()} {t.common.currency}
+                        </span>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${status.bg} ${status.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                          {t.dashboard[order.status.toLowerCase() as keyof typeof t.dashboard] || order.status}
+                        </span>
+                        <ChevronLeft className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSelected ? '-rotate-90' : ''}`} />
+                      </div>
+                    </motion.div>
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-4 rounded-b-xl bg-white border border-t-0 border-gray-100 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'المنتج' : 'Produit'}</p>
+                                <p className="text-sm font-bold text-deal-navy">{productName}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'التاجر' : 'Marchand'}</p>
+                                <p className="text-sm font-bold text-deal-navy">{merchantName}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'الكمية' : 'Quantité'}</p>
+                                <p className="text-sm font-bold text-deal-navy">{order.quantity}x</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'المجموع' : 'Total'}</p>
+                                <p className="text-sm font-black text-deal-teal">{order.totalPrice.toLocaleString()} {t.common.currency}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'الحالة' : 'Statut'}</p>
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${status.bg} ${status.text}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                                  {t.dashboard[order.status.toLowerCase() as keyof typeof t.dashboard] || order.status}
+                                </span>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{locale === 'ar' ? 'تاريخ الطلب' : 'Date de commande'}</p>
+                                <p className="text-sm font-bold text-deal-navy flex items-center gap-1">
+                                  <CalendarDays className="w-3.5 h-3.5 text-deal-teal" />
+                                  {new Date(order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+                            {order.deliveryAddress && (
+                              <div className="pt-2 border-t border-gray-100 space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {locale === 'ar' ? 'عنوان التوصيل' : 'Adresse de livraison'}
+                                </p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{order.deliveryAddress}</p>
+                              </div>
+                            )}
+                            {order.notes && (
+                              <div className="pt-2 border-t border-gray-100 space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
+                                  {locale === 'ar' ? 'ملاحظات' : 'Notes'}
+                                </p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{order.notes}</p>
+                              </div>
+                            )}
+                            <div className="pt-2 border-t border-gray-100">
+                              <p className="text-[10px] text-muted-foreground">
+                                {locale === 'ar' ? 'تم الإنشاء:' : 'Créé le:'} {new Date(order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-sm font-bold text-deal-navy hidden sm:block">
-                        {order.totalPrice.toLocaleString()} {t.common.currency}
-                      </span>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${status.bg} ${status.text}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                        {t.dashboard[order.status.toLowerCase() as keyof typeof t.dashboard] || order.status}
-                      </span>
-                    </div>
-                  </motion.div>
+                    </AnimatePresence>
+                  </div>
                 );
               })}
             </div>

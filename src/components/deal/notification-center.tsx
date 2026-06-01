@@ -1,11 +1,23 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, CalendarCheck, Star, Info, Trash2, Check } from 'lucide-react';
-import { useI18n } from '@/lib/store';
-import { useFavoritesStore } from '@/lib/store';
+import { Bell, X, CalendarCheck, Star, Info, Trash2, Check, Loader2 } from 'lucide-react';
+import { useI18n, useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+
+interface NotificationItem {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  titleFr: string | null;
+  message: string;
+  messageFr: string | null;
+  link: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
 
 const typeIcons: Record<string, React.ElementType> = {
   booking: CalendarCheck,
@@ -27,16 +39,36 @@ const typeUnreadBg: Record<string, string> = {
 
 export default function NotificationCenter() {
   const { t, locale } = useI18n();
-  const {
-    notifications,
-    unreadCount,
-    markNotificationRead,
-    markAllNotificationsRead,
-    clearNotifications,
-  } = useFavoritesStore();
+  const { currentUser } = useAppStore();
 
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Fetch notifications from API
+  const fetchNotifications = useCallback(async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/notifications?userId=${currentUser.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+        setUnreadCount(data.filter((n: NotificationItem) => !n.isRead).length);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?.id]);
+
+  // Fetch on mount and when user changes
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -48,22 +80,48 @@ export default function NotificationCenter() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleNotificationClick = (id: string) => {
-    markNotificationRead(id);
+  const handleNotificationClick = async (id: string) => {
+    try {
+      await fetch(`/api/notifications?id=${id}`, { method: 'PATCH' });
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
   };
 
-  const handleClearAll = () => {
-    clearNotifications();
-    toast.success(locale === 'ar' ? 'تم مسح جميع الإشعارات' : 'Toutes les notifications ont été supprimées');
+  const handleClearAll = async () => {
+    if (!currentUser?.id) return;
+    try {
+      // Delete all notifications for this user
+      for (const notif of notifications) {
+        await fetch(`/api/notifications?id=${notif.id}`, { method: 'DELETE' });
+      }
+      setNotifications([]);
+      setUnreadCount(0);
+      toast.success(locale === 'ar' ? 'تم مسح جميع الإشعارات' : 'Toutes les notifications ont été supprimées');
+    } catch (err) {
+      console.error('Failed to clear notifications:', err);
+    }
   };
 
-  const handleMarkAllRead = () => {
-    markAllNotificationsRead();
-    toast.success(locale === 'ar' ? 'تم تعليم الكل كمقروء' : 'Tout marqué comme lu');
+  const handleMarkAllRead = async () => {
+    if (!currentUser?.id) return;
+    try {
+      await fetch(`/api/notifications?userId=${currentUser.id}`, { method: 'PATCH' });
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+      toast.success(locale === 'ar' ? 'تم تعليم الكل كمقروء' : 'Tout marqué comme lu');
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
   };
 
-  const formatTime = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const diff = Date.now() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -80,7 +138,10 @@ export default function NotificationCenter() {
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) fetchNotifications(); // Refresh when opening
+        }}
         className="relative w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:border-deal-teal hover:bg-deal-teal/5 transition-colors shadow-sm"
       >
         <Bell className="w-4 h-4 text-deal-navy" />
@@ -135,21 +196,27 @@ export default function NotificationCenter() {
                     <Check className="w-3.5 h-3.5 text-deal-teal" />
                   </motion.button>
                 )}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleClearAll}
-                  className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                  title={locale === 'ar' ? 'مسح الكل' : 'Tout supprimer'}
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                </motion.button>
+                {notifications.length > 0 && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleClearAll}
+                    className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                    title={locale === 'ar' ? 'مسح الكل' : 'Tout supprimer'}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  </motion.button>
+                )}
               </div>
             </div>
 
             {/* Notifications List */}
             <div className="max-h-80 overflow-y-auto custom-scrollbar">
-              {notifications.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 text-deal-orange animate-spin" />
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                   <motion.div
                     initial={{ scale: 0 }}
@@ -179,23 +246,26 @@ export default function NotificationCenter() {
                         exit={{ opacity: 0, x: 20, height: 0 }}
                         onClick={() => handleNotificationClick(notification.id)}
                         className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 cursor-pointer transition-colors hover:bg-white/60 ${
-                          !notification.read
-                            ? `${typeUnreadBg[notification.type]} border-s-2`
+                          !notification.isRead
+                            ? `${typeUnreadBg[notification.type] || typeUnreadBg.system} border-s-2`
                             : ''
                         }`}
                       >
-                        <div className={`w-8 h-8 rounded-lg ${typeColors[notification.type]} flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm`}>
+                        <div className={`w-8 h-8 rounded-lg ${typeColors[notification.type] || typeColors.system} flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm`}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm leading-relaxed ${!notification.read ? 'font-semibold text-deal-navy' : 'text-muted-foreground'}`}>
-                            {locale === 'ar' ? notification.message.ar : notification.message.fr}
+                          <p className="text-[11px] font-bold text-deal-navy/60 mb-0.5">
+                            {locale === 'ar' ? (notification.title) : (notification.titleFr || notification.title)}
+                          </p>
+                          <p className={`text-sm leading-relaxed ${!notification.isRead ? 'font-semibold text-deal-navy' : 'text-muted-foreground'}`}>
+                            {locale === 'ar' ? notification.message : (notification.messageFr || notification.message)}
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            {formatTime(notification.timestamp)}
+                            {formatTime(notification.createdAt)}
                           </p>
                         </div>
-                        {!notification.read && (
+                        {!notification.isRead && (
                           <span className="w-2 h-2 rounded-full bg-deal-orange mt-2 flex-shrink-0" />
                         )}
                       </motion.div>

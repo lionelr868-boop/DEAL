@@ -19,6 +19,7 @@ import {
   X,
   AlertTriangle,
   MessageCircle,
+  LogOut,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import CustomerDashboard from './dashboard/customer-dashboard';
@@ -74,12 +75,20 @@ function getSidebarItems(role: Role): SidebarItem[] {
     ],
   };
 
-  return [...base, ...roleItems[role]];
+  const logoutItem: SidebarItem = {
+    key: 'logout',
+    labelAr: 'تسجيل الخروج',
+    labelFr: 'Déconnexion',
+    icon: LogOut,
+    color: 'text-red-500',
+  };
+
+  return [...base, ...roleItems[role], logoutItem];
 }
 
 export default function DashboardWrapper() {
   const { t, locale } = useI18n();
-  const { currentUser, setShowDashboard, dashboardActiveTab, setDashboardActiveTab } = useAppStore();
+  const { currentUser, setShowDashboard, dashboardActiveTab, setDashboardActiveTab, logout } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -206,31 +215,36 @@ export default function DashboardWrapper() {
             {/* Nav items */}
             {sidebarItems.map((item, i) => {
               const Icon = item.icon;
+              const isLogout = item.key === 'logout';
               const isActive = dashboardActiveTab === item.key;
               return (
-                <motion.button
-                  key={item.key}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 + i * 0.05 }}
-                  onClick={() => setDashboardActiveTab(item.key)}
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-deal-orange/10 to-deal-gold/10 text-deal-orange shadow-sm border border-deal-orange/20'
-                      : 'text-muted-foreground hover:bg-gray-100 hover:text-deal-navy'
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-deal-orange' : item.color || ''}`} />
-                  <span>{locale === 'ar' ? item.labelAr : item.labelFr}</span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebar-indicator"
-                      className="ms-auto w-1.5 h-1.5 rounded-full bg-deal-orange"
-                    />
-                  )}
-                </motion.button>
+                <div key={item.key}>
+                  {isLogout && <div className="border-t border-gray-200 my-3" />}
+                  <motion.button
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 + i * 0.05 }}
+                    onClick={() => isLogout ? logout() : setDashboardActiveTab(item.key)}
+                    whileHover={{ x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      isLogout
+                        ? 'text-red-500 hover:bg-red-50 hover:text-red-600'
+                        : isActive
+                          ? 'bg-gradient-to-r from-deal-orange/10 to-deal-gold/10 text-deal-orange shadow-sm border border-deal-orange/20'
+                          : 'text-muted-foreground hover:bg-gray-100 hover:text-deal-navy'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 flex-shrink-0 ${isLogout ? 'text-red-500' : isActive ? 'text-deal-orange' : item.color || ''}`} />
+                    <span>{locale === 'ar' ? item.labelAr : item.labelFr}</span>
+                    {isActive && !isLogout && (
+                      <motion.div
+                        layoutId="sidebar-indicator"
+                        className="ms-auto w-1.5 h-1.5 rounded-full bg-deal-orange"
+                      />
+                    )}
+                  </motion.button>
+                </div>
               );
             })}
           </div>
@@ -296,23 +310,32 @@ export default function DashboardWrapper() {
             <div className="p-3 space-y-1">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
+                const isLogout = item.key === 'logout';
                 const isActive = dashboardActiveTab === item.key;
                 return (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      setDashboardActiveTab(item.key);
-                      setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-r from-deal-orange/10 to-deal-gold/10 text-deal-orange shadow-sm border border-deal-orange/20'
-                        : 'text-muted-foreground hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-deal-orange' : ''}`} />
-                    <span>{locale === 'ar' ? item.labelAr : item.labelFr}</span>
-                  </button>
+                  <div key={item.key}>
+                    {isLogout && <div className="border-t border-gray-200 my-3" />}
+                    <button
+                      onClick={() => {
+                        if (isLogout) {
+                          logout();
+                        } else {
+                          setDashboardActiveTab(item.key);
+                          setSidebarOpen(false);
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                        isLogout
+                          ? 'text-red-500 hover:bg-red-50'
+                          : isActive
+                            ? 'bg-gradient-to-r from-deal-orange/10 to-deal-gold/10 text-deal-orange shadow-sm border border-deal-orange/20'
+                            : 'text-muted-foreground hover:bg-gray-50'
+                      }`}
+                    >
+                      <Icon className={`w-5 h-5 ${isLogout ? 'text-red-500' : isActive ? 'text-deal-orange' : ''}`} />
+                      <span>{locale === 'ar' ? item.labelAr : item.labelFr}</span>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -328,7 +351,7 @@ export default function DashboardWrapper() {
         className="fixed bottom-0 inset-x-0 z-40 glass border-t border-gray-200/50 md:hidden pb-safe"
       >
         <div className="flex items-center justify-around px-2 py-2">
-          {sidebarItems.slice(0, Math.min(sidebarItems.length, 5)).map((item) => {
+          {sidebarItems.filter(item => item.key !== 'logout').slice(0, Math.min(5)).map((item) => {
             const Icon = item.icon;
             const isActive = dashboardActiveTab === item.key;
             return (

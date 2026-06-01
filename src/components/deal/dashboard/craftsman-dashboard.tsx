@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wrench,
@@ -24,6 +24,7 @@ import {
   Inbox,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
+import ProfileTabContent from './profile-tab-content';
 import { services } from '@/lib/data/mock';
 import { AnimatedCounter } from '../animated-counter';
 import { toast } from 'sonner';
@@ -104,7 +105,7 @@ interface RevenueBar {
 
 export default function CraftsmanDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId } = useAppStore();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab } = useAppStore();
 
   // Real services state
   const [myServices, setMyServices] = useState<ApiService[]>([]);
@@ -257,10 +258,52 @@ export default function CraftsmanDashboard() {
     }
   }, [t.dashboard.accept, t.dashboard.cancelled, locale]);
 
+  // Add service form state
+  const [showAddServiceForm, setShowAddServiceForm] = useState(false);
+  const [addFormLoading, setAddFormLoading] = useState(false);
+  const [newServiceTitle, setNewServiceTitle] = useState('');
+  const [newServiceDesc, setNewServiceDesc] = useState('');
+  const [newServiceCategory, setNewServiceCategory] = useState('elec');
+  const [newServicePrice, setNewServicePrice] = useState('');
+
+  const handleSubmitAddService = async () => {
+    if (!newServiceTitle.trim() || !newServicePrice.trim() || !currentUser?.id) return;
+    setAddFormLoading(true);
+    try {
+      const res = await fetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newServiceTitle,
+          description: newServiceDesc,
+          categoryId: newServiceCategory,
+          price: Number(newServicePrice),
+          providerId: currentUser.id,
+        }),
+      });
+      if (res.ok) {
+        toast.success(locale === 'ar' ? t.dashboard.addedSuccessfully : t.dashboard.addedSuccessfully);
+        setShowAddServiceForm(false);
+        setNewServiceTitle('');
+        setNewServiceDesc('');
+        setNewServiceCategory('elec');
+        setNewServicePrice('');
+        setServicesFetched(false);
+        await fetchServices();
+      } else {
+        toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'خطأ في الاتصال' : 'Erreur de connexion');
+    } finally {
+      setAddFormLoading(false);
+    }
+  };
+
   const quickActions = [
-    { label: t.dashboard.addNewService, icon: Plus, color: 'bg-deal-orange' },
-    { label: t.dashboard.viewAllBookings, icon: ClipboardList, color: 'bg-deal-teal' },
-    { label: t.dashboard.editProfile, icon: UserCog, color: 'bg-deal-gold' },
+    { label: t.dashboard.addNewService, icon: Plus, color: 'bg-deal-orange', action: () => setShowAddServiceForm(true) },
+    { label: t.dashboard.viewAllBookings, icon: ClipboardList, color: 'bg-deal-teal', action: () => setDashboardActiveTab('bookings') },
+    { label: t.dashboard.editProfile, icon: UserCog, color: 'bg-deal-gold', action: () => setDashboardActiveTab('profile') },
   ];
 
   const handleOpenService = (id: string) => {
@@ -339,6 +382,11 @@ export default function CraftsmanDashboard() {
     );
   };
 
+  // --- Profile Tab ---
+  if (dashboardActiveTab === 'profile') {
+    return <ProfileTabContent role="craftsman" />;
+  }
+
   // --- Services Tab ---
   if (dashboardActiveTab === 'services') {
     return (
@@ -367,6 +415,7 @@ export default function CraftsmanDashboard() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => { setShowAddServiceForm(true); setDashboardActiveTab('overview'); }}
                 className="btn-3d-sm text-white text-xs"
                 style={{
                   background: 'linear-gradient(180deg, #FF8C5A 0%, #FF6B35 100%)',
@@ -629,6 +678,7 @@ export default function CraftsmanDashboard() {
                 animate="visible"
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={action.action}
                 className="btn-3d-sm text-white text-xs sm:text-sm"
                 style={{
                   background: action.color === 'bg-deal-orange'
@@ -650,6 +700,49 @@ export default function CraftsmanDashboard() {
             );
           })}
         </div>
+        <AnimatePresence>
+          {showAddServiceForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-deal-navy">{t.dashboard.addNewService}</h4>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowAddServiceForm(false)} className="text-xs text-muted-foreground hover:text-deal-navy">{t.common.cancel}</motion.button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input type="text" value={newServiceTitle} onChange={(e) => setNewServiceTitle(e.target.value)} placeholder={t.dashboard.titleField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange" dir={locale === 'ar' ? 'rtl' : 'ltr'} />
+                  <input type="number" value={newServicePrice} onChange={(e) => setNewServicePrice(e.target.value)} placeholder={t.dashboard.priceField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange" dir="ltr" />
+                  <select value={newServiceCategory} onChange={(e) => setNewServiceCategory(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange">
+                    <option value="elec">{t.categories.electrical}</option>
+                    <option value="plumb">{t.categories.plumbing}</option>
+                    <option value="build">{t.categories.construction}</option>
+                    <option value="carp">{t.categories.carpentry}</option>
+                    <option value="hvac">{t.categories.hvac}</option>
+                    <option value="metal">{t.categories.metalwork}</option>
+                    <option value="paint">{t.categories.painting}</option>
+                    <option value="clean">{t.categories.cleaning}</option>
+                  </select>
+                  <input type="text" value={newServiceDesc} onChange={(e) => setNewServiceDesc(e.target.value)} placeholder={t.dashboard.descriptionField} className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-orange/30 focus:border-deal-orange" dir={locale === 'ar' ? 'rtl' : 'ltr'} />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={addFormLoading || !newServiceTitle.trim() || !newServicePrice.trim()}
+                  onClick={handleSubmitAddService}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-deal-orange to-orange-500 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                >
+                  {addFormLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  {t.common.add}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
