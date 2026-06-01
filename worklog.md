@@ -1,5 +1,140 @@
 
 ---
+Task ID: 11
+Agent: Main Agent + 3 Parallel Subagents
+Task: Real Dashboards, Admin Complaints/Messages Tabs, Complaint Button, Enhanced Messaging
+
+Work Log:
+- Read worklog.md and assessed full project state (10 task iterations, 31+ components, 22+ API endpoints)
+- Launched 3 parallel subagents for maximum efficiency:
+  - Agent 2-a: Real data for Craftsman, Merchant, Equipment Owner dashboards
+  - Agent 2-b: Admin complaints + messages tabs
+  - Agent 2-c: Complaint button in detail modal + enhanced messaging widget
+- Main agent fixed CustomerDashboard to fetch data on mount
+
+### Subagent 2-a — Provider Dashboards with Real Data:
+
+**CraftsmanDashboard** (`craftsman-dashboard.tsx`):
+- Fetches services + bookings on mount via `Promise.all` for overview stats
+- Stats computed dynamically: total services (API), active bookings (non-COMPLETED/CANCELLED), revenue (COMPLETED bookings sum), avg rating
+- Revenue chart derived from completed bookings grouped by month (hidden if no data)
+- Accept/reject buttons now functional: PATCH `/api/bookings` with CONFIRMED/CANCELLED
+- Loading spinners + empty states on all tabs
+
+**MerchantDashboard** (`merchant-dashboard.tsx`):
+- Added `merchantId` filter to `/api/products` route
+- Fetches products + orders on mount for overview stats
+- Products tab uses real API data with fallback
+- Low stock section computed from real products (stock < 10)
+- Added PATCH `/api/orders` endpoint with status transition validation
+- Accept/reject order buttons functional
+
+**EquipmentOwnerDashboard** (`equipment-owner-dashboard.tsx`):
+- Fetches equipment + bookings on mount
+- Rentals tab shows real booking data
+- Accept/reject buttons functional on pending rentals
+- Donut chart updates with real equipment status counts
+
+### Subagent 2-b — Admin Dashboard Complaints + Messages Tabs:
+
+**Complaints Tab** (new tab in admin dashboard):
+- Fetches all complaints from `GET /api/complaints`
+- Color-coded status badges: PENDING (orange), IN_PROGRESS (amber), RESOLVED (green), REJECTED (red)
+- Click-to-expand shows full details + user contact info + existing admin reply
+- Reply form: textarea + send → PATCH `/api/complaints?action=reply`
+- Status management: Mark Resolved, Mark In Progress, Reject → PATCH `/api/complaints?action=status`
+- Toast notifications, loading spinners, refresh button
+
+**Messages Tab** (new tab in admin dashboard):
+- Left panel: scrollable user list with role badges
+- Right panel: chat view with message bubbles (teal for sent, gray for received)
+- Send messages via POST /api/messages
+- Auto marks messages as read, refreshes list
+
+**Sidebar Updated** — Two new admin tabs:
+- `complaints` with AlertTriangle icon (amber)
+- `messages` with MessageCircle icon (teal)
+
+### Subagent 2-c — Complaint Button + Enhanced Messaging:
+
+**Complaint Button in Detail Modal:**
+- Added Flag icon button in action buttons overlay of all 3 detail views (service, product, equipment)
+- Red warning style, tooltip on hover
+- Opens complaint modal via `setShowComplaintModal(true)`
+- Requires login (shows toast if not logged in)
+
+**Enhanced Messaging Widget:**
+- Added "+" button in chat header for starting new conversations
+- Provider selection panel with search bar and filtered user list (CRAFTSMAN, MERCHANT, EQUIPMENT_OWNER only)
+- Shows provider name, specialty/shop name, rating badge
+- Empty conversations state now shows "Start Conversation" button
+
+**Detail Modal → Messaging Integration:**
+- Added `messagingTargetUserId` to Zustand store
+- `handleMessageProvider()` maps provider names to user IDs and sets target
+- Messaging widget watches `messagingTargetUserId` and auto-opens with that conversation
+- Falls back to contact form if provider ID not found
+
+### Main Agent Fix — CustomerDashboard:
+- Added initial data fetch on mount (Promise.all for bookings + orders)
+- Stats now compute correctly on first render (not just after tab switch)
+- `pendingReviews` stat now derived from real data
+
+### API Changes:
+1. **`/api/products`** — Added `merchantId` query filter
+2. **`/api/orders`** — Added PATCH endpoint with status transition validation
+
+### i18n Keys Added (29+ keys in both ar.json and fr.json):
+- `dashboard.complaints`, `dashboard.messages`, `dashboard.noComplaints`
+- `dashboard.reply`, `dashboard.adminReply`, `dashboard.markResolved`, `dashboard.markInProgress`, `dashboard.reject`
+- `dashboard.replySent`, `dashboard.statusUpdated`, `dashboard.noReply`, `dashboard.typeReply`
+- `dashboard.allUsers`, `dashboard.selectUser`, `dashboard.noConversation`
+- `dashboard.accepted`, `dashboard.rejected`
+- `common.newMessage`, `common.selectUser`, `common.startConversation`
+
+### Stage Summary:
+- ✅ All 5 dashboards now use REAL API data (no hardcoded/mock data)
+- ✅ All action buttons functional (accept/reject bookings, orders, rentals)
+- ✅ Admin dashboard has complaints management tab with reply + status management
+- ✅ Admin dashboard has messages tab for platform-wide messaging
+- ✅ Complaint button added to all detail modal views
+- ✅ Messaging widget enhanced with start-new-conversation feature
+- ✅ Detail modal → messaging widget integration (contact provider → chat)
+- ✅ 0 lint errors (1 pre-existing font warning only)
+- ✅ Dev server compiles cleanly
+
+### Files Modified (13):
+1. `src/components/deal/dashboard/craftsman-dashboard.tsx` — Real data + functional buttons
+2. `src/components/deal/dashboard/merchant-dashboard.tsx` — Real data + functional buttons
+3. `src/components/deal/dashboard/equipment-owner-dashboard.tsx` — Real data + functional buttons
+4. `src/components/deal/dashboard/admin-dashboard.tsx` — Complaints + messages tabs
+5. `src/components/deal/dashboard/customer-dashboard.tsx` — Mount-time data fetch
+6. `src/components/deal/dashboard-wrapper.tsx` — New sidebar items for admin
+7. `src/components/deal/detail-modal.tsx` — Complaint button + messaging integration
+8. `src/components/deal/messaging-widget.tsx` — New conversation feature + auto-open
+9. `src/lib/store.ts` — Added messagingTargetUserId state
+10. `src/app/api/products/route.ts` — Added merchantId filter
+11. `src/app/api/orders/route.ts` — Added PATCH endpoint
+12. `src/i18n/ar.json` — 29+ new keys
+13. `src/i18n/fr.json` — 29+ new keys
+
+### Unresolved / Known Issues:
+- Avatar upload saves to form state only (not persisted to DB)
+- Real notifications not connected to frontend notification center
+- Search frontend integration not complete
+- Mobile messaging widget may overlap with other fixed elements
+- No WebSocket real-time messaging yet (polling-based)
+
+### Recommended Next Steps (Priority Order):
+1. **WebSocket real-time messaging** — Socket.io mini-service for live message delivery
+2. **Notification center → real API** — Connect to NotificationDb API
+3. **Avatar persistence** — Save avatar to User model via register API
+4. **Multi-image gallery** — Multiple images per service/product/equipment
+5. **Card creative redesign** — Apply new button styles to all cards
+6. **Search frontend integration** — Connect search bar to /api/search
+7. **Mobile responsiveness testing** — Test all components on mobile
+
+---
 Task ID: 10
 Agent: Main Agent
 Task: Fix Stats Bar Real Data, Dashboard Button Navigation, Navbar Button Redesign

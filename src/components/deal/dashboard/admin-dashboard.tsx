@@ -35,6 +35,12 @@ import {
   Eye,
   Power,
   PowerOff,
+  AlertTriangle,
+  MessageCircle,
+  Send,
+  CheckCircle2,
+  XCircle,
+  Clock4,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { AnimatedCounter } from '../animated-counter';
@@ -90,9 +96,60 @@ interface DBUser {
   createdAt: string;
 }
 
+interface ComplaintItem {
+  id: string;
+  userId: string;
+  targetId: string | null;
+  targetType: string | null;
+  subject: string;
+  subjectFr: string | null;
+  description: string;
+  descriptionFr: string | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'REJECTED';
+  adminReply: string | null;
+  adminReplyFr: string | null;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    nameFr: string | null;
+    email: string;
+    phone: string | null;
+    avatar: string | null;
+ };
+}
+
+interface MessageItem {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  sender: { id: string; name: string; nameFr: string | null; avatar: string | null };
+  receiver: { id: string; name: string; nameFr: string | null; avatar: string | null };
+}
+
+interface ConversationItem {
+  otherUserId: string;
+  otherUserName: string;
+  otherUserNameFr: string | null;
+  otherUserAvatar: string | null;
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
+}
+
+const complaintStatusConfig: Record<string, { bg: string; text: string; icon: typeof CheckCircle2; labelAr: string; labelFr: string }> = {
+  PENDING: { bg: 'bg-orange-100', text: 'text-orange-600', icon: Clock4, labelAr: 'قيد الانتظار', labelFr: 'En attente' },
+  IN_PROGRESS: { bg: 'bg-amber-100', text: 'text-amber-600', icon: Clock, labelAr: 'قيد المعالجة', labelFr: 'En cours' },
+  RESOLVED: { bg: 'bg-emerald-100', text: 'text-emerald-600', icon: CheckCircle2, labelAr: 'تم الحل', labelFr: 'Résolu' },
+  REJECTED: { bg: 'bg-red-100', text: 'text-red-500', icon: XCircle, labelAr: 'مرفوض', labelFr: 'Rejeté' },
+};
+
 export default function AdminDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { dashboardActiveTab } = useAppStore();
+  const { dashboardActiveTab, currentUser } = useAppStore();
 
   const [dbUsers, setDbUsers] = useState<DBUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -108,6 +165,24 @@ export default function AdminDashboard() {
   // Stats from API
   const [apiStats, setApiStats] = useState<{ users: Record<string, number>; services: number; products: number; equipment: number; bookings: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+
+  // Complaints state
+  const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
+  const [loadingComplaints, setLoadingComplaints] = useState(false);
+  const [expandedComplaintId, setExpandedComplaintId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replyLoading, setReplyLoading] = useState<string | null>(null);
+  const [statusLoading, setStatusLoading] = useState<string | null>(null);
+
+  // Messages state
+  const [allUsers, setAllUsers] = useState<DBUser[]>([]);
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [selectedChatUser, setSelectedChatUser] = useState<DBUser | null>(null);
+  const [chatMessages, setChatMessages] = useState<MessageItem[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const fetchUsers = useCallback(async (search?: string, role?: string) => {
     setLoadingUsers(true);
@@ -142,6 +217,140 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  // Fetch complaints
+  const fetchComplaints = useCallback(async () => {
+    setLoadingComplaints(true);
+    try {
+      const res = await fetch('/api/complaints');
+      if (res.ok) {
+        const data = await res.json();
+        setComplaints(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch complaints:', err);
+    } finally {
+      setLoadingComplaints(false);
+    }
+  }, []);
+
+  // Fetch all users for messaging
+  const fetchAllUsers = useCallback(async () => {
+    setLoadingMessages(true);
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        setAllUsers(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, []);
+
+  // Fetch conversations for admin
+  const fetchConversations = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const res = await fetch(`/api/messages?userId=${currentUser.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch conversations:', err);
+    }
+  }, [currentUser]);
+
+  // Fetch chat messages
+  const fetchChatMessages = useCallback(async (otherUserId: string) => {
+    if (!currentUser) return;
+    setLoadingChat(true);
+    try {
+      const res = await fetch(`/api/messages?userId=${currentUser.id}&otherUserId=${otherUserId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(data);
+        // Mark as read
+        await fetch('/api/messages', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser.id, otherUserId }),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    } finally {
+      setLoadingChat(false);
+    }
+  }, [currentUser]);
+
+  // Handle complaint reply
+  const handleReplyComplaint = async (complaint: ComplaintItem) => {
+    if (!replyText.trim()) return;
+    setReplyLoading(complaint.id);
+    try {
+      const res = await fetch('/api/complaints?action=reply', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: complaint.id, adminReply: replyText, adminReplyFr: replyText }),
+      });
+      if (res.ok) {
+        toast.success(locale === 'ar' ? t.dashboard.replySentSuccess : 'Réponse envoyée avec succès');
+        setReplyText('');
+        await fetchComplaints();
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+    } finally {
+      setReplyLoading(null);
+    }
+  };
+
+  // Handle complaint status change
+  const handleStatusChange = async (complaintId: string, status: string) => {
+    setStatusLoading(complaintId);
+    try {
+      const res = await fetch('/api/complaints?action=status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: complaintId, status }),
+      });
+      if (res.ok) {
+        toast.success(locale === 'ar' ? t.dashboard.statusUpdated : 'Statut mis à jour avec succès');
+        await fetchComplaints();
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+    } finally {
+      setStatusLoading(null);
+    }
+  };
+
+  // Handle send message
+  const handleSendMessage = async () => {
+    if (!currentUser || !selectedChatUser || !messageInput.trim()) return;
+    setSendingMessage(true);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderId: currentUser.id, receiverId: selectedChatUser.id, content: messageInput }),
+      });
+      if (res.ok) {
+        setMessageInput('');
+        await fetchChatMessages(selectedChatUser.id);
+        await fetchConversations();
+        toast.success(locale === 'ar' ? t.dashboard.messageSentSuccess : 'Message envoyé avec succès');
+      }
+    } catch {
+      toast.error(locale === 'ar' ? 'حدث خطأ' : 'Une erreur est survenue');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   useEffect(() => {
     if (dashboardActiveTab === 'users') {
       fetchUsers(userSearch || undefined, roleFilter);
@@ -151,6 +360,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    if (dashboardActiveTab === 'complaints') {
+      fetchComplaints();
+    }
+  }, [dashboardActiveTab, fetchComplaints]);
+
+  useEffect(() => {
+    if (dashboardActiveTab === 'messages') {
+      fetchAllUsers();
+      fetchConversations();
+    }
+  }, [dashboardActiveTab, fetchAllUsers, fetchConversations]);
 
   const handleToggleActive = async (userId: string, currentState: boolean) => {
     setActionLoading(userId);
@@ -302,6 +524,425 @@ export default function AdminDashboard() {
     { label: t.dashboard.manageCategories, icon: FolderTree, color: 'bg-deal-teal' },
     { label: t.dashboard.viewReports, icon: BarChart3, color: 'bg-deal-gold' },
   ];
+
+  // --- Complaints Tab ---
+  if (dashboardActiveTab === 'complaints') {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-navy via-deal-navy-dark to-deal-navy p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -top-10 -end-10 w-48 h-48 rounded-full bg-amber-500/20 blur-2xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <span className="text-xs font-bold text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded-full">{t.dashboard.complaints}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black">{t.dashboard.complaints}</h2>
+                <p className="mt-1 text-white/70 text-sm">{locale === 'ar' ? 'مراجعة وإدارة شكاوى المستخدمين' : 'Réviser et gérer les réclamations des utilisateurs'}</p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={loadingComplaints}
+                onClick={fetchComplaints}
+                className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 text-white ${loadingComplaints ? 'animate-spin' : ''}`} />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Complaints List */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-3d rounded-2xl bg-white p-5 sm:p-6">
+          {loadingComplaints ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-deal-orange animate-spin" />
+              <span className="ms-3 text-sm text-muted-foreground">{t.common.loading}</span>
+            </div>
+          ) : complaints.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">{t.dashboard.noComplaints}</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {complaints.length} {locale === 'ar' ? 'شكوى' : 'réclamation(s)'}
+                </span>
+              </div>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+                {complaints.map((complaint, i) => {
+                  const statusConf = complaintStatusConfig[complaint.status] || complaintStatusConfig.PENDING;
+                  const StatusIcon = statusConf.icon;
+                  const isExpanded = expandedComplaintId === complaint.id;
+                  const userName = locale === 'fr' && complaint.user.nameFr ? complaint.user.nameFr : complaint.user.name;
+                  return (
+                    <motion.div
+                      key={complaint.id}
+                      custom={i}
+                      variants={fadeInUp}
+                      initial="hidden"
+                      animate="visible"
+                      className="rounded-xl border border-gray-100 hover:border-gray-200 overflow-hidden transition-all"
+                    >
+                      {/* Complaint Card Header */}
+                      <div
+                        className="p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
+                        onClick={() => setExpandedComplaintId(isExpanded ? null : complaint.id)}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-deal-orange to-amber-400 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white font-bold text-xs">{userName.charAt(0)}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-bold text-sm text-deal-navy truncate">{userName}</p>
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${statusConf.bg} ${statusConf.text}`}>
+                                  <StatusIcon className="w-3 h-3" />
+                                  {locale === 'ar' ? statusConf.labelAr : statusConf.labelFr}
+                                </span>
+                              </div>
+                              <p className="text-xs font-semibold text-deal-navy mt-0.5">
+                                {locale === 'fr' && complaint.subjectFr ? complaint.subjectFr : complaint.subject}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                {locale === 'fr' && complaint.descriptionFr ? complaint.descriptionFr : complaint.description}
+              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(complaint.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'fr-FR')}
+                            </span>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                            >
+                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <Eye className="w-3.5 h-3.5 text-gray-500" />}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded Complaint Detail */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 pb-4 pt-1 border-t border-gray-100 space-y-4">
+                              {/* Full Description */}
+                              <div>
+                                <h4 className="text-xs font-bold text-muted-foreground mb-1">{t.dashboard.description}</h4>
+                                <p className="text-sm text-deal-navy leading-relaxed bg-gray-50 rounded-lg p-3">
+                                  {locale === 'fr' && complaint.descriptionFr ? complaint.descriptionFr : complaint.description}
+                                </p>
+                              </div>
+
+                              {/* User Info */}
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>{complaint.user.email}</span>
+                                {complaint.user.phone && (
+                                  <span className="ms-3 flex items-center gap-1">
+                                    <Phone className="w-3.5 h-3.5" />
+                                    <span dir="ltr">{complaint.user.phone}</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Existing Admin Reply */}
+                              {complaint.adminReply && (
+                                <div className="rounded-lg bg-deal-teal/5 border border-deal-teal/20 p-3">
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <MessageCircle className="w-3.5 h-3.5 text-deal-teal" />
+                                    <span className="text-[10px] font-bold text-deal-teal">{t.dashboard.adminReply}</span>
+                                  </div>
+                                  <p className="text-xs text-deal-navy leading-relaxed">
+                                    {locale === 'fr' && complaint.adminReplyFr ? complaint.adminReplyFr : complaint.adminReply}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Reply Form */}
+                              <div className="space-y-2">
+                                <label className="text-xs font-bold text-deal-navy">{t.dashboard.reply}</label>
+                                <textarea
+                                  value={replyText}
+                                  onChange={(e) => setReplyText(e.target.value)}
+                                  placeholder={t.dashboard.replyPlaceholder}
+                                  rows={3}
+                                  className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal text-deal-navy placeholder:text-muted-foreground resize-none"
+                                  dir={locale === 'ar' ? 'rtl' : 'ltr'}
+                                />
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  disabled={!replyText.trim() || replyLoading === complaint.id}
+                                  onClick={() => handleReplyComplaint(complaint)}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-deal-teal to-teal-600 text-white text-xs font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                                >
+                                  {replyLoading === complaint.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Send className="w-3.5 h-3.5" />
+                                  )}
+                                  {t.dashboard.submitReply}
+                                </motion.button>
+                              </div>
+
+                              {/* Status Actions */}
+                              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                                <span className="text-[10px] font-bold text-muted-foreground self-center me-2">{t.admin.status}:</span>
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  disabled={statusLoading === complaint.id || complaint.status === 'RESOLVED'}
+                                  onClick={() => handleStatusChange(complaint.id, 'RESOLVED')}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-[10px] font-bold shadow-sm hover:bg-emerald-600 transition-colors disabled:opacity-40"
+                                >
+                                  {statusLoading === complaint.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                  {t.dashboard.markResolved}
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  disabled={statusLoading === complaint.id || complaint.status === 'IN_PROGRESS'}
+                                  onClick={() => handleStatusChange(complaint.id, 'IN_PROGRESS')}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-[10px] font-bold shadow-sm hover:bg-amber-600 transition-colors disabled:opacity-40"
+                                >
+                                  {statusLoading === complaint.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
+                                  {t.dashboard.markInProgress}
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  disabled={statusLoading === complaint.id || complaint.status === 'REJECTED'}
+                                  onClick={() => handleStatusChange(complaint.id, 'REJECTED')}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 text-white text-[10px] font-bold shadow-sm hover:bg-red-600 transition-colors disabled:opacity-40"
+                                >
+                                  {statusLoading === complaint.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                  {t.dashboard.rejectComplaint}
+                                </motion.button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- Messages Tab ---
+  if (dashboardActiveTab === 'messages') {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-deal-navy via-deal-navy-dark to-deal-navy p-6 text-white">
+          <div className="absolute inset-0 hero-pattern opacity-20" />
+          <div className="absolute -top-10 -end-10 w-48 h-48 rounded-full bg-deal-teal/20 blur-2xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageCircle className="w-5 h-5 text-deal-teal" />
+              <span className="text-xs font-bold text-deal-teal bg-deal-teal/20 px-2 py-0.5 rounded-full">{t.dashboard.messages}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black">{t.dashboard.messages}</h2>
+                <p className="mt-1 text-white/70 text-sm">{locale === 'ar' ? 'تواصل مع مستخدمي المنصة' : 'Communiquez avec les utilisateurs de la plateforme'}</p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={loadingMessages}
+                onClick={() => { fetchAllUsers(); fetchConversations(); }}
+                className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 text-white ${loadingMessages ? 'animate-spin' : ''}`} />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Messages Layout: User list + Chat */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 card-3d rounded-2xl bg-white overflow-hidden">
+          {/* User List Panel */}
+          <div className="border-e border-gray-100">
+            <div className="p-3 border-b border-gray-100">
+              <h3 className="text-xs font-bold text-muted-foreground">{locale === 'ar' ? 'المستخدمون' : 'Utilisateurs'}</h3>
+            </div>
+            <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+              {loadingMessages ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 text-deal-teal animate-spin" />
+                </div>
+              ) : allUsers.filter(u => u.id !== currentUser?.id).length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">{t.dashboard.noConversations}</p>
+                </div>
+              ) : (
+                allUsers
+                  .filter(u => u.id !== currentUser?.id)
+                  .map((user) => {
+                    const isSelected = selectedChatUser?.id === user.id;
+                    const userName = locale === 'fr' && user.nameFr ? user.nameFr : user.name;
+                    const roleConf = roleColors[user.role] || roleColors.customer;
+                    const roleName = roleLabels[user.role] || roleLabels.customer;
+                    const lastConv = conversations.find(c => c.otherUserId === user.id);
+                    return (
+                      <motion.button
+                        key={user.id}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedChatUser(user);
+                          fetchChatMessages(user.id);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-3 border-b border-gray-50 transition-colors ${
+                          isSelected
+                            ? 'bg-deal-teal/5 border-s-2 border-s-deal-teal'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="relative flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">{userName.charAt(0)}</span>
+                          </div>
+                          {lastConv && lastConv.unreadCount > 0 && (
+                            <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                              {lastConv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 text-start">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-bold text-xs text-deal-navy truncate">{userName}</p>
+                            <span className={`text-[9px] font-bold ${roleConf.text}`}>{locale === 'ar' ? roleName.ar : roleName.fr}</span>
+                          </div>
+                          {lastConv && (
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">{lastConv.lastMessage}</p>
+                          )}
+                        </div>
+                      </motion.button>
+                    );
+                  })
+              )}
+            </div>
+          </div>
+
+          {/* Chat Panel */}
+          <div className="md:col-span-2 flex flex-col">
+            {selectedChatUser ? (
+              <>
+                {/* Chat Header */}
+                <div className="flex items-center gap-3 p-4 border-b border-gray-100">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-deal-orange to-deal-teal flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {(locale === 'fr' && selectedChatUser.nameFr ? selectedChatUser.nameFr : selectedChatUser.name).charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-deal-navy">
+                      {locale === 'fr' && selectedChatUser.nameFr ? selectedChatUser.nameFr : selectedChatUser.name}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{selectedChatUser.email}</p>
+                  </div>
+                </div>
+
+                {/* Messages Area */}
+                <div className="flex-1 p-4 max-h-[400px] overflow-y-auto custom-scrollbar space-y-3">
+                  {loadingChat ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-6 h-6 text-deal-teal animate-spin" />
+                    </div>
+                  ) : chatMessages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <MessageCircle className="w-10 h-10 text-gray-300 mb-2" />
+                      <p className="text-xs text-muted-foreground">{t.dashboard.noMessagesYet}</p>
+                    </div>
+                  ) : (
+                    chatMessages.map((msg) => {
+                      const isMine = msg.senderId === currentUser?.id;
+                      return (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                            isMine
+                              ? 'bg-gradient-to-r from-deal-teal to-teal-600 text-white rounded-ee-sm'
+                              : 'bg-gray-100 text-deal-navy rounded-es-sm'
+                          }`}>
+                            <p className="text-sm leading-relaxed">{msg.content}</p>
+                            <p className={`text-[9px] mt-1 ${isMine ? 'text-white/60' : 'text-muted-foreground'}`}>
+                              {new Date(msg.createdAt).toLocaleTimeString(locale === 'ar' ? 'ar-DZ' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="p-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                      placeholder={t.dashboard.typeMessage}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-deal-teal/30 focus:border-deal-teal text-deal-navy placeholder:text-muted-foreground"
+                      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={!messageInput.trim() || sendingMessage}
+                      onClick={handleSendMessage}
+                      className="w-10 h-10 rounded-xl bg-gradient-to-r from-deal-teal to-teal-600 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    >
+                      {sendingMessage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </motion.button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 rounded-full bg-deal-teal/10 flex items-center justify-center mb-4">
+                  <MessageCircle className="w-8 h-8 text-deal-teal" />
+                </div>
+                <p className="text-sm font-bold text-deal-navy">{(t as unknown as { messagesAdmin: { selectUserToChat: string } }).messagesAdmin.selectUserToChat}</p>
+                <p className="text-xs text-muted-foreground mt-1">{locale === 'ar' ? 'اختر مستخدمًا من القائمة لبدء المحادثة' : 'Choisissez un utilisateur dans la liste pour commencer'}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // --- Users Management Tab ---
   if (dashboardActiveTab === 'users') {

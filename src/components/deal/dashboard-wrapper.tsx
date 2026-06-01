@@ -17,6 +17,8 @@ import {
   Users,
   FolderTree,
   X,
+  AlertTriangle,
+  MessageCircle,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import CustomerDashboard from './dashboard/customer-dashboard';
@@ -64,6 +66,8 @@ function getSidebarItems(role: Role): SidebarItem[] {
     ],
     admin: [
       { key: 'users', labelAr: 'المستخدمون', labelFr: 'Utilisateurs', icon: Users, color: 'text-deal-teal' },
+      { key: 'complaints', labelAr: 'الشكاوى', labelFr: 'Réclamations', icon: AlertTriangle, color: 'text-amber-500' },
+      { key: 'messages', labelAr: 'الرسائل', labelFr: 'Messages', icon: MessageCircle, color: 'text-deal-teal' },
       { key: 'categories', labelAr: 'الفئات', labelFr: 'Catégories', icon: FolderTree, color: 'text-deal-gold-dark' },
       { key: 'reports', labelAr: 'التقارير', labelFr: 'Rapports', icon: BarChart3, color: 'text-deal-orange' },
       { key: 'settings', labelAr: 'الإعدادات', labelFr: 'Paramètres', icon: Settings, color: 'text-deal-navy' },

@@ -122,17 +122,26 @@ export default function CustomerDashboard() {
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    if (dashboardActiveTab === 'bookings') {
-      fetchBookings();
-    }
-  }, [dashboardActiveTab, fetchBookings]);
+  // Fetch data on mount for overview stats
+  const [initialFetched, setInitialFetched] = useState(false);
 
   useEffect(() => {
-    if (dashboardActiveTab === 'orders') {
+    if (currentUser && !initialFetched) {
+      Promise.all([fetchBookings(), fetchOrders()]).finally(() => setInitialFetched(true));
+    }
+  }, [currentUser, initialFetched, fetchBookings, fetchOrders]);
+
+  useEffect(() => {
+    if (dashboardActiveTab === 'bookings' && initialFetched) {
+      fetchBookings();
+    }
+  }, [dashboardActiveTab, initialFetched, fetchBookings]);
+
+  useEffect(() => {
+    if (dashboardActiveTab === 'orders' && initialFetched) {
       fetchOrders();
     }
-  }, [dashboardActiveTab, fetchOrders]);
+  }, [dashboardActiveTab, initialFetched, fetchOrders]);
 
   const handleCancelBooking = async (bookingId: string) => {
     setCancelLoading(bookingId);
@@ -158,7 +167,7 @@ export default function CustomerDashboard() {
   const stats = [
     { label: t.dashboard.activeBookings, value: apiBookings.filter(b => !['COMPLETED', 'CANCELLED'].includes(b.status)).length.toString(), icon: CalendarCheck, color: 'from-deal-orange to-deal-orange-dark', bg: 'bg-deal-orange/10' },
     { label: t.dashboard.completedOrders, value: apiOrders.filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED').length.toString(), icon: PackageCheck, color: 'from-deal-teal to-deal-teal-dark', bg: 'bg-deal-teal/10' },
-    { label: t.dashboard.pendingReviews, value: '2', icon: Star, color: 'from-deal-gold to-deal-gold-dark', bg: 'bg-deal-gold/10' },
+    { label: t.dashboard.pendingReviews, value: apiBookings.filter(b => b.status === 'COMPLETED' && apiOrders.filter(o => o.status === 'DELIVERED').length === 0).length.toString(), icon: Star, color: 'from-deal-gold to-deal-gold-dark', bg: 'bg-deal-gold/10' },
   ];
 
   const statsReady = useMemo(() => true, []);

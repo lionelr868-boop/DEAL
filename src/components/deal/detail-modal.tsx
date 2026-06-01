@@ -9,7 +9,7 @@ import {
   User, Store, PackageCheck, CheckCircle2, XCircle, Clock,
   Wrench, Zap, Droplets, HardHat, Hammer, Wind, PaintBucket, Home,
   Heart, Share2, MessageCircle, Star, ChevronLeft, ChevronRight, ImageIcon,
-  Loader2, CalendarDays, Send, PenLine, ShoppingBag,
+  Loader2, CalendarDays, Send, PenLine, ShoppingBag, Flag,
 } from 'lucide-react';
 import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
 import { services, products, equipmentList } from '@/lib/data/mock';
@@ -109,6 +109,7 @@ export default function DetailModal() {
     showDetailModal, setShowDetailModal, detailType, selectedItemId,
     setDetailType, setSelectedItemId, setShowProfileModal, currentUser,
     setProfileProviderName, setProfileSpecialty, setProfileRating, setProfileReviewsCount,
+    setShowComplaintModal, setMessagingTargetUserId,
   } = useAppStore();
   const { toggleFavorite, isFavorite, addNotification } = useFavoritesStore();
 
@@ -200,6 +201,55 @@ export default function DetailModal() {
     setShowBookingForm(false);
     setShowReviewForm(false);
     setShowOrderForm(false);
+  };
+
+  const handleComplaint = () => {
+    if (!currentUser) {
+      toast.error(t.common.loginRequired);
+      return;
+    }
+    setShowComplaintModal(true);
+  };
+
+  const handleMessageProvider = (providerName: { ar: string; fr: string }) => {
+    if (!currentUser) {
+      toast.error(t.common.loginRequired);
+      return;
+    }
+    // Set messaging target to trigger the messaging widget to open
+    // We use provider name as a lookup key since we don't have providerId in mock data
+    const providerMap: Record<string, string> = {
+      'كريم بن أحمد': 'craftsman1',
+      'Karim Ben Ahmed': 'craftsman1',
+      'عمر بلقاسم': 'craftsman2',
+      'Omar Belkacem': 'craftsman2',
+      'يوسف مزياني': 'craftsman3',
+      'Youcef Meziani': 'craftsman3',
+      'علي شريف': 'craftsman4',
+      'Ali Cherif': 'craftsman4',
+      'محمد بن عيسى': 'craftsman5',
+      'Mohamed Ben Aissa': 'craftsman5',
+      'سالم بوحمد': 'craftsman6',
+      'Salim Bouhamed': 'craftsman6',
+      'مؤسسة البناء الحديث': 'merchant1',
+      'Bati Modern': 'merchant1',
+      'مؤسسة الكهرباء والأنوار': 'merchant2',
+      'Electro Lumière': 'merchant2',
+      'الأخشاب الطبيعية': 'merchant3',
+      'Bois Nature': 'merchant3',
+      'مؤسسة كراء المعدات الثقيلة': 'equip1',
+      'Location Matériel Lourd': 'equip1',
+      'مؤسسة الأدوات المهنية': 'equip2',
+      'Outils Professionnels': 'equip2',
+    };
+    const providerId = providerMap[providerName[locale]] || providerMap[Object.keys(providerMap).find(k => k === providerName.ar || k === providerName.fr)] || null;
+    if (providerId) {
+      setMessagingTargetUserId(providerId);
+      setShowDetailModal(false);
+    } else {
+      // Fallback to contact form if provider ID not found
+      handleContact(providerName);
+    }
   };
 
   const handleOrder = (_itemName: string) => {
@@ -686,6 +736,15 @@ export default function DetailModal() {
               >
                 <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : 'text-white'}`} />
               </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleComplaint}
+                className="w-9 h-9 rounded-xl bg-red-500/30 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/50 transition-colors"
+                title={t.common.reportProblem}
+              >
+                <Flag className="w-4 h-4 text-white" />
+              </motion.button>
             </div>
           </div>
 
@@ -882,6 +941,15 @@ export default function DetailModal() {
                 className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
               >
                 <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleComplaint}
+                className="w-9 h-9 rounded-xl bg-red-500/30 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/50 transition-colors"
+                title={t.common.reportProblem}
+              >
+                <Flag className="w-4 h-4 text-white" />
               </motion.button>
             </div>
           </div>
@@ -1108,6 +1176,15 @@ export default function DetailModal() {
                 className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
               >
                 <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleComplaint}
+                className="w-9 h-9 rounded-xl bg-red-500/30 backdrop-blur-sm flex items-center justify-center hover:bg-red-500/50 transition-colors"
+                title={t.common.reportProblem}
+              >
+                <Flag className="w-4 h-4 text-white" />
               </motion.button>
             </div>
           </div>

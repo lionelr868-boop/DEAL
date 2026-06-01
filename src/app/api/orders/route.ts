@@ -145,3 +145,90 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, status, notes } = body;
+
+    if (!id || !status) {
+      return NextResponse.json(
+        { error: 'Order id and status are required' },
+        { status: 400 }
+      );
+    }
+
+    const validStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    const existingOrder = await db.productOrder.findUnique({ where: { id } });
+    if (!existingOrder) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
+    const validTransitions: Record<string, string[]> = {
+      PENDING: ['PROCESSING', 'CANCELLED'],
+      PROCESSING: ['SHIPPED', 'CANCELLED'],
+      SHIPPED: ['COMPLETED'],
+      COMPLETED: [],
+      CANCELLED: [],
+    };
+
+    const allowed = validTransitions[existingOrder.status] || [];
+    if (!allowed.includes(status)) {
+      return NextResponse.json(
+        { error: `Cannot transition from ${existingOrder.status} to ${status}` },
+        { status: 400 }
+      );
+    }
+
+    const updateData: Record<string, unknown> = { status };
+    if (notes !== undefined) {
+      updateData.notes = notes;
+    }
+
+    const order = await db.productOrder.update({
+      where: { id },
+      data: updateData,
+      include: {
+        product: { include: { category: true } },
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            nameFr: true,
+            avatar: true,
+            phone: true,
+          },
+        },
+        merchant: {
+          select: {
+            id: true,
+            name: true,
+            nameFr: true,
+            avatar: true,
+            phone: true,
+            shopName: true,
+            shopNameFr: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error('Update order error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

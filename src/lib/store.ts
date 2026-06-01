@@ -76,6 +76,7 @@ interface AppState {
   dashboardActiveTab: string;
   showProfileModal: boolean;
   showComplaintModal: boolean;
+  messagingTargetUserId: string | null;
   profileProviderName: { ar: string; fr: string };
   profileSpecialty: { ar: string; fr: string };
   profileRating: number;
@@ -96,6 +97,7 @@ interface AppState {
   setDashboardActiveTab: (tab: string) => void;
   setShowProfileModal: (show: boolean) => void;
   setShowComplaintModal: (show: boolean) => void;
+  setMessagingTargetUserId: (id: string | null) => void;
   setProfileProviderName: (name: { ar: string; fr: string }) => void;
   setProfileSpecialty: (specialty: { ar: string; fr: string }) => void;
   setProfileRating: (rating: number) => void;
@@ -117,6 +119,7 @@ export const useAppStore = create<AppState>((set) => ({
   dashboardActiveTab: 'overview',
   showProfileModal: false,
   showComplaintModal: false,
+  messagingTargetUserId: null,
   profileProviderName: { ar: '', fr: '' },
   profileSpecialty: { ar: '', fr: '' },
   profileRating: 0,
@@ -137,6 +140,7 @@ export const useAppStore = create<AppState>((set) => ({
   setDashboardActiveTab: (tab) => set({ dashboardActiveTab: tab }),
   setShowProfileModal: (show) => set({ showProfileModal: show }),
   setShowComplaintModal: (show) => set({ showComplaintModal: show }),
+  setMessagingTargetUserId: (id) => set({ messagingTargetUserId: id }),
   setProfileProviderName: (name) => set({ profileProviderName: name }),
   setProfileSpecialty: (specialty) => set({ profileSpecialty: specialty }),
   setProfileRating: (rating) => set({ profileRating: rating }),

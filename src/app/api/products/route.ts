@@ -8,8 +8,13 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
+    const merchantId = searchParams.get('merchantId');
 
     const where: Record<string, unknown> = {};
+
+    if (merchantId) {
+      where.merchantId = merchantId;
+    }
 
     if (categoryId) {
       where.categoryId = categoryId;
