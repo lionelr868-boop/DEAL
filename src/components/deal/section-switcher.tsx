@@ -143,7 +143,7 @@ export default function SectionSwitcher() {
   const handleShowLess = () => setShowAll(false);
 
   return (
-    <section ref={sectionRef} className="py-16 bg-gray-50/50" id={`${activeSection}-section`}>
+    <section ref={sectionRef} className="py-16" id={`${activeSection}-section`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Search Bar */}
         <SearchBar />
@@ -214,7 +214,7 @@ export default function SectionSwitcher() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="flex gap-2 p-1.5 rounded-2xl bg-white shadow-lg border border-gray-100"
+            className="flex gap-2 p-1.5 rounded-2xl bg-white/80 backdrop-blur-xl shadow-lg border border-white/60"
           >
             {tabs.map((tab) => {
               const IconComp = tab.icon;
@@ -398,7 +398,7 @@ export default function SectionSwitcher() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={showAll ? handleShowLess : handleShowMore}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border-2 border-deal-orange/20 text-deal-orange font-bold text-sm hover:border-deal-orange/40 hover:bg-deal-orange/5 transition-all shadow-md"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/80 backdrop-blur border-2 border-deal-orange/20 text-deal-orange font-bold text-sm hover:border-deal-orange/40 hover:bg-deal-orange/5 transition-all shadow-md"
             >
               {showAll ? (
                 <>

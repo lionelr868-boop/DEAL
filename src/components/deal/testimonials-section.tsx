@@ -73,7 +73,7 @@ export default function TestimonialsSection() {
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-orange-50/30 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-deal-orange/[0.03] to-background" />
       <div className="absolute top-0 start-0 w-72 h-72 bg-deal-orange/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 end-0 w-72 h-72 bg-deal-teal/5 rounded-full blur-3xl" />
 

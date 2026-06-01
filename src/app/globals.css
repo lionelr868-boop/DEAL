@@ -56,17 +56,17 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #FAFBFC;
+  --background: #E8ECF1;
   --foreground: #1E293B;
-  --card: #FFFFFF;
+  --card: #F4F6F8;
   --card-foreground: #1E293B;
-  --popover: #FFFFFF;
+  --popover: #F4F6F8;
   --popover-foreground: #1E293B;
   --primary: #FF6B35;
   --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
+  --secondary: #E2E6EA;
   --secondary-foreground: #1E293B;
-  --muted: #F1F5F9;
+  --muted: #E2E6EA;
   --muted-foreground: #64748B;
   --accent: #0D9488;
   --accent-foreground: #FFFFFF;
@@ -83,7 +83,7 @@
   --sidebar-foreground: #1E293B;
   --sidebar-primary: #FF6B35;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #FFF7ED;
+  --sidebar-accent: #E8ECF1;
   --sidebar-accent-foreground: #FF6B35;
   --sidebar-border: #E2E8F0;
   --sidebar-ring: #FF6B35;
@@ -211,7 +211,7 @@
 /* Card 3D Effects */
 .card-3d {
   position: relative;
-  background: white;
+  background: #F4F6F8;
   border-radius: 1rem;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -381,9 +381,9 @@
 
 /* Stat card animation */
 .stat-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+  background: linear-gradient(135deg, rgba(244, 246, 248, 0.95) 0%, rgba(244, 246, 248, 0.85) 100%);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.12);
   transition: all 0.3s ease;
 }
 

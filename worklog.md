@@ -664,3 +664,82 @@ Work Log:
 4. Edit/delete functionality for existing items
 5. Form validation improvements (required fields checking)
 6. Mobile responsive testing of add forms
+
+---
+Task ID: 14
+Agent: Main Agent + Frontend Styling Subagent
+Task: Complete Homepage Hero Redesign + Silver Background + Middle Section Polish
+
+Work Log:
+- User requested (in Arabic): "The top section of the homepage I don't like, I want you to change it completely. The middle section looks disorganized, and you can replace the white background with shiny silver color."
+- Read worklog.md (Tasks 1-13) and assessed project state
+- Read hero.tsx, section-switcher.tsx, testimonials-section.tsx, globals.css, page.tsx
+- Launched full-stack-developer subagent for the complete redesign
+
+### Changes Made:
+
+**1. Hero Section — Complete Redesign (hero.tsx):**
+- **Removed**: Dark navy background, floating particles/blobs, 18 animated particle dots, floating circles, mesh gradient
+- **New light gradient background**: `linear-gradient(165deg, #FFFFFF → #FFF8F0 → #F0FDFA → #E8ECF1)` — warm white to silver
+- **Two-column desktop layout**: 
+  - Left column: Tagline badge, big gradient heading (orange→gold→teal), bilingual subtitle, embedded search bar
+  - Right column: 3 feature cards (Services/Wrench, Products/ShoppingBag, Equipment/Truck) with gradient icons and hover shimmer
+- **Embedded search bar**: Large glassmorphism search input with orange search button, connected to `useAppStore`'s `searchQuery`
+- **Feature cards**: Subtle gradient backgrounds, hover lift animation, shimmer effect
+- **Subtle decorative orbs**: Soft orange/teal/gold blurred circles instead of dark blobs
+- **Stats bar**: 4 animated stat cards with AnimatedCounter, fetching real data from /api/stats
+- **How it works**: Retained with cleaner glass cards and connecting dotted lines
+- **Scroll indicator**: Subtle arrow at bottom
+- RTL-compatible with `start`/`end` logical properties
+- Arrow icon flips for Arabic (ArrowLeft) vs French (ArrowRight)
+
+**2. Silver Background (globals.css):**
+- `--background`: `#FAFBFC` → `#E8ECF1` (shiny silver)
+- `--card`: `#FFFFFF` → `#F4F6F8` (lighter silver for cards)
+- `--popover`: `#FFFFFF` → `#F4F6F8`
+- `--secondary`: `#F1F5F9` → `#E2E6EA`
+- `--muted`: `#F1F5F9` → `#E2E6EA`
+- `--sidebar-accent`: `#FFF7ED` → `#E8ECF1`
+- `.stat-card` background updated to `#F4F6F8` tones
+- `.card-3d` background updated to `#F4F6F8`
+
+**3. Middle Section Polish (section-switcher.tsx):**
+- Removed `bg-gray-50/50` from main section (now inherits silver bg)
+- Tab switcher: `bg-white` → `bg-white/80 backdrop-blur-xl` with `border-white/60`
+- Show more/less button: `bg-white` → `bg-white/80 backdrop-blur`
+
+**4. Testimonials Background (testimonials-section.tsx):**
+- Changed `orange-50/30` → `deal-orange/[0.03]` for subtle tint that works with silver
+
+### Verification:
+- ✅ 0 lint errors (1 pre-existing font warning only)
+- ✅ Dev server compiling successfully, GET / 200
+- ✅ VLM screenshot analysis confirms: clean layout, feature cards, gradient heading, search bar, silver background tones, no visual issues
+
+### Files Modified (4):
+1. `src/components/deal/hero.tsx` — Complete rewrite with new design
+2. `src/app/globals.css` — Silver background CSS variables + card updates
+3. `src/components/deal/section-switcher.tsx` — Glass-morphism tab switcher + transparent bg
+4. `src/components/deal/testimonials-section.tsx` — Subtle orange tint for silver bg
+
+### Stage Summary:
+- ✅ Hero section completely redesigned — modern, clean, light theme
+- ✅ Two-column layout with feature cards and embedded search bar
+- ✅ Shiny silver background across entire platform
+- ✅ Middle section polished with glassmorphism elements
+- ✅ All existing functionality preserved (stats API, RTL, i18n)
+- ✅ 0 lint errors, dev server compiling cleanly
+
+### Unresolved / Known Issues (from previous tasks):
+- Avatar upload still not persisted to DB
+- No WebSocket real-time messaging (polling-based)
+- Search frontend not connected to /api/search
+- Mobile responsiveness needs full testing
+- Uploaded images not showing in service/product/equipment cards on homepage
+
+### Recommended Next Steps:
+1. Show uploaded images in service/product/equipment cards on homepage
+2. Connect homepage search bar to /api/search API
+3. Mobile responsiveness testing
+4. WebSocket real-time messaging
+5. Avatar persistence to DB

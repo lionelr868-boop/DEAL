@@ -2,25 +2,92 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { ArrowDown, Users, ShoppingBag, Truck, Search, CheckCircle, Wrench, Star } from 'lucide-react';
-import { useI18n } from '@/lib/store';
+import {
+  ArrowDown, Users, ShoppingBag, Truck, Search,
+  CheckCircle, Wrench, Star, ArrowRight, ArrowLeft,
+} from 'lucide-react';
+import { useI18n, useAppStore } from '@/lib/store';
 import { AnimatedCounter } from './animated-counter';
 
-function StatCard({ stat, statLabel, index, isInView }: {
-  stat: { key: string; icon: typeof Users; color: string; delay: number; target: string | number };
+/* ──────────── Feature Card (right column) ──────────── */
+function FeatureCard({
+  icon: IconComp,
+  title,
+  description,
+  gradientFrom,
+  gradientTo,
+  delay,
+}: {
+  icon: typeof Wrench;
+  title: string;
+  description: string;
+  gradientFrom: string;
+  gradientTo: string;
+  delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, delay, ease: 'easeOut' }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      className="group relative rounded-2xl overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, ${gradientFrom}08 0%, ${gradientTo}12 100%)`,
+        border: `1px solid ${gradientFrom}20`,
+      }}
+    >
+      {/* Shimmer on hover */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{
+          background: `linear-gradient(105deg, transparent 40%, ${gradientFrom}15 45%, ${gradientTo}10 50%, transparent 55%)`,
+          backgroundSize: '200% 100%',
+        }}
+      />
+      <div className="relative p-5 sm:p-6 flex gap-4 items-start">
+        {/* Gradient icon container */}
+        <div
+          className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg"
+          style={{
+            background: `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`,
+            boxShadow: `0 4px 14px ${gradientFrom}35`,
+          }}
+        >
+          <IconComp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm sm:text-base font-bold text-deal-navy mb-1">
+            {title}
+          </h3>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            {description}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ──────────── Stat Card (bottom stats bar) ──────────── */
+function StatCard({
+  stat,
+  statLabel,
+  index,
+  isInView,
+}: {
+  stat: {
+    key: string;
+    icon: typeof Users;
+    color: string;
+    delay: number;
+    target: string | number;
+  };
   statLabel: string;
   index: number;
   isInView: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
   const IconComp = stat.icon;
-  const glowColors: Record<string, string> = {
-    craftsmen: 'rgba(255, 107, 53, 0.4)',
-    products: 'rgba(13, 148, 136, 0.4)',
-    equipment: 'rgba(245, 158, 11, 0.4)',
-    satisfaction: 'rgba(255, 107, 53, 0.3)',
-  };
-
   return (
     <motion.div
       key={stat.key}
@@ -28,39 +95,13 @@ function StatCard({ stat, statLabel, index, isInView }: {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: stat.delay }}
-      whileHover={{ y: -8 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      whileHover={{ y: -6 }}
       className={`stat-card rounded-2xl p-4 sm:p-6 relative overflow-hidden ${index % 2 === 0 ? 'animate-float' : 'animate-float-delayed'}`}
     >
-      {/* Animated glow border on hover */}
-      <motion.div
-        initial={false}
-        animate={hovered ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="absolute inset-0 rounded-2xl"
-        style={{
-          boxShadow: `inset 0 0 0 2px ${glowColors[stat.key] || 'rgba(255,107,53,0.3)'}, 0 0 20px ${glowColors[stat.key] || 'rgba(255,107,53,0.2)'}`,
-        }}
-      />
-      {/* Glow shimmer on hover */}
-      <motion.div
-        initial={false}
-        animate={hovered
-          ? { backgroundPosition: '200% 50%' }
-          : { backgroundPosition: '0% 50%' }
-        }
-        transition={{ duration: 2, ease: 'linear' }}
-        className="absolute inset-0 rounded-2xl"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${glowColors[stat.key] || 'rgba(255,107,53,0.15)'}, transparent)`,
-          backgroundSize: '200% 100%',
-          opacity: hovered ? 0.15 : 0,
-        }}
-      />
-
       <div className="relative z-10">
-        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-3 shadow-lg`}>
+        <div
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-3 shadow-lg`}
+        >
           <IconComp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         <div className="text-2xl sm:text-3xl font-black text-deal-navy">
@@ -72,7 +113,11 @@ function StatCard({ stat, statLabel, index, isInView }: {
               isInView={true}
             />
           ) : (
-            <span>{typeof stat.target === 'string' ? stat.target.match(/^[^0-9]*/)?.[0] || '0' : '0'}</span>
+            <span>
+              {typeof stat.target === 'string'
+                ? stat.target.match(/^[^0-9]*/)?.[0] || '0'
+                : '0'}
+            </span>
           )}
         </div>
         <div className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
@@ -83,15 +128,28 @@ function StatCard({ stat, statLabel, index, isInView }: {
   );
 }
 
+/* ──────────── How It Works ──────────── */
 function HowItWorksSection() {
   const { t } = useI18n();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   const steps = [
-    { icon: Search, color: 'from-deal-orange to-deal-orange-dark', number: 1 },
-    { icon: Users, color: 'from-deal-teal to-deal-teal-dark', number: 2 },
-    { icon: CheckCircle, color: 'from-deal-gold to-deal-gold-dark', number: 3 },
+    {
+      icon: Search,
+      color: 'from-deal-orange to-deal-orange-dark',
+      number: 1,
+    },
+    {
+      icon: Users,
+      color: 'from-deal-teal to-deal-teal-dark',
+      number: 2,
+    },
+    {
+      icon: CheckCircle,
+      color: 'from-deal-gold to-deal-gold-dark',
+      number: 3,
+    },
   ];
 
   const titles = [t.hero.step1Title, t.hero.step2Title, t.hero.step3Title];
@@ -99,7 +157,6 @@ function HowItWorksSection() {
 
   return (
     <div ref={ref} className="max-w-4xl mx-auto mt-16 sm:mt-20">
-      {/* Section title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -111,31 +168,28 @@ function HowItWorksSection() {
         </h2>
       </motion.div>
 
-      {/* Steps */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-0 relative">
         {steps.map((step, i) => {
           const IconComp = step.icon;
           return (
             <div key={i} className="flex-1 relative flex flex-col items-center">
-              {/* Step card */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: i * 0.2 }}
                 className="relative z-10 flex flex-col items-center text-center w-full max-w-[200px] glass-card rounded-2xl p-5"
               >
-                {/* Number circle with icon */}
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg mb-4 relative`}
                 >
                   <IconComp className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                  {/* Number badge */}
                   <div className="absolute -top-1 -end-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
-                    <span className="text-xs font-black text-deal-navy">{step.number}</span>
+                    <span className="text-xs font-black text-deal-navy">
+                      {step.number}
+                    </span>
                   </div>
                 </motion.div>
-
                 <h3 className="text-sm sm:text-base font-bold text-deal-navy mb-1">
                   {titles[i]}
                 </h3>
@@ -144,7 +198,6 @@ function HowItWorksSection() {
                 </p>
               </motion.div>
 
-              {/* Dotted connector line (not after last) */}
               {i < steps.length - 1 && (
                 <motion.div
                   initial={{ scaleX: 0 }}
@@ -153,16 +206,8 @@ function HowItWorksSection() {
                   className="hidden sm:block absolute top-8 sm:top-10 start-[60%] end-[-20%] h-0.5"
                 >
                   <div className="w-full border-t-2 border-dashed border-deal-orange/30" />
-                  <motion.div
-                    initial={{ x: '-100%', opacity: 0 }}
-                    animate={isInView ? { x: '100%', opacity: [0, 1, 1, 0] } : {}}
-                    transition={{ duration: 1.5, delay: i * 0.2 + 0.5, ease: 'easeInOut' }}
-                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-deal-orange"
-                  />
                 </motion.div>
               )}
-
-              {/* Mobile vertical connector */}
               {i < steps.length - 1 && (
                 <motion.div
                   initial={{ scaleY: 0 }}
@@ -179,21 +224,29 @@ function HowItWorksSection() {
   );
 }
 
+/* ──────────── Main Hero ──────────── */
 export default function Hero() {
   const { locale, t } = useI18n();
+  const { searchQuery, setSearchQuery } = useAppStore();
   const heroRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const statsInView = useInView(statsRef, { once: true, margin: '-50px' });
   const [realStats, setRealStats] = useState<{
-    totalUsers: number; craftsmen: number; customers: number;
-    services: number; products: number; equipment: number;
-    bookings: number; orders: number; avgRating: number;
+    totalUsers: number;
+    craftsmen: number;
+    customers: number;
+    services: number;
+    products: number;
+    equipment: number;
+    bookings: number;
+    orders: number;
+    avgRating: number;
   } | null>(null);
 
   useEffect(() => {
     fetch('/api/stats')
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         setRealStats({
           totalUsers: data.users?.total || 0,
           craftsmen: data.users?.craftsmen || 0,
@@ -214,17 +267,38 @@ export default function Hero() {
     offset: ['start start', 'end start'],
   });
 
-  const bgY = useTransform(scrollY, [0, 500], [0, 150]);
-  const tealBlobY = useTransform(scrollY, [0, 500], [0, 100]);
-  const goldBlobY = useTransform(scrollY, [0, 500], [0, 80]);
   const contentY = useTransform(scrollY, [0, 500], [0, 60]);
   const opacity = useTransform(scrollY, [0, 350], [1, 0]);
 
   const stats = [
-    { key: 'providers', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', delay: 0, target: realStats ? `${realStats.totalUsers}` : '0' },
-    { key: 'services', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.15, target: realStats ? `${realStats.services}` : '0' },
-    { key: 'products', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.3, target: realStats ? `${realStats.products}` : '0' },
-    { key: 'satisfaction', icon: Star, color: 'from-deal-orange to-deal-gold', delay: 0.45, target: realStats ? `${realStats.avgRating}` : '0' },
+    {
+      key: 'providers',
+      icon: Wrench,
+      color: 'from-deal-orange to-deal-orange-dark',
+      delay: 0,
+      target: realStats ? `${realStats.totalUsers}` : '0',
+    },
+    {
+      key: 'services',
+      icon: ShoppingBag,
+      color: 'from-deal-teal to-deal-teal-dark',
+      delay: 0.15,
+      target: realStats ? `${realStats.services}` : '0',
+    },
+    {
+      key: 'products',
+      icon: Truck,
+      color: 'from-deal-gold to-deal-gold-dark',
+      delay: 0.3,
+      target: realStats ? `${realStats.products}` : '0',
+    },
+    {
+      key: 'satisfaction',
+      icon: Star,
+      color: 'from-deal-orange to-deal-gold',
+      delay: 0.45,
+      target: realStats ? `${realStats.avgRating}` : '0',
+    },
   ];
 
   const getStatLabel = (key: string) => {
@@ -246,210 +320,211 @@ export default function Hero() {
     return arMap[key] || '';
   };
 
+  /* Feature cards data */
+  const featureCards = [
+    {
+      icon: Wrench,
+      title: t.sections.services,
+      description:
+        locale === 'fr'
+          ? 'Trouvez des artisans qualifiés pour tous vos projets'
+          : 'أفضل الحرفيين المتخصصين لمشاريعك',
+      gradientFrom: '#FF6B35',
+      gradientTo: '#E55A25',
+    },
+    {
+      icon: ShoppingBag,
+      title: t.sections.products,
+      description:
+        locale === 'fr'
+          ? 'Matériaux et produits de qualité à prix compétitifs'
+          : 'مواد ومنتجات عالية الجودة بأسعار منافسة',
+      gradientFrom: '#0D9488',
+      gradientTo: '#0F766E',
+    },
+    {
+      icon: Truck,
+      title: t.sections.equipment,
+      description:
+        locale === 'fr'
+          ? 'Louez du matériel professionnel au meilleur tarif'
+          : 'استأجر معدات احترافية بأفضل الأسعار',
+      gradientFrom: '#F59E0B',
+      gradientTo: '#D97706',
+    },
+  ];
+
+  const ArrowIcon = locale === 'ar' ? ArrowLeft : ArrowRight;
+
   return (
-    <section ref={heroRef} className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-      {/* Animated mesh gradient background */}
-      <div className="absolute inset-0 mesh-gradient" style={{ zIndex: 0 }}>
-        <motion.div
-          animate={{
-            backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,53,0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(13,148,136,0.18) 0%, transparent 50%), radial-gradient(ellipse at 40% 80%, rgba(245,158,11,0.14) 0%, transparent 50%)',
-            backgroundSize: '200% 200%',
-          }}
-        />
-      </div>
-      {/* Background layers with parallax */}
-      <motion.div className="absolute inset-0 bg-gradient-to-br from-deal-navy via-deal-navy-dark to-deal-navy" style={{ y: bgY, zIndex: 1 }} />
-      <motion.div className="absolute inset-0 hero-pattern opacity-60" style={{ y: bgY }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+    <section
+      ref={heroRef}
+      className="relative overflow-hidden"
+      style={{
+        background:
+          'linear-gradient(165deg, #FFFFFF 0%, #FFF8F0 30%, #F0FDFA 60%, #E8ECF1 100%)',
+      }}
+    >
+      {/* Subtle decorative orbs */}
+      <div className="absolute top-0 start-0 w-[500px] h-[500px] bg-deal-orange/[0.06] rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 end-0 w-[600px] h-[600px] bg-deal-teal/[0.06] rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 start-1/2 w-[400px] h-[400px] bg-deal-gold/[0.04] rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
-      {/* Decorative blobs with parallax */}
+      {/* Content */}
       <motion.div
-        animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0], scale: [1, 1.2, 0.9, 1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        style={{ y: bgY }}
-        className="absolute top-20 start-10 w-72 h-72 rounded-full bg-deal-orange/20 blur-3xl"
-      />
-      <motion.div
-        animate={{ x: [0, -40, 20, 0], y: [0, 20, -30, 0], scale: [1, 0.9, 1.2, 1] }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-        style={{ y: tealBlobY }}
-        className="absolute bottom-20 end-10 w-96 h-96 rounded-full bg-deal-teal/20 blur-3xl"
-      />
-      <motion.div
-        animate={{ x: [0, 20, -10, 0], y: [0, -20, 10, 0] }}
-        transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-        style={{ y: goldBlobY }}
-        className="absolute top-1/2 start-1/3 w-64 h-64 rounded-full bg-deal-gold/15 blur-3xl"
-      />
-
-      {/* Floating decorative circles */}
-      {[...Array(6)].map((_, i) => {
-        const sizeClass = i % 3 === 0 ? 'w-3 h-3' : i % 3 === 1 ? 'w-2 h-2' : 'w-4 h-4';
-        return (
-          <motion.div
-            key={i}
-            animate={{ y: [0, -20, 0] }}
-            transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
-            className={`absolute rounded-full border border-white/10 ${sizeClass}`}
-            style={{
-              top: `${15 + i * 15}%`,
-              left: `${10 + i * 15}%`,
-            }}
-          />
-        );
-      })}
-
-      {/* Floating particle dots */}
-      {(() => {
-        const particles = Array.from({ length: 18 }, (_, i) => ({
-          id: i,
-          size: 2 + Math.random() * 4,
-          opacity: 0.1 + Math.random() * 0.3,
-          color: ['#FF6B35', '#0D9488', '#F59E0B'][i % 3],
-          x: `${5 + Math.random() * 90}%`,
-          y: `${5 + Math.random() * 90}%`,
-          duration: 8 + Math.random() * 12,
-          delay: Math.random() * 5,
-          moveX: -40 + Math.random() * 80,
-          moveY: -40 + Math.random() * 80,
-        }));
-        return particles.map((p) => (
-          <motion.div
-            key={`particle-${p.id}`}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{
-              opacity: [p.opacity, p.opacity * 0.5, p.opacity],
-              scale: [1, 1.2, 0.8, 1],
-              x: [0, p.moveX, -p.moveX * 0.5, 0],
-              y: [0, p.moveY, -p.moveY * 0.5, 0],
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: p.delay,
-              opacity: { duration: p.duration, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
-              scale: { duration: p.duration * 0.6, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
-              x: { duration: p.duration, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
-              y: { duration: p.duration * 0.8, repeat: Infinity, ease: 'easeInOut', delay: p.delay },
-            }}
-            className="absolute rounded-full"
-            style={{
-              width: p.size,
-              height: p.size,
-              backgroundColor: p.color,
-              left: p.x,
-              top: p.y,
-              filter: `blur(${p.size > 4 ? 1 : 0}px)`,
-            }}
-          />
-        ));
-      })()}
-
-      {/* Content with parallax */}
-      <motion.div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20" style={{ y: contentY }}>
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-16 sm:pb-20"
+        style={{ y: contentY }}
+      >
         <motion.div style={{ opacity }}>
-          {/* Main badge */}
+          {/* ── Two-Column Layout ── */}
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 mb-20">
+            {/* Left Column: Text Content */}
+            <div className="flex-1 text-center lg:text-start">
+              {/* Tagline badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-deal-orange/20 bg-deal-orange/[0.06] backdrop-blur-sm mb-6"
+              >
+                <div className="w-2 h-2 rounded-full bg-deal-teal animate-pulse" />
+                <span className="text-sm font-medium text-deal-navy/80">
+                  {t.app.tagline}
+                </span>
+              </motion.div>
+
+              {/* Big gradient heading */}
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-5"
+                style={{
+                  fontFamily: "'Cairo', 'Inter', sans-serif",
+                }}
+              >
+                <span
+                  className="block"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #FF6B35 0%, #F59E0B 40%, #0D9488 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  {t.hero.title.split(' ').slice(0, 3).join(' ')}
+                </span>
+                <span className="block text-deal-navy mt-1">
+                  {t.hero.title.split(' ').slice(3).join(' ')}
+                </span>
+              </motion.h1>
+
+              {/* Bilingual subtitle */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.4 }}
+                className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed"
+              >
+                {t.hero.subtitle}
+              </motion.p>
+
+              {/* Embedded Search Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="max-w-xl mx-auto lg:mx-0"
+              >
+                <div className="relative group search-focus-ring rounded-2xl">
+                  <div className="flex items-center bg-white/80 backdrop-blur-xl border-2 border-deal-orange/15 rounded-2xl shadow-lg shadow-deal-orange/5 group-hover:border-deal-orange/30 group-hover:shadow-xl group-hover:shadow-deal-orange/10 transition-all duration-300 overflow-hidden">
+                    {/* Search icon */}
+                    <div className="ps-4 sm:ps-5 pe-3 flex items-center">
+                      <Search className="w-5 h-5 text-deal-orange/60 group-hover:text-deal-orange transition-colors" />
+                    </div>
+
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t.nav.search}
+                      className="flex-1 py-4 sm:py-5 bg-transparent text-deal-navy placeholder:text-muted-foreground/60 text-sm sm:text-base font-medium outline-none min-w-0"
+                    />
+
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      className="me-2 sm:me-3 flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-deal-orange to-deal-orange-dark text-white text-sm font-bold shadow-md shadow-deal-orange/20 hover:shadow-lg hover:shadow-deal-orange/30 transition-shadow"
+                    >
+                      <span className="hidden sm:inline">{t.common.search}</span>
+                      <ArrowIcon className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Column: Feature Cards */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="flex-1 w-full max-w-md lg:max-w-none"
+            >
+              <div className="flex flex-col gap-4">
+                {featureCards.map((card, i) => (
+                  <FeatureCard
+                    key={card.title}
+                    icon={card.icon}
+                    title={card.title}
+                    description={card.description}
+                    gradientFrom={card.gradientFrom}
+                    gradientTo={card.gradientTo}
+                    delay={0.4 + i * 0.15}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── Animated Stats Bar ── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur border border-white/20 mb-8"
+            ref={statsRef}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto"
           >
-            <div className="w-2 h-2 rounded-full bg-deal-teal animate-pulse" />
-            <span className="text-sm font-medium text-white/90">{t.app.tagline}</span>
+            {stats.map((stat, i) => (
+              <StatCard
+                key={stat.key}
+                stat={stat}
+                statLabel={getStatLabel(stat.key)}
+                index={i}
+                isInView={statsInView}
+              />
+            ))}
           </motion.div>
 
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6"
-          >
-            <span className="block">{t.hero.title.split(' ').slice(0, 3).join(' ')}</span>
-            <span className="block bg-gradient-to-r from-deal-orange via-deal-gold to-deal-teal bg-clip-text text-transparent mt-2">
-              {t.hero.title.split(' ').slice(3).join(' ')}
-            </span>
-          </motion.h1>
+          {/* ── How It Works ── */}
+          <HowItWorksSection />
 
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed"
-          >
-            {t.hero.subtitle}
-          </motion.p>
-
-          {/* CTA buttons */}
+          {/* Scroll indicator */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, y: [0, 8, 0] }}
+            transition={{
+              delay: 1.5,
+              y: { duration: 1.5, repeat: Infinity },
+            }}
+            className="mt-12 flex justify-center"
           >
-            <motion.button
-              whileHover={{ scale: 1.06, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-3d shine-effect text-white bg-deal-orange text-base px-8 py-4 rounded-2xl font-bold glow-effect"
-              onClick={() => {
-                const el = document.getElementById('services-section');
-                el?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              {t.hero.cta1}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.06, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-3d btn-3d-teal shine-effect text-white text-base px-8 py-4 rounded-2xl font-bold"
-            >
-              {t.hero.cta2}
-            </motion.button>
+            <ArrowDown className="w-6 h-6 text-deal-navy/30" />
           </motion.div>
-        </motion.div>
-
-        {/* Stat cards - animate when in view */}
-        <motion.div
-          ref={statsRef}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto"
-        >
-          {stats.map((stat, i) => (
-            <StatCard
-              key={stat.key}
-              stat={stat}
-              statLabel={getStatLabel(stat.key)}
-              index={i}
-              isInView={statsInView}
-            />
-          ))}
-        </motion.div>
-
-        {/* How it works section */}
-        <HowItWorksSection />
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, y: [0, 8, 0] }}
-          transition={{ delay: 1.5, y: { duration: 1.5, repeat: Infinity } }}
-          className="mt-12"
-        >
-          <ArrowDown className="w-6 h-6 text-white/40 mx-auto" />
         </motion.div>
       </motion.div>
     </section>
   );
 }
-
