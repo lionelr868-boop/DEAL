@@ -516,6 +516,8 @@
     "craftsmanDashFr": "Tableau artisan - Gérez vos services et réservations",
     "merchantDashFr": "Tableau commerçant - Gérez vos produits et commandes",
     "equipOwnerDashFr": "Tableau loueur - Suivez vos locations",
+    "adminDash": "Tableau admin - Gérez la plateforme et les utilisateurs",
+    "adminDashFr": "Tableau admin - Gérez la plateforme et les utilisateurs",
     "uploadAvatar": "Ajouter une photo de profil",
     "uploadAvatarFr": "Ajouter une photo de profil",
     "backToHome": "Retour à l'accueil",

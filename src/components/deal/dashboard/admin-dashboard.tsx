@@ -842,8 +842,8 @@ export default function AdminDashboard() {
                   .map((user) => {
                     const isSelected = selectedChatUser?.id === user.id;
                     const userName = locale === 'fr' && user.nameFr ? user.nameFr : user.name;
-                    const roleConf = roleColors[user.role] || roleColors.customer;
-                    const roleName = roleLabels[user.role] || roleLabels.customer;
+                    const roleConf = roleColors[(user.role || '').toLowerCase()] || roleColors.customer;
+                    const roleName = roleLabels[(user.role || '').toLowerCase()] || roleLabels.customer;
                     const lastConv = conversations.find(c => c.otherUserId === user.id);
                     return (
                       <motion.button
@@ -1119,8 +1119,8 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {filteredUsers.map((user, i) => {
-                      const role = roleColors[user.role] || roleColors.customer;
-                      const roleName = roleLabels[user.role] || roleLabels.customer;
+                      const role = roleColors[(user.role || '').toLowerCase()] || roleColors.customer;
+                      const roleName = roleLabels[(user.role || '').toLowerCase()] || roleLabels.customer;
                       const userName = locale === 'fr' && user.nameFr ? user.nameFr : user.name;
                       const isExpanded = expandedUserId === user.id;
                       return (
@@ -1797,8 +1797,8 @@ export default function AdminDashboard() {
 
           <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
             {recentUsers.map((user, i) => {
-              const role = roleColors[user.role] || roleColors.customer;
-              const roleName = roleLabels[user.role] || roleLabels.customer;
+              const role = roleColors[(user.role || '').toLowerCase()] || roleColors.customer;
+              const roleName = roleLabels[(user.role || '').toLowerCase()] || roleLabels.customer;
               return (
                 <motion.div
                   key={user.id}

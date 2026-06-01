@@ -73,6 +73,7 @@ function getSidebarItems(role: Role): SidebarItem[] {
       { key: 'categories', labelAr: 'الفئات', labelFr: 'Catégories', icon: FolderTree, color: 'text-deal-gold-dark' },
       { key: 'reports', labelAr: 'التقارير', labelFr: 'Rapports', icon: BarChart3, color: 'text-deal-orange' },
       { key: 'settings', labelAr: 'الإعدادات', labelFr: 'Paramètres', icon: Settings, color: 'text-deal-navy' },
+      { key: 'profile', labelAr: 'الملف الشخصي', labelFr: 'Profil', icon: UserCog, color: 'text-deal-orange' },
     ],
   };
 

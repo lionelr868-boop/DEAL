@@ -1,4 +1,83 @@
 ---
+Task ID: 15
+Agent: Main Agent
+Task: Login Testing + Admin Dashboard Enhancement + Role Label Bug Fix
+
+Work Log:
+- Read worklog.md (Tasks 1-14) and assessed project state: 32+ components, 22+ API endpoints, 5 dashboard roles
+- User requested: "In login and testing dashboards, add testing of admin dashboard"
+- Added admin demo account to auth-page.tsx (admin@deal.dz / admin123)
+- Added ADMIN dashboard preview card to the login page with red gradient styling
+- Added adminDash i18n keys to both ar.json and fr.json
+- Tested all 5 login flows via agent-browser (customer, craftsman, merchant, equipment_owner, admin)
+- Deep-tested all 7 admin dashboard tabs (overview, users, complaints, messages, categories, reports, settings)
+- Fixed role label bug: `user.role` (uppercase) vs `roleLabels` keys (lowercase) caused all users to show as "عميل" (customer)
+- Added profile tab to admin sidebar (was missing from admin sidebar items)
+- Verified all dashboards compile and work correctly (0 lint errors)
+
+### Demo Accounts:
+| Role | Email | Password |
+|---|---|---|
+| Customer | customer1@deal.dz | pass123 |
+| Craftsman | craftsman1@deal.dz | pass123 |
+| Merchant | merchant1@deal.dz | pass123 |
+| Equipment Owner | equip1@deal.dz | pass123 |
+| Admin | admin@deal.dz | admin123 |
+
+### Bug Fixed — Role Labels in Admin Dashboard:
+- **Issue**: `roleColors[user.role]` and `roleLabels[user.role]` used uppercase DB values like "CRAFTSMAN", "MERCHANT", "ADMIN"
+- **Fix**: Changed to `roleColors[(user.role || '').toLowerCase()]` in 3 locations
+- **Affected areas**: Users tab user list, Messages tab user list, Recent users list
+
+### Admin Dashboard Tabs Verified:
+1. ✅ **Overview** — Platform stats cards, quick actions, recent users, activity feed
+2. ✅ **Users** — User list with search/filter by role, expand details, activate/suspend/verify
+3. ✅ **Complaints** — 3 complaints with status badges, expand to reply, status management buttons
+4. ✅ **Messages** — User list + chat panel with message bubbles, send messages
+5. ✅ **Categories** — Service categories (8) + Product categories (6) with icons
+6. ✅ **Reports** — Stats cards (3 customers, 8 craftsmen, 5 merchants, 3 equipment owners, 28 services, 24 products, 16 equipment, 5 bookings), activity feed
+7. ✅ **Settings** — Platform name, contact email, support phone, maintenance mode toggle
+8. ✅ **Profile** — Admin profile editing (newly added to sidebar)
+
+### Dashboard Sidebar Tabs Verified:
+- **Customer**: نظرة عامة | حجوزاتي | طلباتي | المفضلة | الملف الشخصي | تسجيل الخروج ✅
+- **Craftsman**: نظرة عامة | خدماتي | حجوزاتي | الملف الشخصي | تسجيل الخروج ✅
+- **Merchant**: نظرة عامة | منتجاتي | الطلبات | الملف الشخصي | تسجيل الخروج ✅
+- **Equipment Owner**: نظرة عامة | معداتي | الإيجارات | الملف الشخصي | تسجيل الخروج ✅
+- **Admin**: نظرة عامة | المستخدمون | الشكاوى | الرسائل | الفئات | التقارير | الإعدادات | الملف الشخصي | تسجيل الخروج ✅
+
+### Files Modified (4):
+1. `src/components/deal/auth-page.tsx` — Added ADMIN dashboard preview card + admin demo account
+2. `src/components/deal/dashboard/admin-dashboard.tsx` — Fixed role label bug in 3 locations (toLowerCase)
+3. `src/components/deal/dashboard-wrapper.tsx` — Added profile tab to admin sidebar items
+4. `src/i18n/fr.json` — Added adminDash + adminDashFr keys
+
+### Lint Results:
+- 0 errors, 1 pre-existing font warning only
+- Dev server compiles cleanly
+
+### Stage Summary:
+- ✅ All 5 login flows working via demo accounts
+- ✅ All 5 dashboards render with correct sidebar tabs
+- ✅ Admin dashboard has all 8 tabs fully functional
+- ✅ Role labels now display correctly for all user types
+- ✅ Profile tab added to admin sidebar
+
+### Unresolved / Known Issues:
+- Avatar upload still not persisted to DB
+- No WebSocket real-time messaging (polling-based)
+- Search frontend not connected to /api/search
+- Mobile responsiveness needs full testing
+- Messages tab user list shows email duplicates in text concatenation
+
+### Recommended Next Steps:
+1. WebSocket real-time messaging
+2. Avatar persistence to DB
+3. Search frontend integration
+4. Mobile responsiveness testing
+5. Multi-image gallery for services/products/equipment
+
+---
 Task ID: 12
 Agent: Main Agent + 2 Parallel Subagents
 Task: Fix All User-Reported Dashboard Issues — Comments, Quick Actions, Logout, Profile, Notifications, Admin

@@ -37,6 +37,12 @@ const dashboards = [
     color: '#8B5CF6',
     gradient: 'from-purple-500 to-purple-700',
   },
+  {
+    key: 'ADMIN',
+    icon: Settings,
+    color: '#EF4444',
+    gradient: 'from-red-500 to-red-700',
+  },
 ];
 
 function getDashboardLabel(key: string, locale: string) {
@@ -46,6 +52,7 @@ function getDashboardLabel(key: string, locale: string) {
     CRAFTSMAN: locale === 'ar' ? 'craftsmanDash' : 'craftsmanDashFr',
     MERCHANT: locale === 'ar' ? 'merchantDash' : 'merchantDashFr',
     EQUIPMENT_OWNER: locale === 'ar' ? 'equipOwnerDash' : 'equipOwnerDashFr',
+    ADMIN: locale === 'ar' ? 'adminDash' : 'adminDashFr',
   };
   return map[key] || '';
 }
@@ -168,6 +175,7 @@ export default function AuthPage() {
     CRAFTSMAN: { email: 'craftsman1@deal.dz', password: 'pass123', name: 'محمد الكهربائي' },
     MERCHANT: { email: 'merchant1@deal.dz', password: 'pass123', name: 'سعيد للمواد' },
     EQUIPMENT_OWNER: { email: 'equip1@deal.dz', password: 'pass123', name: 'رابح للمعدات' },
+    ADMIN: { email: 'admin@deal.dz', password: 'admin123', name: 'مدير المنصة' },
   };
 
   const handleDashPreviewClick = async (role: string) => {
