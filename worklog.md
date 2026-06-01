@@ -1328,3 +1328,38 @@ Work Log:
 - ✅ Watermark class applied to main content area
 - ✅ All glow rings and orbiting elements scaled up proportionally
 - ✅ Floating animation more pronounced
+
+---
+Task ID: 17
+Agent: Main Agent
+Task: Remove "موثوق من قبل" (Trusted By) section and move "من نحن" (Who We Are) to its position in Footer
+
+Work Log:
+- Read footer.tsx and page.tsx to understand current layout
+- Identified the "Trusted By" section (lines 354-378) and "Team Section — Who We Are" (lines 383-409)
+- Removed the "موثوق من قبل" (Trusted By) section completely
+- Moved the "من نحن" (Who We Are) section to replace it (now sits between animated divider dots and the copyright bar)
+- Removed duplicate gradient divider that was between the two sections
+- Cleaned up unused imports: removed `Shield` and `Award` from lucide-react imports (kept `Zap` which is still used in stats section)
+- Ran lint check: 0 errors, 1 pre-existing font warning only
+
+### File Modified (1):
+1. **`src/components/deal/footer.tsx`** — Removed Trusted By section, moved Who We Are section up, cleaned imports
+
+### Footer Layout After Change:
+1. About section, Quick links, Contact info, Newsletter (grid)
+2. Animated divider dots
+3. Platform Stats Live
+4. Animated divider dots
+5. **من نحن (Who We Are)** — Team section with gold text (moved here)
+6. Gradient divider
+7. Bottom bar (copyright)
+
+### Lint Results:
+- 0 errors, 1 pre-existing font warning only
+
+### Stage Summary:
+- ✅ "موثوق من قبل" section removed from footer
+- ✅ "من نحن" section moved to replace it
+- ✅ Unused imports cleaned up
+- ✅ No code errors

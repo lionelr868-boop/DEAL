@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Phone, Mail, Heart, ArrowUp, Send, Sparkles, CheckCircle2, Users, Wrench, Package, Truck, Shield, Award, Zap } from 'lucide-react';
+import { MapPin, Phone, Mail, Heart, ArrowUp, Send, Sparkles, CheckCircle2, Users, Wrench, Package, Truck, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/store';
 import { AnimatedCounter } from './animated-counter';
 
@@ -350,35 +350,6 @@ export default function Footer() {
           <div className="divider-dot" style={{ background: '#0D9488' }} />
           <div className="divider-dot" style={{ background: '#F59E0B' }} />
         </div>
-
-        {/* Trusted By section */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-10"
-        >
-          <p className="text-center text-white/30 text-xs font-semibold mb-4 uppercase tracking-wider">
-            {locale === 'ar' ? 'موثوق من قبل' : 'Approuvé par'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <div className="trust-badge">
-              <Shield className="w-4 h-4 text-deal-teal" />
-              <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'حماية البيانات' : 'SSL Sécurisé'}</span>
-            </div>
-            <div className="trust-badge">
-              <Award className="w-4 h-4 text-deal-gold" />
-              <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'معتميز الجودة' : 'Qualité Certifiée'}</span>
-            </div>
-            <div className="trust-badge">
-              <Zap className="w-4 h-4 text-deal-orange" />
-              <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'أداء عالي' : 'Haute Perf.'}</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Gradient divider before copyright */}
-        <div className="gradient-divider mb-8" />
 
         {/* Team Section — Gold text */}
         <motion.div
