@@ -210,7 +210,7 @@ export default function Home() {
               className="flex-1"
             >
               <Navbar />
-              <main className="flex-1">
+              <main className="flex-1 logo-watermark">
                 <Hero />
                 <SectionSwitcher />
 

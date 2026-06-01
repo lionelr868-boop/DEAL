@@ -1281,3 +1281,50 @@ Work Log:
   - Orbiting glowing dots
   - Radial gradient glow behind logo
 - ✅ 0 lint errors, dev server compiles cleanly
+
+---
+Task ID: Watermark + Hero Logo Enhancement
+Agent: Main Agent
+Task: Add CSS watermark class, enlarge hero background logo, apply watermark to main element
+
+Work Log:
+- Read worklog.md and assessed full project state
+- Appended logo watermark CSS class to end of globals.css (no existing content modified)
+- Made hero background logo MUCH bigger and more visible in hero.tsx (11 changes)
+- Applied logo-watermark class to main element in page.tsx
+- Verified: 0 lint errors, dev server compiling cleanly (GET / 200)
+
+### Files Modified (3):
+
+1. **`src/app/globals.css`** — Appended logo watermark CSS class at END of file
+   - `.logo-watermark` class with `::before` pseudo-element for repeating logo pattern (350px tiles, opacity 0.025, mix-blend-mode multiply)
+   - `.logo-watermark > *` to ensure content stays above watermark (z-index: 1)
+   - `.logo-watermark::after` with animated subtle glow movement (3 radial gradients: amber, teal, orange)
+   - `@keyframes watermarkGlowMove` animation (15s ease-in-out infinite)
+
+2. **`src/components/deal/hero.tsx`** — Hero background logo enlarged and made more visible (11 specific changes)
+   - Logo size: 180/220/260px → 280/350/420px (w/h across breakpoints)
+   - Opacity animation: 0.06→0.1→0.06 → 0.1→0.18→0.1
+   - Scale animation: 1→1.02→1 → 1→1.04→1
+   - Drop shadow: 40px/80px → 60px/120px with stronger opacity (0.25/0.12)
+   - Soft glow behind logo: 0.12/0.05 → 0.2/0.08
+   - Outer glow ring: 500/600/700px → 700/800/1000px
+   - Second glow ring: 450/550/650px → 750/850/950px
+   - Rotating light beam ring: 400/500/600px → 600/750/900px
+   - Counter-rotating ring: 350/430/520px → 550/640/780px
+   - Orbiting light dots: 300/360/420px → 450/550/650px
+   - Floating movement: more pronounced (y: 0→-12→0→8→0 → 0→-20→0→12→0, x: 0→6→-4→0 → 0→10→-8→0)
+
+3. **`src/app/page.tsx`** — Added logo-watermark class to main element
+   - Changed `<main className="flex-1">` to `<main className="flex-1 logo-watermark">`
+
+### Lint Results:
+- 0 errors, 1 pre-existing font warning only
+- Dev server compiles cleanly, GET / 200 confirmed
+
+### Stage Summary:
+- ✅ Logo watermark CSS added to globals.css (appended, no existing content modified)
+- ✅ Hero background logo significantly enlarged (~55% bigger) with stronger visibility
+- ✅ Watermark class applied to main content area
+- ✅ All glow rings and orbiting elements scaled up proportionally
+- ✅ Floating animation more pronounced
