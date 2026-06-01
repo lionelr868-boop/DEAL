@@ -169,9 +169,11 @@ export default function DashboardWrapper() {
 
               {/* Logo */}
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center shadow-lg">
-                  <span className="text-white font-black text-sm">D</span>
-                </div>
+              <img
+                src="/logo.png"
+                alt="DEAL"
+                className="w-9 h-9 rounded-xl object-contain shadow-lg"
+              />
                 <h1 className="text-xl font-black bg-gradient-to-r from-deal-orange via-deal-gold to-deal-teal bg-clip-text text-transparent hidden sm:block">
                   {t.dashboard.dashboardTitle}
                 </h1>
@@ -282,9 +284,11 @@ export default function DashboardWrapper() {
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center">
-                  <span className="text-white font-black text-xs">D</span>
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="DEAL"
+                  className="w-8 h-8 rounded-lg object-contain"
+                />
                 <span className="font-black text-deal-navy">{t.dashboard.dashboardTitle}</span>
               </div>
               <motion.button

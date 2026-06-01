@@ -296,8 +296,12 @@ export default function AuthPage() {
                   transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                   className="mb-6"
                 >
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-deal-orange to-deal-gold shadow-2xl shadow-deal-orange/30">
-                    <span className="text-4xl font-black text-white" style={{ fontFamily: "'Cairo', sans-serif" }}>D</span>
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl shadow-deal-orange/30 overflow-hidden">
+                    <img
+                      src="/logo.png"
+                      alt="DEAL"
+                      className="w-full h-full object-contain p-2"
+                    />
                   </div>
                 </motion.div>
 

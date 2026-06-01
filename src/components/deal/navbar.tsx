@@ -60,12 +60,11 @@ export default function Navbar() {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center shadow-lg shadow-deal-orange/20">
-              <span className="text-white font-black text-lg">D</span>
-            </div>
-            <span className="text-2xl font-black bg-gradient-to-r from-deal-orange via-deal-gold to-deal-teal bg-clip-text text-transparent">
-              DEAL
-            </span>
+            <img
+              src="/logo.png"
+              alt="DEAL Logo"
+              className="h-10 w-auto object-contain rounded-xl"
+            />
           </motion.div>
 
           {/* Desktop nav links */}

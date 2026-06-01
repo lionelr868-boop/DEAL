@@ -68,11 +68,13 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl"
+            className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl overflow-hidden"
           >
-            <span className="text-4xl font-black text-white tracking-tighter" style={{ fontFamily: "'Cairo', sans-serif" }}>
-              D
-            </span>
+            <img
+              src="/logo.png"
+              alt="DEAL"
+              className="w-full h-full object-contain p-2"
+            />
           </motion.div>
 
           {/* Pulsing ring */}

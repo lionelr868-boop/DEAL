@@ -1204,3 +1204,36 @@ Work Log:
 - ✅ All existing functionality preserved
 - ✅ RTL support maintained
 - ✅ 0 lint errors
+
+---
+Task ID: 17
+Agent: Main Agent
+Task: Replace Platform Logo + Add Team Info Footer Section
+
+Work Log:
+- User uploaded new logo image (pasted_image_1780323082930.png)
+- Copied logo to /public/logo.png
+- Replaced ALL instances of the old "D" letter logo across 5 files:
+  1. `src/components/deal/navbar.tsx` — Header logo (line 63-67)
+  2. `src/components/deal/footer.tsx` — Footer logo (line 138-142) + Added team section
+  3. `src/app/page.tsx` — Loading screen logo (line 73-77)
+  4. `src/components/deal/dashboard-wrapper.tsx` — Dashboard header logo (line 172-176) + mobile sidebar logo (line 287-291)
+  5. `src/components/deal/auth-page.tsx` — Auth page logo (line 299-305)
+- Added gold-colored team info section to footer with bilingual support (Ar/Fr):
+  - Team members: قاسمي ضياء الدين, بوساحة لطفي, برجم أسامة
+  - Specialty: علوم تجارية / Sciences commerciales
+  - Master's thesis project description: مؤسسة ناشئة/جامعة سوق أهراس
+- Verified: 0 lint errors, dev server compiles cleanly, all APIs return 200
+
+### Files Modified (5):
+1. `public/logo.png` — NEW: Copied uploaded logo image
+2. `src/components/deal/navbar.tsx` — Replaced "D" with img tag
+3. `src/components/deal/footer.tsx` — Replaced "D" with img + Added team section with gold text
+4. `src/app/page.tsx` — Replaced loading screen "D" with img
+5. `src/components/deal/dashboard-wrapper.tsx` — Replaced 2 "D" logos with img
+6. `src/components/deal/auth-page.tsx` — Replaced auth page "D" with img
+
+### Stage Summary:
+- ✅ New logo deployed across entire platform (navbar, footer, loading screen, dashboard, auth page)
+- ✅ Team info section added to footer with gold-colored Arabic/French text
+- ✅ 0 lint errors, dev server compiles cleanly

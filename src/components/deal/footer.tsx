@@ -135,12 +135,11 @@ export default function Footer() {
           {/* About section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center">
-                <span className="text-white font-black text-lg">D</span>
-              </div>
-              <span className="text-2xl font-black bg-gradient-to-r from-deal-orange to-deal-gold bg-clip-text text-transparent">
-                DEAL
-              </span>
+              <img
+                src="/logo.png"
+                alt="DEAL Logo"
+                className="h-10 w-auto object-contain rounded-xl"
+              />
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
               {t.footer.aboutText}
@@ -375,6 +374,37 @@ export default function Footer() {
               <Zap className="w-4 h-4 text-deal-orange" />
               <span className="text-xs text-white/60 font-semibold">{locale === 'ar' ? 'أداء عالي' : 'Haute Perf.'}</span>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Gradient divider before copyright */}
+        <div className="gradient-divider mb-8" />
+
+        {/* Team Section — Gold text */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-8"
+        >
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <h3 className="text-lg font-bold text-amber-400/90" style={{ fontFamily: "'Cairo', sans-serif" }}>
+              {locale === 'ar' ? 'من نحن' : 'Qui sommes-nous'}
+            </h3>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <span className="text-amber-400 font-semibold text-sm" style={{ fontFamily: "'Cairo', sans-serif" }}>قاسمي ضياء الدين</span>
+              <span className="text-amber-400 font-semibold text-sm" style={{ fontFamily: "'Cairo', sans-serif" }}>بوساحة لطفي</span>
+              <span className="text-amber-400 font-semibold text-sm" style={{ fontFamily: "'Cairo', sans-serif" }}>برجم أسامة</span>
+            </div>
+            <p className="text-amber-400/80 text-sm font-medium" style={{ fontFamily: "'Cairo', sans-serif" }}>
+              {locale === 'ar' ? 'التخصص: علوم تجارية' : 'Spécialité : Sciences commerciales'}
+            </p>
+            <p className="text-amber-400/70 text-xs leading-relaxed max-w-xl mx-auto" style={{ fontFamily: "'Cairo', sans-serif" }}>
+              {locale === 'ar'
+                ? 'منصة مقدمة ضمن متطلبات نيل شهادة الماستر مؤسسة ناشئة/ جامعة سوق أهراس-كلية العلوم الاقتصادية والتجارية وعلوم التسيير'
+                : 'Plateforme présentée dans le cadre des exigences de l\'obtention du diplôme de Master Entrepreneurship Émergent / Université de Souk Ahras - Faculté des Sciences Économiques, Commerciales et de Gestion'
+              }
+            </p>
           </div>
         </motion.div>
 
