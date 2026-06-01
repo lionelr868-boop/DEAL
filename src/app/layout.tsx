@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   keywords: 'سوق أهراس, حرفيين, تجار, معدات, خدمات, منتجات, Souk Ahras, DEAL, artisans, commerçants, Algérie',
   authors: [{ name: "DEAL Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
     title: 'DEAL - منصة الحرفيين والتجار في سوق أهراس',

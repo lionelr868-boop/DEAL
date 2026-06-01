@@ -42,8 +42,12 @@ yarn-error.log*
 next-env.d.ts
 local-*
 .claude
-.z-ai-config
 *.log
+
+# custom
+/db/
+/download/
+/upload/
 dev.log
 dev.out.log
 test
