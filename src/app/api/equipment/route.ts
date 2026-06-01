@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       dailyPrice,
       weeklyPrice,
       monthlyPrice,
+      images,
     } = body;
 
     // Validate required fields
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
         dailyPrice: parseFloat(dailyPrice),
         weeklyPrice: weeklyPrice != null ? parseFloat(weeklyPrice) : null,
         monthlyPrice: monthlyPrice != null ? parseFloat(monthlyPrice) : null,
+        images: images || null,
       },
       include: {
         owner: {

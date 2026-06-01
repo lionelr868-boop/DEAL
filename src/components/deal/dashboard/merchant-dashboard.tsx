@@ -79,7 +79,7 @@ interface ApiProduct {
 
 export default function MerchantDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab } = useAppStore();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab, setShowAddItemPage } = useAppStore();
 
   const fallbackProducts = products.slice(0, 8);
 
@@ -255,7 +255,7 @@ export default function MerchantDashboard() {
   };
 
   const quickActions = [
-    { label: t.dashboard.addProduct, icon: Plus, color: 'bg-deal-teal', action: () => setShowAddProductForm(true) },
+    { label: t.dashboard.addProduct, icon: Plus, color: 'bg-deal-teal', action: () => setShowAddItemPage('product') },
     { label: t.dashboard.manageOrders, icon: ClipboardList, color: 'bg-deal-orange', action: () => setDashboardActiveTab('orders') },
     { label: t.dashboard.viewProfile, icon: UserCog, color: 'bg-deal-gold', action: () => setDashboardActiveTab('profile') },
   ];
@@ -369,7 +369,7 @@ export default function MerchantDashboard() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setShowAddProductForm(true); setDashboardActiveTab('overview'); }}
+                onClick={() => { setShowAddItemPage('product'); }}
                 className="btn-3d-sm text-white text-xs"
                 style={{
                   background: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',

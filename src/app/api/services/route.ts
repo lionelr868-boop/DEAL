@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       descriptionFr,
       price,
       priceUnit,
+      images,
     } = body;
 
     // Validate required fields
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
         descriptionFr: descriptionFr || null,
         price: parseFloat(price),
         priceUnit: priceUnit || 'service',
+        images: images || null,
       },
       include: {
         category: true,

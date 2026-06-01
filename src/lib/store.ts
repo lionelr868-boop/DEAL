@@ -74,6 +74,7 @@ interface AppState {
   selectedCategory: string | null;
   showDashboard: boolean;
   dashboardActiveTab: string;
+  showAddItemPage: 'service' | 'product' | 'equipment' | null;
   showProfileModal: boolean;
   showComplaintModal: boolean;
   messagingTargetUserId: string | null;
@@ -95,6 +96,7 @@ interface AppState {
   setSelectedCategory: (category: string | null) => void;
   setShowDashboard: (show: boolean) => void;
   setDashboardActiveTab: (tab: string) => void;
+  setShowAddItemPage: (type: 'service' | 'product' | 'equipment' | null) => void;
   setShowProfileModal: (show: boolean) => void;
   setShowComplaintModal: (show: boolean) => void;
   setMessagingTargetUserId: (id: string | null) => void;
@@ -117,6 +119,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedCategory: null,
   showDashboard: false,
   dashboardActiveTab: 'overview',
+  showAddItemPage: null,
   showProfileModal: false,
   showComplaintModal: false,
   messagingTargetUserId: null,
@@ -138,6 +141,7 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedCategory: (category) => set({ selectedCategory: category }),
   setShowDashboard: (show) => set({ showDashboard: show }),
   setDashboardActiveTab: (tab) => set({ dashboardActiveTab: tab }),
+  setShowAddItemPage: (type) => set({ showAddItemPage: type }),
   setShowProfileModal: (show) => set({ showProfileModal: show }),
   setShowComplaintModal: (show) => set({ showComplaintModal: show }),
   setMessagingTargetUserId: (id) => set({ messagingTargetUserId: id }),

@@ -88,7 +88,7 @@ interface ApiBooking {
 
 export default function EquipmentOwnerDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab } = useAppStore();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab, setShowAddItemPage } = useAppStore();
 
   // Real equipment state
   const [myEquipment, setMyEquipment] = useState<ApiEquipment[]>([]);
@@ -248,7 +248,7 @@ export default function EquipmentOwnerDashboard() {
   };
 
   const quickActions = [
-    { label: t.dashboard.addEquipment, icon: Plus, color: 'bg-deal-gold', action: () => setShowAddEquipmentForm(true) },
+    { label: t.dashboard.addEquipment, icon: Plus, color: 'bg-deal-gold', action: () => setShowAddItemPage('equipment') },
     { label: t.dashboard.viewRentals, icon: ClipboardList, color: 'bg-deal-teal', action: () => setDashboardActiveTab('rentals') },
     { label: t.dashboard.manageProfile, icon: UserCog, color: 'bg-deal-orange', action: () => setDashboardActiveTab('profile') },
   ];
@@ -400,7 +400,7 @@ export default function EquipmentOwnerDashboard() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setShowAddEquipmentForm(true); setDashboardActiveTab('overview'); }}
+                onClick={() => { setShowAddItemPage('equipment'); }}
                 className="btn-3d-sm text-deal-navy text-xs"
                 style={{
                   background: 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)',

@@ -105,7 +105,7 @@ interface RevenueBar {
 
 export default function CraftsmanDashboard() {
   const { t, getLocalizedValue, locale } = useI18n();
-  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab } = useAppStore();
+  const { currentUser, dashboardActiveTab, setShowDetailModal, setDetailType, setSelectedItemId, setDashboardActiveTab, setShowAddItemPage } = useAppStore();
 
   // Real services state
   const [myServices, setMyServices] = useState<ApiService[]>([]);
@@ -301,7 +301,7 @@ export default function CraftsmanDashboard() {
   };
 
   const quickActions = [
-    { label: t.dashboard.addNewService, icon: Plus, color: 'bg-deal-orange', action: () => setShowAddServiceForm(true) },
+    { label: t.dashboard.addNewService, icon: Plus, color: 'bg-deal-orange', action: () => setShowAddItemPage('service') },
     { label: t.dashboard.viewAllBookings, icon: ClipboardList, color: 'bg-deal-teal', action: () => setDashboardActiveTab('bookings') },
     { label: t.dashboard.editProfile, icon: UserCog, color: 'bg-deal-gold', action: () => setDashboardActiveTab('profile') },
   ];
@@ -415,7 +415,7 @@ export default function CraftsmanDashboard() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setShowAddServiceForm(true); setDashboardActiveTab('overview'); }}
+                onClick={() => { setShowAddItemPage('service'); }}
                 className="btn-3d-sm text-white text-xs"
                 style={{
                   background: 'linear-gradient(180deg, #FF8C5A 0%, #FF6B35 100%)',

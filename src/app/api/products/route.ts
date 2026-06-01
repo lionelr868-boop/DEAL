@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
       price,
       stock,
       unit,
+      images,
     } = body;
 
     // Validate required fields
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
         price: parseFloat(price),
         stock: stock != null ? parseInt(stock) : 0,
         unit: unit || 'piece',
+        images: images || null,
       },
       include: {
         category: true,

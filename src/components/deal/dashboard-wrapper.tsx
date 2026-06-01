@@ -27,6 +27,7 @@ import CraftsmanDashboard from './dashboard/craftsman-dashboard';
 import MerchantDashboard from './dashboard/merchant-dashboard';
 import EquipmentOwnerDashboard from './dashboard/equipment-owner-dashboard';
 import AdminDashboard from './dashboard/admin-dashboard';
+import AddItemPage from './dashboard/add-item-page';
 
 type Role = 'customer' | 'craftsman' | 'merchant' | 'equipment_owner' | 'admin';
 
@@ -88,7 +89,7 @@ function getSidebarItems(role: Role): SidebarItem[] {
 
 export default function DashboardWrapper() {
   const { t, locale } = useI18n();
-  const { currentUser, setShowDashboard, dashboardActiveTab, setDashboardActiveTab, logout } = useAppStore();
+  const { currentUser, setShowDashboard, dashboardActiveTab, setDashboardActiveTab, logout, showAddItemPage, setShowAddItemPage } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -251,14 +252,13 @@ export default function DashboardWrapper() {
         </motion.aside>
 
         {/* Main Content */}
-        <motion.main
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="flex-1 min-w-0 p-3 sm:p-6 pb-24 md:pb-6"
-        >
-          {renderDashboard()}
-        </motion.main>
+        <div className="flex-1 min-w-0 p-3 sm:p-6 pb-24 md:pb-6">
+          {showAddItemPage ? (
+            <AddItemPage type={showAddItemPage} />
+          ) : (
+            renderDashboard()
+          )}
+        </div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
