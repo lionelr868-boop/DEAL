@@ -66,14 +66,14 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
           className="relative mb-8"
         >
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl overflow-hidden"
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl overflow-hidden"
           >
             <img
               src="/logo.png"
               alt="DEAL"
-              className="w-full h-full object-contain p-2"
+              className="w-full h-full object-contain p-3"
             />
           </motion.div>
 

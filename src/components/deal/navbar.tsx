@@ -63,7 +63,7 @@ export default function Navbar() {
             <img
               src="/logo.png"
               alt="DEAL Logo"
-              className="h-10 w-auto object-contain rounded-xl"
+              className="h-12 w-auto object-contain"
             />
           </motion.div>
 

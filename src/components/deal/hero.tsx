@@ -455,6 +455,106 @@ export default function Hero() {
         style={{ background: 'radial-gradient(circle, rgba(255,107,53,0.04) 0%, transparent 70%)' }}
       />
 
+      {/* ── Large Animated Background Logo with Light Effects ── */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[2]">
+        {/* Outer glow ring — pulsing light */}
+        <motion.div
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.04, 0.09, 0.04],
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] lg:w-[700px] lg:h-[700px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.15) 0%, rgba(245,158,11,0.06) 30%, transparent 70%)' }}
+        />
+
+        {/* Second glow ring — teal accent */}
+        <motion.div
+          animate={{
+            scale: [1.1, 1, 1.1],
+            opacity: [0.03, 0.07, 0.03],
+          }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+          className="absolute w-[450px] h-[450px] sm:w-[550px] sm:h-[550px] lg:w-[650px] lg:h-[650px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 60%)' }}
+        />
+
+        {/* Rotating light beam ring */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          className="absolute w-[400px] h-[400px] sm:w-[500px] sm:h-[500px] lg:w-[600px] lg:h-[600px] rounded-full"
+        >
+          <div className="absolute top-0 start-1/2 -translate-x-1/2 w-32 h-1 rounded-full bg-gradient-to-r from-transparent via-amber-400/20 to-transparent" style={{ filter: 'blur(4px)' }} />
+          <div className="absolute bottom-0 start-1/2 -translate-x-1/2 w-32 h-1 rounded-full bg-gradient-to-r from-transparent via-teal-400/15 to-transparent" style={{ filter: 'blur(4px)' }} />
+          <div className="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-32 rounded-full bg-gradient-to-b from-transparent via-orange-400/15 to-transparent" style={{ filter: 'blur(4px)' }} />
+          <div className="absolute end-0 top-1/2 -translate-y-1/2 w-1 h-32 rounded-full bg-gradient-to-b from-transparent via-amber-300/15 to-transparent" style={{ filter: 'blur(4px)' }} />
+        </motion.div>
+
+        {/* Counter-rotating light ring */}
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+          className="absolute w-[350px] h-[350px] sm:w-[430px] sm:h-[430px] lg:w-[520px] lg:h-[520px] rounded-full"
+        >
+          <div className="absolute top-0 start-0 w-20 h-0.5 rounded-full bg-gradient-to-e from-amber-400/25 to-transparent" style={{ filter: 'blur(3px)' }} />
+          <div className="absolute bottom-0 end-0 w-20 h-0.5 rounded-full bg-gradient-to-s from-teal-400/20 to-transparent" style={{ filter: 'blur(3px)' }} />
+        </motion.div>
+
+        {/* The Logo Image — floating with subtle movement */}
+        <motion.div
+          animate={{
+            y: [0, -12, 0, 8, 0],
+            x: [0, 6, -4, 0],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          className="relative z-[3]"
+        >
+          <motion.div
+            animate={{
+              opacity: [0.06, 0.1, 0.06],
+              scale: [1, 1.02, 1],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            className="relative"
+          >
+            {/* Soft glow behind logo */}
+            <div className="absolute inset-0 scale-150 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.05) 40%, transparent 70%)' }}
+            />
+            <img
+              src="/logo.png"
+              alt=""
+              className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] lg:w-[260px] lg:h-[260px] object-contain"
+              style={{ filter: 'drop-shadow(0 0 40px rgba(251,191,36,0.15)) drop-shadow(0 0 80px rgba(245,158,11,0.08))' }}
+            />
+          </motion.div>
+        </motion.div>
+
+        {/* Orbiting light dots around the logo */}
+        {[0, 60, 120, 180, 240, 300].map((angle) => (
+          <motion.div
+            key={angle}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 15 + (angle % 30), repeat: Infinity, ease: 'linear', delay: angle / 360 }}
+            className="absolute w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] lg:w-[420px] lg:h-[420px]"
+          >
+            <div
+              className="absolute top-0 start-1/2 -translate-x-1/2 w-2 h-2 rounded-full"
+              style={{
+                background: angle % 120 === 0 ? 'rgba(251,191,36,0.4)' : angle % 120 === 60 ? 'rgba(20,184,166,0.35)' : 'rgba(255,107,53,0.35)',
+                boxShadow: angle % 120 === 0
+                  ? '0 0 8px rgba(251,191,36,0.6), 0 0 20px rgba(251,191,36,0.3)'
+                  : angle % 120 === 60
+                    ? '0 0 8px rgba(20,184,166,0.5), 0 0 20px rgba(20,184,166,0.2)'
+                    : '0 0 8px rgba(255,107,53,0.5), 0 0 20px rgba(255,107,53,0.2)',
+                filter: 'blur(0.5px)',
+              }}
+            />
+          </motion.div>
+        ))}
+      </div>
+
       {/* Floating decorative shapes */}
       <FloatingShape
         className="absolute top-[15%] start-[8%] w-3 h-3 rounded-full bg-amber-400/20 z-[2]"

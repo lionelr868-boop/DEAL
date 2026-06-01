@@ -172,7 +172,7 @@ export default function DashboardWrapper() {
               <img
                 src="/logo.png"
                 alt="DEAL"
-                className="w-9 h-9 rounded-xl object-contain shadow-lg"
+                className="h-11 w-auto object-contain"
               />
                 <h1 className="text-xl font-black bg-gradient-to-r from-deal-orange via-deal-gold to-deal-teal bg-clip-text text-transparent hidden sm:block">
                   {t.dashboard.dashboardTitle}
@@ -287,7 +287,7 @@ export default function DashboardWrapper() {
                 <img
                   src="/logo.png"
                   alt="DEAL"
-                  className="w-8 h-8 rounded-lg object-contain"
+                  className="w-10 h-10 rounded-lg object-contain"
                 />
                 <span className="font-black text-deal-navy">{t.dashboard.dashboardTitle}</span>
               </div>

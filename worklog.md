@@ -1237,3 +1237,47 @@ Work Log:
 - ✅ New logo deployed across entire platform (navbar, footer, loading screen, dashboard, auth page)
 - ✅ Team info section added to footer with gold-colored Arabic/French text
 - ✅ 0 lint errors, dev server compiles cleanly
+
+---
+Task ID: 18
+Agent: Main Agent
+Task: Enlarge Logo Everywhere + Animated Background Logo in Hero with Light Effects
+
+Work Log:
+- Increased logo sizes across all 6 locations:
+  1. Navbar: h-10 → h-12, removed rounded-xl for cleaner look
+  2. Footer: h-10 → h-14, removed rounded-xl
+  3. Loading Screen: w-24 h-24 → w-32 h-32, softer pulse animation (1.1 → 1.08, 1.5s → 2s)
+  4. Dashboard header: w-9 h-9 → h-11 w-auto
+  5. Dashboard mobile sidebar: w-8 h-8 → w-10 h-10
+  6. Auth page: w-20 h-20 → w-28 h-28
+- Added spectacular animated background logo in hero section (hero.tsx):
+  - Large logo (180px → 260px responsive) centered in hero background
+  - Floating movement animation (y: [-12, 0, 8], x: [0, 6, -4])
+  - Pulsing opacity animation (0.06 → 0.1)
+  - Outer glow ring pulsing light effect (amber/gold radial gradient)
+  - Second glow ring (teal accent, counter-phase)
+  - Rotating light beam ring (4 beams: amber, teal, orange, amber-300)
+  - Counter-rotating light ring (amber + teal beams)
+  - 6 orbiting light dots (amber, teal, orange) with glowing box shadows
+  - Soft radial glow behind logo (amber → gold gradient, blur-3xl)
+  - Drop shadow filter on logo image for extra glow
+- Verified: 0 lint errors, dev server compiles cleanly
+
+### Files Modified (6):
+1. `src/components/deal/navbar.tsx` — Logo h-10 → h-12
+2. `src/components/deal/footer.tsx` — Logo h-10 → h-14
+3. `src/app/page.tsx` — Loading screen logo w-24 → w-32
+4. `src/components/deal/dashboard-wrapper.tsx` — Header h-11 + Sidebar w-10
+5. `src/components/deal/auth-page.tsx` — Auth logo w-20 → w-28
+6. `src/components/deal/hero.tsx` — Added 100+ lines of animated background logo effects
+
+### Stage Summary:
+- ✅ Logo bigger and clearer in all 6 current positions
+- ✅ Spectacular animated background logo in hero with:
+  - Floating movement (figure-8 path)
+  - Pulsing glow light effects
+  - Rotating light beam rings
+  - Orbiting glowing dots
+  - Radial gradient glow behind logo
+- ✅ 0 lint errors, dev server compiles cleanly

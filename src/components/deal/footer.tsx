@@ -138,7 +138,7 @@ export default function Footer() {
               <img
                 src="/logo.png"
                 alt="DEAL Logo"
-                className="h-10 w-auto object-contain rounded-xl"
+                className="h-14 w-auto object-contain"
               />
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
