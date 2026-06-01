@@ -244,3 +244,15 @@ model Complaint {
 
   user        User      @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model PlatformSettings {
+  id               String   @id @default(cuid())
+  platformName     String   @default("DEAL")
+  contactEmail     String   @default("contact@deal.dz")
+  supportPhone     String   @default("")
+  maintenanceMode  Boolean  @default(false)
+  siteDescription  String   @default("")
+  siteDescriptionFr String @default("")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}

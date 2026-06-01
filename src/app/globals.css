@@ -2174,3 +2174,39 @@ body::before {
   font-size: 0.75rem;
   color: #64748B;
 }
+
+/* ========== TASK 3: Hero Homepage Redesign ========== */
+
+/* Dark hero background */
+.hero-dark-bg {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0F172A 0%, #1E293B 40%, #162032 70%, #0F172A 100%);
+}
+
+/* Dot grid pattern for dark hero */
+.hero-dot-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+/* Glass search bar on dark bg */
+.hero-search-glass:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Hero stat cards (glass on dark) */
+.hero-stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-stat-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}

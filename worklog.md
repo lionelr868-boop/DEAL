@@ -1,4 +1,275 @@
 ---
+Task ID: 16
+Agent: Main Agent + 3 Parallel Subagents
+Task: Radical Admin Dashboard Development + Homepage Redesign + Continuous Creative Development
+
+Work Log:
+- User reported: "Most admin buttons are decorative only, no add category button, no user filtering, homepage looks unprofessional"
+- Launched 3 parallel subagents for maximum efficiency:
+  - Subagent 2-a: Backend API routes (categories CRUD, content mgmt, delete user, settings, enhanced stats)
+  - Subagent 2-b: Homepage professional redesign with dark navy theme
+  - Subagent 2-c: Complete admin dashboard rewrite (9 functional tabs)
+- Updated dashboard-wrapper.tsx: Added "content management" tab to admin sidebar
+- Added FileText icon import for new sidebar item
+- All work verified with `bun run lint` (0 errors) and dev log (all APIs returning 200)
+
+### Files Created by Subagents (6):
+1. `src/app/api/admin/content/route.ts` — Content management (GET/DELETE/PATCH for services/products/equipment)
+2. `src/app/api/admin/users/[id]/route.ts` — User deletion API (blocks ADMIN deletion)
+3. `src/app/api/admin/settings/route.ts` — Platform settings CRUD (GET/PUT)
+
+### Files Modified by Subagents (5):
+4. `prisma/schema.prisma` — Added PlatformSettings model
+5. `src/app/api/service-categories/route.ts` — Added POST + DELETE
+6. `src/app/api/product-categories/route.ts` — Added POST + DELETE
+7. `src/app/api/stats/route.ts` — Enhanced: pendingComplaints, recentUsers, recentActivity
+8. `src/components/deal/hero.tsx` — Complete visual redesign (dark navy theme, glass morphism)
+9. `src/app/globals.css` — 4 new CSS classes (hero-dark-bg, hero-dot-pattern, etc.)
+10. `src/components/deal/dashboard/admin-dashboard.tsx` — Complete rewrite (1512 lines)
+
+### Files Modified by Main Agent (1):
+11. `src/components/deal/dashboard-wrapper.tsx` — Added content tab to admin sidebar
+
+### Admin Dashboard — 9 Fully Functional Tabs:
+1. ✅ Overview — Real stats from API, recent users & activity from DB (NO hardcoded data)
+2. ✅ Users — Enhanced: search, role filter, status filter, verification filter, DELETE USER
+3. ✅ Content Management (NEW) — Services/Products/Equipment sub-tabs, search, toggle availability, delete
+4. ✅ Complaints — Real API data, reply, status management
+5. ✅ Messages — Real API data, user list + chat
+6. ✅ Categories (REAL CRUD) — Add new from DB, delete from DB, inline form with all fields
+7. ✅ Reports — Animated bar charts with real data
+8. ✅ Settings (REAL persistence) — Fetches/saves to DB via API
+9. ✅ Profile — Shared ProfileTabContent component
+
+### Homepage Redesign:
+- Dark navy gradient background (#0F172A → #1E293B)
+- Subtle dot grid pattern overlay
+- 3 gradient mesh orbs for ambient depth
+- 5 floating decorative shapes with animations
+- Glass morphism search bar
+- Trust badges row (Verified, 24/7 Support, Best Prices)
+- Dark glass feature cards and stat cards
+- Warmer gradient heading (amber-400 → orange-400 → teal-400)
+
+### API Integration Points (15+):
+- GET /api/stats → Overview stats, recent users, activity feed
+- GET/POST/PATCH /api/users → Users management
+- DELETE /api/admin/users/[id] → Delete user
+- GET/DELETE/PATCH /api/admin/content → Content management
+- GET/POST /api/service-categories, /api/product-categories → Category CRUD
+- DELETE /api/service-categories, /api/product-categories → Delete categories
+- GET/PUT /api/admin/settings → Settings persistence
+- GET/POST/PATCH /api/complaints → Complaints management
+- GET/POST/PATCH /api/messages → Messages
+
+### Stage Summary:
+- ✅ Admin dashboard radically transformed — every button is functional
+- ✅ Category management with real DB CRUD (add/delete)
+- ✅ Content management for services/products/equipment
+- ✅ User filtering (role, status, verification)
+- ✅ User deletion capability
+- ✅ Platform settings persisted to database
+- ✅ Homepage redesigned with professional dark theme
+- ✅ 0 lint errors, dev server compiles cleanly
+- ✅ All API routes returning 200
+
+### Unresolved / Known Issues:
+- Avatar upload not persisted to DB
+- No WebSocket real-time messaging (polling-based)
+- Search frontend not connected to /api/search
+- Mobile responsiveness needs testing
+- Messages tab user list shows email duplicates
+
+### Recommended Next Steps:
+1. Continuous creative development — discover and fix non-functional features
+2. Search frontend integration
+3. Avatar persistence to DB
+4. Multi-image gallery for services/products/equipment
+5. Mobile responsiveness testing
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Complete Rewrite of Admin Dashboard — 9 Fully Functional Tabs with Real API Integration
+
+Work Log:
+- Read worklog.md (Tasks 1-15) and assessed project state: 32+ components, 22+ API endpoints, 5 dashboard roles
+- Completely rewrote `src/components/deal/dashboard/admin-dashboard.tsx` (1922 → 1512 lines)
+- Removed ALL hardcoded/decorative data, replaced with real API integration
+- Every button is functional with proper API calls
+- Created reusable helper components: TabHeader, LoadingSpinner, EmptyState
+- Added new interfaces: ContentItem, CategoryItem, ApiStats
+- Connected to 7 new API routes created by Task 2 agent
+- Fixed 4 JSX parsing errors (nested ternaries with .map() calls)
+- Verified with `bun run lint`: 0 errors, 1 pre-existing font warning only
+
+### File Modified (1):
+
+**`src/components/deal/dashboard/admin-dashboard.tsx`** — Complete rewrite (1512 lines)
+
+### 9 Tabs Implemented:
+
+1. **Overview (default)**
+   - 6 stat cards from real `/api/stats` data (Customers, Craftsmen, Merchants, Equipment Owners, Total Bookings, Total Revenue)
+   - 4 quick action buttons: Manage Users, Manage Categories, View Reports, Manage Content
+   - Recent Users: Real data from `apiStats.recentUsers` (DB)
+   - Activity Feed: Real data from `apiStats.recentActivity` (DB) with colored icons per type (booking, order, review, complaint, user)
+   - NO hardcoded data
+
+2. **Users Tab (Enhanced)**
+   - Search bar + Role filter (All, Customer, Craftsman, Merchant, Equipment Owner, Admin)
+   - NEW: Status filter (All, Active, Inactive)
+   - NEW: Verification filter (All, Verified, Unverified)
+   - Each user card: avatar initial, name, email, role badge, status badge, verification badge
+   - Click to expand: full profile details (phone, city, specialties, bio, hourlyRate, shopName, rating, experience)
+   - NEW: Delete User button (calls `DELETE /api/admin/users/[id]` with confirm dialog)
+   - Toggle Active/Inactive, Toggle Verified buttons with toast feedback
+   - Role count cards showing total per role
+
+3. **Content Management Tab (NEW)**
+   - Three sub-tabs: Services | Products | Equipment
+   - Each sub-tab fetches from `GET /api/admin/content?type=xxx`
+   - Search within content items
+   - Each item shows: title (bilingual), provider name, price, availability status badge
+   - Actions: Toggle availability (PATCH), Delete (DELETE with confirm dialog)
+   - Empty states for each content type
+   - Loading spinner during fetch
+
+4. **Complaints Tab (Kept existing)**
+   - Already works with real API data, preserved as-is
+   - Fetches from GET /api/complaints
+   - Color-coded status badges, expand to reply, status management
+
+5. **Messages Tab (Kept existing)**
+   - Already works with real API data, preserved as-is
+   - User list + chat panel with message bubbles
+
+6. **Categories Tab (REAL CRUD from DB)**
+   - Two sections: Service Categories | Product Categories
+   - Service categories: fetched from `GET /api/service-categories`
+   - Product categories: fetched from `GET /api/product-categories`
+   - ADD NEW button → opens animated inline form with fields: Name (Ar), Name (Fr), Icon (emoji input), Description (Ar), Description (Fr), Sort Order
+   - POST to `/api/service-categories` or `/api/product-categories`
+   - Each category shows: icon, name, item count, sort order
+   - Delete button with confirmation (DELETE API call)
+
+7. **Reports Tab**
+   - Key number cards: Pending Complaints, Total Bookings, Total Orders
+   - Bar chart: Users by role (animated div bars with Framer Motion)
+   - Bar chart: Content count (Services, Products, Equipment)
+   - Activity feed from real API data
+
+8. **Settings Tab (REAL persistence)**
+   - Fetches from `GET /api/admin/settings` on mount
+   - Fields: Platform Name, Contact Email, Support Phone, Maintenance Mode toggle
+   - Save button → `PUT /api/admin/settings`
+   - Loading state during fetch
+   - Toast notification on success
+
+9. **Profile Tab (Kept existing)**
+   - Uses shared ProfileTabContent component with role="admin"
+
+### New Helper Components:
+- `TabHeader`: Reusable gradient header with icon, badge, title, subtitle, refresh button
+- `LoadingSpinner`: Centered Loader2 spinner with text
+- `EmptyState`: Icon + message for empty lists
+
+### New Interfaces:
+- `ContentItem`: id, title, titleFr, price, isAvailable, providerName, categoryName, rating, stock, status, createdAt
+- `CategoryItem`: id, name, nameFr, icon, description, descriptionFr, sortOrder, _count
+- `ApiStats`: Extended with pendingComplaints, recentUsers, recentActivity arrays
+
+### API Integration Points:
+- GET /api/stats → Overview stats, recent users, activity feed
+- GET /api/users → Users list with search/filter
+- PATCH /api/users/[id] → Toggle active/verified
+- DELETE /api/admin/users/[id] → Delete user
+- GET /api/admin/content?type=xxx → Content management
+- PATCH /api/admin/content → Toggle availability
+- DELETE /api/admin/content → Delete content
+- GET/POST /api/service-categories → Category CRUD
+- GET/POST /api/product-categories → Category CRUD
+- DELETE /api/service-categories, /api/product-categories → Delete
+- GET/PUT /api/admin/settings → Settings CRUD
+- GET /api/complaints → Complaints management
+- GET/POST /api/messages → Messages
+
+### Styling:
+- Consistent card styling: rounded-2xl, bg-white, shadow-sm
+- Tab headers: gradient bg from-deal-navy to deal-navy-dark with white text
+- RTL support throughout (start/end/ps/me/ms/pe)
+- Custom scrollbar class: custom-scrollbar
+- Framer Motion animations: fadeInUp variant for list items, AnimatePresence for expandable sections
+- Toast notifications for ALL actions (sonner)
+- deal-navy, deal-orange, deal-teal, deal-gold custom color system
+
+### Lint Results:
+- 0 errors (1 pre-existing font warning only)
+- Dev server compiles cleanly, GET / 200 confirmed
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Admin Management Backend APIs — Categories CRUD, Content Management, User Delete, Settings, Enhanced Stats
+
+Work Log:
+- Read worklog.md (Tasks 1-15) and assessed project state: 32+ components, 22+ API endpoints, 5 dashboard roles
+- Added PlatformSettings model to Prisma schema (pushed to DB via db:push)
+- Updated 2 existing API routes and created 4 new ones
+- All routes follow existing project patterns (NextRequest/NextResponse, try/catch, db import, JSON responses)
+- 0 lint errors (1 pre-existing font warning only)
+
+### Schema Change:
+- **`prisma/schema.prisma`** — Added `PlatformSettings` model with fields: platformName, contactEmail, supportPhone, maintenanceMode, siteDescription, siteDescriptionFr
+
+### Files Modified (3):
+
+1. **`src/app/api/service-categories/route.ts`** — Added POST (create category) and DELETE (remove by ?id=) handlers
+   - POST: Creates ServiceCategory with name, nameFr, icon, description, descriptionFr, sortOrder
+   - DELETE: Removes category by query param ?id=, reports deleted services count (cascade)
+
+2. **`src/app/api/product-categories/route.ts`** — Added POST (create category) and DELETE (remove by ?id=) handlers
+   - POST: Creates ProductCategory with same fields as service categories
+   - DELETE: Removes category by query param ?id=, reports deleted products count (cascade)
+
+3. **`src/app/api/stats/route.ts`** — Enhanced with 3 new data fields
+   - `pendingComplaints`: Count of complaints with status PENDING
+   - `recentUsers`: Last 5 registered users (name, nameFr, role, avatar, createdAt)
+   - `recentActivity`: Combined feed of last 10 bookings + orders + reviews + complaints, sorted by date, with bilingual labels
+
+### Files Created (3):
+
+4. **`src/app/api/admin/content/route.ts`** (NEW) — Admin content management API
+   - GET: List content by type (?type=services|products|equipment) with ?search= support
+     - Services include: provider name/rating/verification, category name
+     - Products include: merchant name/shop/rating, category name, stock
+     - Equipment include: owner name/rating, status, pricing tiers
+   - DELETE: Remove content by ?type= & ?id=
+   - PATCH: Update single field via ?type= & ?id= & ?field= & ?value= (toggles availability, changes status, etc.)
+
+5. **`src/app/api/admin/users/[id]/route.ts`** (NEW) — Admin user deletion API
+   - DELETE: Remove user by ID with cascade of related data (messages, notifications, complaints)
+   - Blocks deletion of ADMIN role users (403 Forbidden)
+   - Returns success message with deleted user name
+
+6. **`src/app/api/admin/settings/route.ts`** (NEW) — Platform settings API
+   - GET: Returns saved settings or hardcoded defaults (DEAL, contact@deal.dz)
+   - PUT: Creates or updates platform settings (platformName, contactEmail, supportPhone, maintenanceMode, siteDescription, siteDescriptionFr)
+
+### Lint Results:
+- 0 errors, 1 pre-existing font warning only
+- Dev server compiles cleanly
+
+### Stage Summary:
+- ✅ All 7 endpoints implemented following existing patterns
+- ✅ Prisma schema updated with PlatformSettings model
+- ✅ Service/product categories now support full CRUD
+- ✅ Admin can list, search, delete, and update all content types
+- ✅ Admin can delete non-admin users with cascade cleanup
+- ✅ Platform settings persisted to database with defaults
+- ✅ Stats API now provides pending complaints, recent users, and activity feed
+
+---
 Task ID: 15
 Agent: Main Agent
 Task: Login Testing + Admin Dashboard Enhancement + Role Label Bug Fix
@@ -822,3 +1093,114 @@ Work Log:
 3. Mobile responsiveness testing
 4. WebSocket real-time messaging
 5. Avatar persistence to DB
+---
+Task ID: 3
+Agent: Main Agent
+Task: Hero Homepage Visual Redesign — Professional Dark Theme, Glass Morphism, Modern Aesthetics
+
+Work Log:
+- Read worklog.md (Tasks 1-15) and assessed project state: 32+ components, 22+ API endpoints, 5 dashboard roles
+- Analyzed current hero.tsx (530 lines) with light gradient background, orange-dominant styling
+- User reported: "doesn't look professional and the colors are not nice"
+- Complete visual redesign of hero.tsx with modern dark navy theme
+- Added new CSS classes to globals.css for dark hero styling
+- No i18n changes needed (all existing keys preserved)
+
+### Hero Section Redesign Details:
+
+**Background & Pattern:**
+- Replaced light gradient (white/warm/teal/gray) with dark navy gradient (#0F172A → #1E293B → #162032)
+- Added subtle dot grid pattern overlay (32px spacing, 3% white opacity)
+- Three gradient mesh orbs (amber top-left, teal bottom-right, orange center) for depth
+- Five floating decorative geometric shapes (circles + diamonds) with animated bob/rotate
+
+**Typography & Layout:**
+- Kept two-column layout (text left, features right)
+- Tagline badge: glass morphism pill with teal pulse dot, white/70% text on dark
+- Heading: Warm amber→gold→orange→teal gradient text (first half), solid white (second half)
+- Subtitle: white/50% opacity for readability on dark bg
+- Trust badges below search: Shield/Clock/Star icons with white/35% text
+
+**Search Bar (Glass Morphism):**
+- Dark glass background (white/8%, blur 24px)
+- White/10% border with hover glow effect
+- Amber/gold→orange gradient search button (replaced solid orange)
+- White text placeholder, amber icon on hover
+
+**Feature Cards (Right Column):**
+- Dark glass cards (white/7%, blur 24px, colored border tint per card)
+- Amber gradient for Services, Teal for Products, Orange for Equipment
+- Radial glow on hover per accent color
+- Animated bottom accent line on hover
+- White text on dark backgrounds
+
+**Stats Bar:**
+- Dark glass stat cards (white/5%, blur 20px, subtle white border)
+- New gradient classes: amber-400→amber-500, teal-400→teal-500, orange-400→orange-500
+- White text (numbers) with white/50% labels
+- Floating animation preserved
+
+**How It Works:**
+- Sparkles icon + uppercase label pill (replaced simple heading)
+- Rounded-2xl step icons (instead of circles) with dashed outer rings
+- Dark navy step number badges
+- White text on dark background
+- Gradient connector lines (white/15% → white/5%)
+- Color progression: amber → teal → orange
+
+**Scroll Indicator:**
+- "Discover"/"Découvrir" micro-label above arrow
+- White/20% arrow icon
+
+### Files Modified (2):
+
+1. **`src/components/deal/hero.tsx`** — Complete visual redesign:
+   - Dark navy gradient background with `hero-dark-bg` class
+   - Dot pattern overlay with `hero-dot-pattern` class
+   - 5 floating decorative shapes (FloatingShape component)
+   - 3 gradient mesh orbs for ambient lighting
+   - Glass morphism tagline badge, search bar, feature cards
+   - Warm amber/gold gradient heading text
+   - Trust badges (Shield, Clock, Star)
+   - Amber/gold→orange gradient search button
+   - Dark glass stat cards with new color classes
+   - Rounded-2xl How It Works step icons with dashed rings
+   - Connected gradient step lines
+   - Scroll indicator with micro-label
+   - New imports: Sparkles, Shield, Clock
+
+2. **`src/app/globals.css`** — Added 4 new CSS classes:
+   - `.hero-dark-bg` — Dark navy gradient background
+   - `.hero-dot-pattern` — Subtle dot grid overlay
+   - `.hero-search-glass` — Hover glow effect for search
+   - `.hero-stat-card` — Glass stat cards on dark background
+
+### What Was Preserved:
+- All existing functionality (search query, stats API fetch, i18n, framer-motion animations)
+- RTL support (start/end/ps/pe/ms/me throughout)
+- AnimatedCounter component for stat numbers
+- useI18n/useAppStore hooks and locale-aware content
+- getStatLabel() bilingual function
+- Two-column responsive layout (stacked mobile, side-by-side desktop)
+- Scroll parallax (useScroll/useTransform)
+- How It Works section structure with 3 steps
+- All import structure maintained
+- No new npm packages added
+
+### Lint Results:
+- 0 errors, 1 pre-existing font warning only
+- Dev server compiles cleanly: GET / 200 in ~15ms
+
+### Stage Summary:
+- ✅ Dark navy professional gradient background
+- ✅ Subtle dot grid pattern overlay
+- ✅ Floating decorative geometric shapes
+- ✅ Glass morphism search bar with warm amber/gold tones
+- ✅ White text on dark with proper contrast ratios
+- ✅ Deep teal accents for trust elements
+- ✅ Connected How It Works steps with refined design
+- ✅ Elegant glass stat cards with color-coded icons
+- ✅ Professional spacing and consistent rounded corners
+- ✅ All existing functionality preserved
+- ✅ RTL support maintained
+- ✅ 0 lint errors

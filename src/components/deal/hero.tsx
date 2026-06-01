@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import {
   ArrowDown, Users, ShoppingBag, Truck, Search,
   CheckCircle, Wrench, Star, ArrowRight, ArrowLeft,
+  Sparkles, Shield, Clock,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import { AnimatedCounter } from './animated-counter';
@@ -16,6 +17,7 @@ function FeatureCard({
   description,
   gradientFrom,
   gradientTo,
+  accentColor,
   delay,
 }: {
   icon: typeof Wrench;
@@ -23,47 +25,60 @@ function FeatureCard({
   description: string;
   gradientFrom: string;
   gradientTo: string;
+  accentColor: string;
   delay: number;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      initial={{ opacity: 0, y: 30, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.6, delay, ease: 'easeOut' }}
-      whileHover={{ y: -6, scale: 1.02 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       className="group relative rounded-2xl overflow-hidden"
-      style={{
-        background: `linear-gradient(135deg, ${gradientFrom}08 0%, ${gradientTo}12 100%)`,
-        border: `1px solid ${gradientFrom}20`,
-      }}
     >
-      {/* Shimmer on hover */}
+      {/* Glass card on dark background */}
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        className="relative p-5 sm:p-6 flex gap-4 items-start rounded-2xl"
         style={{
-          background: `linear-gradient(105deg, transparent 40%, ${gradientFrom}15 45%, ${gradientTo}10 50%, transparent 55%)`,
-          backgroundSize: '200% 100%',
+          background: 'rgba(255, 255, 255, 0.07)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${accentColor}18`,
         }}
-      />
-      <div className="relative p-5 sm:p-6 flex gap-4 items-start">
+      >
+        {/* Subtle glow on hover */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at 30% 50%, ${accentColor}10 0%, transparent 70%)`,
+          }}
+        />
+
         {/* Gradient icon container */}
         <div
-          className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg"
+          className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center"
           style={{
             background: `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`,
-            boxShadow: `0 4px 14px ${gradientFrom}35`,
+            boxShadow: `0 4px 20px ${accentColor}30`,
           }}
         >
           <IconComp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
         </div>
+
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm sm:text-base font-bold text-deal-navy mb-1">
+          <h3 className="text-sm sm:text-base font-bold text-white mb-1">
             {title}
           </h3>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+          <p className="text-xs sm:text-sm text-white/55 leading-relaxed">
             {description}
           </p>
         </div>
+
+        {/* Corner accent line */}
+        <div
+          className="absolute bottom-0 start-0 h-[2px] w-0 group-hover:w-full transition-all duration-500"
+          style={{ background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo})` }}
+        />
       </div>
     </motion.div>
   );
@@ -91,20 +106,22 @@ function StatCard({
   return (
     <motion.div
       key={stat.key}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: stat.delay }}
-      whileHover={{ y: -6 }}
-      className={`stat-card rounded-2xl p-4 sm:p-6 relative overflow-hidden ${index % 2 === 0 ? 'animate-float' : 'animate-float-delayed'}`}
+      whileHover={{ y: -4, scale: 1.03 }}
+      className={`hero-stat-card rounded-2xl p-5 sm:p-6 relative overflow-hidden ${index % 2 === 0 ? 'animate-float' : 'animate-float-delayed'}`}
     >
-      <div className="relative z-10">
+      {/* Glass background */}
+      <div className="relative z-10 text-center">
         <div
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-3 shadow-lg`}
+          className={`w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-3`}
+          style={{ boxShadow: `0 4px 16px ${stat.color.includes('orange') ? 'rgba(255,107,53,0.3)' : stat.color.includes('teal') ? 'rgba(13,148,136,0.3)' : 'rgba(245,158,11,0.3)'}` }}
         >
           <IconComp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
-        <div className="text-2xl sm:text-3xl font-black text-deal-navy">
+        <div className="text-2xl sm:text-3xl font-black text-white">
           {isInView ? (
             <AnimatedCounter
               target={stat.target}
@@ -120,7 +137,7 @@ function StatCard({
             </span>
           )}
         </div>
-        <div className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
+        <div className="text-xs sm:text-sm text-white/50 font-medium mt-1.5">
           {statLabel}
         </div>
       </div>
@@ -137,17 +154,20 @@ function HowItWorksSection() {
   const steps = [
     {
       icon: Search,
-      color: 'from-deal-orange to-deal-orange-dark',
+      color: 'from-amber-400 to-amber-500',
+      ringColor: 'rgba(245,158,11,0.15)',
       number: 1,
     },
     {
       icon: Users,
-      color: 'from-deal-teal to-deal-teal-dark',
+      color: 'from-teal-400 to-teal-500',
+      ringColor: 'rgba(13,148,136,0.15)',
       number: 2,
     },
     {
       icon: CheckCircle,
-      color: 'from-deal-gold to-deal-gold-dark',
+      color: 'from-orange-400 to-orange-500',
+      ringColor: 'rgba(255,107,53,0.15)',
       number: 3,
     },
   ];
@@ -156,19 +176,28 @@ function HowItWorksSection() {
   const descs = [t.hero.step1Desc, t.hero.step2Desc, t.hero.step3Desc];
 
   return (
-    <div ref={ref} className="max-w-4xl mx-auto mt-16 sm:mt-20">
+    <div ref={ref} className="max-w-4xl mx-auto mt-20 sm:mt-24">
+      {/* Section heading */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6 }}
-        className="text-center mb-10"
+        className="text-center mb-12"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-deal-navy">
-          {t.hero.howItWorks}
-        </h2>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+            {t.hero.howItWorks}
+          </span>
+        </div>
       </motion.div>
 
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-0 relative">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 sm:gap-0 relative">
         {steps.map((step, i) => {
           const IconComp = step.icon;
           return (
@@ -177,43 +206,63 @@ function HowItWorksSection() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: i * 0.2 }}
-                className="relative z-10 flex flex-col items-center text-center w-full max-w-[200px] glass-card rounded-2xl p-5"
+                className="relative z-10 flex flex-col items-center text-center w-full max-w-[220px]"
               >
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg mb-4 relative`}
-                >
-                  <IconComp className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                  <div className="absolute -top-1 -end-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
-                    <span className="text-xs font-black text-deal-navy">
-                      {step.number}
-                    </span>
-                  </div>
-                </motion.div>
-                <h3 className="text-sm sm:text-base font-bold text-deal-navy mb-1">
+                {/* Step circle with ring */}
+                <div className="relative mb-5">
+                  <motion.div
+                    whileHover={{ scale: 1.08 }}
+                    className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center relative`}
+                    style={{ boxShadow: `0 8px 32px ${step.ringColor}` }}
+                  >
+                    <IconComp className="w-8 h-8 sm:w-9 sm:h-9 text-white" />
+                    {/* Step number badge */}
+                    <div className="absolute -top-1.5 -end-1.5 w-7 h-7 rounded-lg bg-deal-navy-dark border-2 border-white/20 flex items-center justify-center">
+                      <span className="text-xs font-black text-white">
+                        {step.number}
+                      </span>
+                    </div>
+                  </motion.div>
+                  {/* Outer ring */}
+                  <div
+                    className="absolute -inset-2 rounded-3xl opacity-30"
+                    style={{
+                      border: `1.5px dashed ${i === 0 ? 'rgba(245,158,11,0.3)' : i === 1 ? 'rgba(13,148,136,0.3)' : 'rgba(255,107,53,0.3)'}`,
+                    }}
+                  />
+                </div>
+
+                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
                   {titles[i]}
                 </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                <p className="text-xs sm:text-sm text-white/45 leading-relaxed max-w-[180px]">
                   {descs[i]}
                 </p>
               </motion.div>
 
+              {/* Connector line (desktop) */}
               {i < steps.length - 1 && (
                 <motion.div
                   initial={{ scaleX: 0 }}
                   animate={isInView ? { scaleX: 1 } : {}}
                   transition={{ duration: 0.6, delay: i * 0.2 + 0.3 }}
-                  className="hidden sm:block absolute top-8 sm:top-10 start-[60%] end-[-20%] h-0.5"
+                  className="hidden sm:block absolute top-9 start-[65%] end-[-25%] h-[2px]"
                 >
-                  <div className="w-full border-t-2 border-dashed border-deal-orange/30" />
+                  <div className="w-full rounded-full" style={{
+                    background: 'linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))',
+                  }} />
                 </motion.div>
               )}
+              {/* Connector line (mobile) */}
               {i < steps.length - 1 && (
                 <motion.div
                   initial={{ scaleY: 0 }}
                   animate={isInView ? { scaleY: 1 } : {}}
                   transition={{ duration: 0.6, delay: i * 0.2 + 0.3 }}
-                  className="sm:hidden w-0.5 h-8 mt-2 mb-2 border-s-2 border-dashed border-deal-orange/30 origin-top"
+                  className="sm:hidden w-[2px] h-8 mt-3 mb-1 origin-top rounded-full"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))',
+                  }}
                 />
               )}
             </div>
@@ -221,6 +270,34 @@ function HowItWorksSection() {
         })}
       </div>
     </div>
+  );
+}
+
+/* ──────────── Floating Decorative Shape ──────────── */
+function FloatingShape({
+  className,
+  delay = 0,
+  duration = 6,
+}: {
+  className: string;
+  delay?: number;
+  duration?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      animate={{
+        y: [0, -15, 0],
+        rotate: [0, 5, -5, 0],
+        opacity: [0.3, 0.5, 0.3],
+      }}
+      transition={{
+        duration,
+        delay,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      }}
+    />
   );
 }
 
@@ -274,28 +351,28 @@ export default function Hero() {
     {
       key: 'providers',
       icon: Wrench,
-      color: 'from-deal-orange to-deal-orange-dark',
+      color: 'from-amber-400 to-amber-500',
       delay: 0,
       target: realStats ? `${realStats.totalUsers}` : '0',
     },
     {
       key: 'services',
       icon: ShoppingBag,
-      color: 'from-deal-teal to-deal-teal-dark',
+      color: 'from-teal-400 to-teal-500',
       delay: 0.15,
       target: realStats ? `${realStats.services}` : '0',
     },
     {
       key: 'products',
       icon: Truck,
-      color: 'from-deal-gold to-deal-gold-dark',
+      color: 'from-orange-400 to-orange-500',
       delay: 0.3,
       target: realStats ? `${realStats.products}` : '0',
     },
     {
       key: 'satisfaction',
       icon: Star,
-      color: 'from-deal-orange to-deal-gold',
+      color: 'from-amber-300 to-orange-400',
       delay: 0.45,
       target: realStats ? `${realStats.avgRating}` : '0',
     },
@@ -329,8 +406,9 @@ export default function Hero() {
         locale === 'fr'
           ? 'Trouvez des artisans qualifiés pour tous vos projets'
           : 'أفضل الحرفيين المتخصصين لمشاريعك',
-      gradientFrom: '#FF6B35',
-      gradientTo: '#E55A25',
+      gradientFrom: '#F59E0B',
+      gradientTo: '#D97706',
+      accentColor: '#F59E0B',
     },
     {
       icon: ShoppingBag,
@@ -339,8 +417,9 @@ export default function Hero() {
         locale === 'fr'
           ? 'Matériaux et produits de qualité à prix compétitifs'
           : 'مواد ومنتجات عالية الجودة بأسعار منافسة',
-      gradientFrom: '#0D9488',
-      gradientTo: '#0F766E',
+      gradientFrom: '#14B8A6',
+      gradientTo: '#0D9488',
+      accentColor: '#14B8A6',
     },
     {
       icon: Truck,
@@ -349,8 +428,9 @@ export default function Hero() {
         locale === 'fr'
           ? 'Louez du matériel professionnel au meilleur tarif'
           : 'استأجر معدات احترافية بأفضل الأسعار',
-      gradientFrom: '#F59E0B',
-      gradientTo: '#D97706',
+      gradientFrom: '#FB923C',
+      gradientTo: '#EA580C',
+      accentColor: '#FB923C',
     },
   ];
 
@@ -359,25 +439,58 @@ export default function Hero() {
   return (
     <section
       ref={heroRef}
-      className="relative overflow-hidden"
-      style={{
-        background:
-          'linear-gradient(165deg, #FFFFFF 0%, #FFF8F0 30%, #F0FDFA 60%, #E8ECF1 100%)',
-      }}
+      className="relative overflow-hidden hero-dark-bg"
     >
-      {/* Subtle decorative orbs */}
-      <div className="absolute top-0 start-0 w-[500px] h-[500px] bg-deal-orange/[0.06] rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 end-0 w-[600px] h-[600px] bg-deal-teal/[0.06] rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/2 start-1/2 w-[400px] h-[400px] bg-deal-gold/[0.04] rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      {/* Dot grid pattern overlay */}
+      <div className="hero-dot-pattern absolute inset-0 pointer-events-none z-[1]" />
+
+      {/* Gradient mesh orbs */}
+      <div className="absolute top-[-10%] start-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none z-[1]"
+        style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%)' }}
+      />
+      <div className="absolute bottom-[10%] end-[-5%] w-[600px] h-[600px] rounded-full pointer-events-none z-[1]"
+        style={{ background: 'radial-gradient(circle, rgba(13,148,136,0.06) 0%, transparent 70%)' }}
+      />
+      <div className="absolute top-[40%] start-[50%] w-[400px] h-[400px] rounded-full pointer-events-none z-[1] -translate-x-1/2 -translate-y-1/2"
+        style={{ background: 'radial-gradient(circle, rgba(255,107,53,0.04) 0%, transparent 70%)' }}
+      />
+
+      {/* Floating decorative shapes */}
+      <FloatingShape
+        className="absolute top-[15%] start-[8%] w-3 h-3 rounded-full bg-amber-400/20 z-[2]"
+        delay={0}
+        duration={5}
+      />
+      <FloatingShape
+        className="absolute top-[25%] end-[12%] w-2 h-2 rounded-full bg-teal-400/25 z-[2]"
+        delay={1}
+        duration={7}
+      />
+      <FloatingShape
+        className="absolute bottom-[30%] start-[15%] w-2.5 h-2.5 bg-orange-400/15 z-[2]"
+        delay={0.5}
+        duration={6}
+        style={{ borderRadius: '4px', transform: 'rotate(45deg)' } as React.CSSProperties}
+      />
+      <FloatingShape
+        className="absolute top-[60%] end-[8%] w-4 h-4 rounded-full bg-amber-300/10 z-[2]"
+        delay={2}
+        duration={8}
+      />
+      <FloatingShape
+        className="absolute top-[10%] end-[25%] w-2 h-2 bg-teal-300/20 z-[2]"
+        delay={1.5}
+        duration={5.5}
+      />
 
       {/* Content */}
       <motion.div
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-16 sm:pb-20"
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20 sm:pb-28"
         style={{ y: contentY }}
       >
         <motion.div style={{ opacity }}>
           {/* ── Two-Column Layout ── */}
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 mb-20">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 mb-24">
             {/* Left Column: Text Content */}
             <div className="flex-1 text-center lg:text-start">
               {/* Tagline badge */}
@@ -385,10 +498,16 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-deal-orange/20 bg-deal-orange/[0.06] backdrop-blur-sm mb-6"
+                className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
               >
-                <div className="w-2 h-2 rounded-full bg-deal-teal animate-pulse" />
-                <span className="text-sm font-medium text-deal-navy/80">
+                <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+                <span className="text-sm font-medium text-white/70">
                   {t.app.tagline}
                 </span>
               </motion.div>
@@ -398,7 +517,7 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-5"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-6"
                 style={{
                   fontFamily: "'Cairo', 'Inter', sans-serif",
                 }}
@@ -407,7 +526,7 @@ export default function Hero() {
                   className="block"
                   style={{
                     background:
-                      'linear-gradient(135deg, #FF6B35 0%, #F59E0B 40%, #0D9488 100%)',
+                      'linear-gradient(135deg, #FBBF24 0%, #F59E0B 30%, #FB923C 60%, #14B8A6 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -415,7 +534,7 @@ export default function Hero() {
                 >
                   {t.hero.title.split(' ').slice(0, 3).join(' ')}
                 </span>
-                <span className="block text-deal-navy mt-1">
+                <span className="block text-white mt-2">
                   {t.hero.title.split(' ').slice(3).join(' ')}
                 </span>
               </motion.h1>
@@ -425,23 +544,31 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.4 }}
-                className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed"
+                className="text-base sm:text-lg text-white/50 max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed"
               >
                 {t.hero.subtitle}
               </motion.p>
 
-              {/* Embedded Search Bar */}
+              {/* Embedded Search Bar — Glass Morphism */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
                 className="max-w-xl mx-auto lg:mx-0"
               >
-                <div className="relative group search-focus-ring rounded-2xl">
-                  <div className="flex items-center bg-white/80 backdrop-blur-xl border-2 border-deal-orange/15 rounded-2xl shadow-lg shadow-deal-orange/5 group-hover:border-deal-orange/30 group-hover:shadow-xl group-hover:shadow-deal-orange/10 transition-all duration-300 overflow-hidden">
+                <div className="relative group hero-search-glass rounded-2xl">
+                  <div
+                    className="flex items-center rounded-2xl overflow-hidden transition-all duration-300"
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      backdropFilter: 'blur(24px)',
+                      WebkitBackdropFilter: 'blur(24px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
                     {/* Search icon */}
                     <div className="ps-4 sm:ps-5 pe-3 flex items-center">
-                      <Search className="w-5 h-5 text-deal-orange/60 group-hover:text-deal-orange transition-colors" />
+                      <Search className="w-5 h-5 text-white/40 group-hover:text-amber-400 transition-colors" />
                     </div>
 
                     <input
@@ -449,18 +576,45 @@ export default function Hero() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={t.nav.search}
-                      className="flex-1 py-4 sm:py-5 bg-transparent text-deal-navy placeholder:text-muted-foreground/60 text-sm sm:text-base font-medium outline-none min-w-0"
+                      className="flex-1 py-4 sm:py-5 bg-transparent text-white placeholder:text-white/30 text-sm sm:text-base font-medium outline-none min-w-0"
                     />
 
                     <motion.button
                       whileHover={{ scale: 1.04 }}
                       whileTap={{ scale: 0.96 }}
-                      className="me-2 sm:me-3 flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-deal-orange to-deal-orange-dark text-white text-sm font-bold shadow-md shadow-deal-orange/20 hover:shadow-lg hover:shadow-deal-orange/30 transition-shadow"
+                      className="me-2 sm:me-3 flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-white text-sm font-bold transition-all duration-300"
+                      style={{
+                        background: 'linear-gradient(135deg, #F59E0B, #EA580C)',
+                        boxShadow: '0 4px 16px rgba(245,158,11,0.25)',
+                      }}
                     >
                       <span className="hidden sm:inline">{t.common.search}</span>
                       <ArrowIcon className="w-4 h-4" />
                     </motion.button>
                   </div>
+                </div>
+              </motion.div>
+
+              {/* Trust badges below search */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-8"
+              >
+                <div className="flex items-center gap-1.5 text-white/35 text-xs font-medium">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>{locale === 'fr' ? 'Vérifié' : 'موثوق'}</span>
+                </div>
+                <div className="w-1 h-1 rounded-full bg-white/15" />
+                <div className="flex items-center gap-1.5 text-white/35 text-xs font-medium">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{locale === 'fr' ? 'Support 24/7' : 'دعم متواصل'}</span>
+                </div>
+                <div className="w-1 h-1 rounded-full bg-white/15" />
+                <div className="flex items-center gap-1.5 text-white/35 text-xs font-medium">
+                  <Star className="w-3.5 h-3.5" />
+                  <span>{locale === 'fr' ? 'Meilleur rapport qualité-prix' : 'أفضل الأسعار'}</span>
                 </div>
               </motion.div>
             </div>
@@ -481,6 +635,7 @@ export default function Hero() {
                     description={card.description}
                     gradientFrom={card.gradientFrom}
                     gradientTo={card.gradientTo}
+                    accentColor={card.accentColor}
                     delay={0.4 + i * 0.15}
                   />
                 ))}
@@ -488,7 +643,7 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* ── Animated Stats Bar ── */}
+          {/* ── Stats Band ── */}
           <motion.div
             ref={statsRef}
             initial={{ opacity: 0 }}
@@ -519,9 +674,12 @@ export default function Hero() {
               delay: 1.5,
               y: { duration: 1.5, repeat: Infinity },
             }}
-            className="mt-12 flex justify-center"
+            className="mt-14 flex flex-col items-center gap-2"
           >
-            <ArrowDown className="w-6 h-6 text-deal-navy/30" />
+            <span className="text-[10px] text-white/25 font-medium uppercase tracking-widest">
+              {locale === 'fr' ? 'Découvrir' : 'اكتشف'}
+            </span>
+            <ArrowDown className="w-5 h-5 text-white/20" />
           </motion.div>
         </motion.div>
       </motion.div>

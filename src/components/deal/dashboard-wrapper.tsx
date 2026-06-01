@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   MessageCircle,
   LogOut,
+  FileText,
 } from 'lucide-react';
 import { useI18n, useAppStore } from '@/lib/store';
 import CustomerDashboard from './dashboard/customer-dashboard';
@@ -68,6 +69,7 @@ function getSidebarItems(role: Role): SidebarItem[] {
     ],
     admin: [
       { key: 'users', labelAr: 'المستخدمون', labelFr: 'Utilisateurs', icon: Users, color: 'text-deal-teal' },
+      { key: 'content', labelAr: 'إدارة المحتوى', labelFr: 'Contenu', icon: FileText, color: 'text-deal-orange' },
       { key: 'complaints', labelAr: 'الشكاوى', labelFr: 'Réclamations', icon: AlertTriangle, color: 'text-amber-500' },
       { key: 'messages', labelAr: 'الرسائل', labelFr: 'Messages', icon: MessageCircle, color: 'text-deal-teal' },
       { key: 'categories', labelAr: 'الفئات', labelFr: 'Catégories', icon: FolderTree, color: 'text-deal-gold-dark' },
