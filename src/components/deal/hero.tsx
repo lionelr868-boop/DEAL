@@ -180,21 +180,29 @@ function HowItWorksSection() {
 }
 
 export default function Hero() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const heroRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const statsInView = useInView(statsRef, { once: true, margin: '-50px' });
-  const [realStats, setRealStats] = useState<{ users: number; services: number; products: number; equipment: number; avgRating: number } | null>(null);
+  const [realStats, setRealStats] = useState<{
+    totalUsers: number; craftsmen: number; customers: number;
+    services: number; products: number; equipment: number;
+    bookings: number; orders: number; avgRating: number;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/stats')
       .then(r => r.json())
       .then(data => {
         setRealStats({
-          users: data.users?.total || 0,
+          totalUsers: data.users?.total || 0,
+          craftsmen: data.users?.craftsmen || 0,
+          customers: data.users?.customers || 0,
           services: data.services || 0,
           products: data.products || 0,
           equipment: data.equipment || 0,
+          bookings: data.bookings || 0,
+          orders: data.orders || 0,
           avgRating: data.avgRating || 0,
         });
       })
@@ -213,17 +221,29 @@ export default function Hero() {
   const opacity = useTransform(scrollY, [0, 350], [1, 0]);
 
   const stats = [
-    { key: 'craftsmen', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', delay: 0, target: realStats ? `+${realStats.users}` : '+200' },
-    { key: 'products', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.15, target: realStats ? `+${realStats.services}` : '+500' },
-    { key: 'equipment', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.3, target: realStats ? `+${realStats.equipment}` : '+100' },
-    { key: 'satisfaction', icon: Star, color: 'from-deal-orange to-deal-gold', delay: 0.45, target: realStats ? `${Math.round(realStats.avgRating * 20)}%` : '98%' },
+    { key: 'providers', icon: Wrench, color: 'from-deal-orange to-deal-orange-dark', delay: 0, target: realStats ? `${realStats.totalUsers}` : '0' },
+    { key: 'services', icon: ShoppingBag, color: 'from-deal-teal to-deal-teal-dark', delay: 0.15, target: realStats ? `${realStats.services}` : '0' },
+    { key: 'products', icon: Truck, color: 'from-deal-gold to-deal-gold-dark', delay: 0.3, target: realStats ? `${realStats.products}` : '0' },
+    { key: 'satisfaction', icon: Star, color: 'from-deal-orange to-deal-gold', delay: 0.45, target: realStats ? `${realStats.avgRating}` : '0' },
   ];
 
-  const statLabels: Record<string, string> = {
-    craftsmen: t.hero.stats.craftsmen,
-    products: t.hero.stats.products,
-    equipment: t.hero.stats.equipment,
-    satisfaction: t.hero.stats.satisfaction,
+  const getStatLabel = (key: string) => {
+    if (locale === 'fr') {
+      const frMap: Record<string, string> = {
+        providers: `${realStats?.craftsmen || 0} artisans`,
+        services: `${realStats?.services || 0} services`,
+        products: `${realStats?.products || 0} produits`,
+        satisfaction: `Note ${realStats?.avgRating || 0}/5`,
+      };
+      return frMap[key] || '';
+    }
+    const arMap: Record<string, string> = {
+      providers: `${realStats?.craftsmen || 0} حرفي`,
+      services: `${realStats?.services || 0} خدمة`,
+      products: `${realStats?.products || 0} منتج`,
+      satisfaction: `${realStats?.avgRating || 0}/5 تقييم`,
+    };
+    return arMap[key] || '';
   };
 
   return (
@@ -409,7 +429,7 @@ export default function Hero() {
             <StatCard
               key={stat.key}
               stat={stat}
-              statLabel={statLabels[stat.key]}
+              statLabel={getStatLabel(stat.key)}
               index={i}
               isInView={statsInView}
             />

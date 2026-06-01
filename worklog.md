@@ -1,5 +1,89 @@
 
 ---
+Task ID: 10
+Agent: Main Agent
+Task: Fix Stats Bar Real Data, Dashboard Button Navigation, Navbar Button Redesign
+
+Work Log:
+- Analyzed user screenshots to understand exact issues
+- Verified stats API returns real data (20 users, 27 services, 24 products, 16 equipment, 4.5 avg rating)
+- Fixed hero.tsx stats mapping: was incorrectly mapping `users.total` to craftsmen card, `services` to products card
+- Fixed missing `locale` destructuring in Hero component (caused 500 runtime error)
+- Updated stats labels to be fully dynamic and bilingual based on real data
+- Added demo account system to auth-page.tsx for each role (CUSTOMER, CRAFTSMAN, MERCHANT, EQUIPMENT_OWNER)
+- In login mode, clicking dashboard preview cards now performs a demo login and navigates to that role's dashboard
+- In register mode, clicking cards still pre-selects the role
+- Completely redesigned navbar.tsx with elegant creative buttons:
+  - Language toggle: pill-shaped with Languages icon, teal gradient background, smooth hover transitions
+  - Login button: glass outlined pill with LogIn icon, border glow on hover
+  - Register button: gradient pill (orange→dark) with UserPlus icon, hover shimmer animation
+  - User badge: avatar initial + name, gradient border
+  - Dashboard/Logout buttons: rounded-full with subtle borders
+  - Mobile menu: matching pill-style auth buttons
+- Verified seed data exists in DB (20 users, 27 services, 24 products, 16 equipment)
+- 0 lint errors (1 pre-existing font warning only)
+- Dev server GET / 200 confirmed working
+
+### Files Modified (3):
+
+1. **`src/components/deal/hero.tsx`**:
+   - Added `locale` to useI18n destructuring (fixed 500 error)
+   - Expanded realStats state type with all API fields
+   - Fixed stats mapping: providers→totalUsers, services→services, products→products, satisfaction→avgRating
+   - Replaced static statLabels with dynamic `getStatLabel()` function
+   - Labels now show real counts: "8 حرفي", "27 خدمة", "24 منتج", "4.5/5 تقييم" (Arabic) / "8 artisans", "27 services", "24 produits", "Note 4.5/5" (French)
+
+2. **`src/components/deal/auth-page.tsx`**:
+   - Added demo accounts map for all 4 roles (email: password: pass123 for all)
+   - `handleDashPreviewClick` now performs demo login in login mode
+   - Shows LogIn icon + demo email preview in login mode
+   - Shows role icon + ChevronRight in register mode
+   - Loading state disables buttons during demo login
+   - Context-aware label: "جرب لوحة التحكم بدخول تجريبي" (login) vs "اكتشف لوحات التحكم" (register)
+   - Added Eye icon for demo mode, hover effects on preview cards
+
+3. **`src/components/deal/navbar.tsx`**:
+   - Full rewrite with creative elegant button design
+   - Language toggle: Languages icon + pill shape + teal gradient + hover rotation
+   - Login: glass-outlined pill + LogIn icon + animated underline on nav links
+   - Register: gradient pill + UserPlus icon + hover shimmer background
+   - User avatar: circular gradient initial + name badge
+   - Nav links: animated underline on hover (gradient orange→gold)
+   - Favorites: circular with gradient badge
+   - All buttons: rounded-full, consistent h-9 height, shadow-sm baseline
+   - Mobile: matching pill-style buttons for login/register
+
+### Demo Accounts:
+- Customer: customer1@deal.dz / pass123
+- Craftsman: craftsman1@deal.dz / pass123
+- Merchant: merchant1@deal.dz / pass123
+- Equipment Owner: equip1@deal.dz / pass123
+
+### Stage Summary:
+- ✅ Stats bar now displays REAL database data (not hardcoded)
+- ✅ Dashboard buttons navigate to actual dashboards via demo login
+- ✅ Navbar buttons redesigned with elegant creative styling
+- ✅ 0 lint errors
+- ✅ GET / 200 confirmed on dev server
+
+### Unresolved / Known Issues:
+- Mobile messaging widget may overlap with other fixed elements
+- Avatar upload saves to form state only (not persisted to DB)
+- Complaint modal trigger not yet in detail-modal cards
+- Real notifications not connected to frontend notification center
+- Search frontend integration not complete
+
+### Recommended Next Steps:
+1. **Complaint button in detail-modal** — Add flag/report icon
+2. **Avatar persistence** — Save avatar to User model via register API
+3. **Notification center → real API** — Connect to NotificationDb API
+4. **Multi-image gallery** — Multiple images per service/product/equipment
+5. **Card redesign** — Apply creative styles to all cards
+6. **WebSocket real-time messaging**
+7. **Admin complaints panel**
+8. **Mobile responsiveness testing**
+
+---
 Task ID: 9
 Agent: Main Agent + Backend Developer Subagent
 Task: Creative Visual Redesign, Separate Auth Page, Backend APIs, Messaging, Complaints, Real Data

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe, LogOut, LayoutDashboard, User, Heart } from 'lucide-react';
+import { Menu, X, Globe, LogOut, LayoutDashboard, User, Heart, LogIn, UserPlus, Languages } from 'lucide-react';
 import { useI18n, useAppStore, useFavoritesStore } from '@/lib/store';
 import NotificationCenter from './notification-center';
 
@@ -60,7 +60,7 @@ export default function Navbar() {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center shadow-lg shadow-deal-orange/20">
               <span className="text-white font-black text-lg">D</span>
             </div>
             <span className="text-2xl font-black bg-gradient-to-r from-deal-orange via-deal-gold to-deal-teal bg-clip-text text-transparent">
@@ -68,115 +68,126 @@ export default function Navbar() {
             </span>
           </motion.div>
 
-          {/* Desktop nav links - hide on small screens */}
-          <div className="hidden sm:flex items-center gap-1">
+          {/* Desktop nav links */}
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <motion.button
                 key={link.key}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={link.action}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-deal-navy hover:bg-deal-orange/10 hover:text-deal-orange transition-colors"
+                className="relative px-4 py-2 rounded-xl text-sm font-semibold text-deal-navy hover:bg-deal-orange/10 hover:text-deal-orange transition-all duration-300 group"
               >
                 {link.label}
+                <span className="absolute bottom-0 inset-x-2 h-0.5 bg-gradient-to-r from-deal-orange to-deal-gold rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center" />
               </motion.button>
             ))}
           </div>
 
           {/* Right side buttons */}
           <div className="flex items-center gap-2">
-            {/* Language toggle */}
+            {/* Language toggle — elegant pill */}
             <motion.button
-              whileHover={{ scale: 1.1, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={toggleLocale}
-              className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center gap-1 hover:border-deal-teal hover:bg-deal-teal/5 transition-colors shadow-sm"
+              className="relative flex items-center gap-1.5 h-9 px-3 rounded-full bg-gradient-to-r from-deal-navy/5 to-deal-teal/5 border border-deal-teal/20 hover:border-deal-teal/40 hover:from-deal-teal/10 hover:to-deal-teal/5 transition-all duration-300 shadow-sm overflow-hidden group"
             >
-              <Globe className="w-4 h-4 text-deal-teal" />
-              <span className="text-xs font-bold text-deal-teal">
-                {locale === 'ar' ? 'FR' : 'AR'}
+              <Languages className="w-3.5 h-3.5 text-deal-teal group-hover:rotate-12 transition-transform duration-300" />
+              <span className="text-xs font-bold text-deal-teal tracking-wide">
+                {locale === 'ar' ? 'FR' : 'عربي'}
               </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-deal-teal/0 via-deal-teal/5 to-deal-teal/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </motion.button>
 
-            {/* Notification Center (visible when logged in) */}
+            {/* Notification Center */}
             {currentUser && (
               <NotificationCenter />
             )}
 
-            {/* Favorites (visible when logged in) */}
+            {/* Favorites */}
             {currentUser && favorites.length > 0 && (
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleFavoritesClick}
-                className="relative w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:border-red-300 hover:bg-red-50 transition-colors shadow-sm"
+                className="relative w-9 h-9 rounded-full bg-white border border-red-100 flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition-all duration-300 shadow-sm"
               >
                 <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center notif-bounce">
+                <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-[9px] font-bold flex items-center justify-center notif-bounce shadow-sm">
                   {favorites.length}
                 </span>
               </motion.button>
             )}
 
-            {/* Auth buttons or User menu */}
+            {/* Auth buttons — creative design */}
             {!currentUser ? (
               <div className="hidden sm:flex items-center gap-2">
+                {/* Login — glass outlined with icon */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => { setAuthMode('login'); setShowAuthPage(true); }}
-                  className="btn-3d-sm bg-white text-deal-orange border border-deal-orange/30 text-xs"
-                  style={{
-                    background: 'white',
-                    boxShadow: '0 4px 0 0 rgba(255,107,53,0.2), 0 6px 8px rgba(255,107,53,0.15)',
-                  }}
+                  className="flex items-center gap-1.5 h-9 px-4 rounded-full bg-white/80 backdrop-blur-sm border-2 border-deal-orange/25 hover:border-deal-orange/60 hover:bg-deal-orange/5 text-deal-orange text-xs font-bold transition-all duration-300 shadow-sm hover:shadow-deal-orange/10 hover:shadow-md group"
                 >
-                  {t.nav.login}
+                  <LogIn className="w-3.5 h-3.5 group-hover:-translate-x-px transition-transform" />
+                  <span>{t.nav.login}</span>
                 </motion.button>
+
+                {/* Register — gradient pill with glow */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => { setAuthMode('register'); setShowAuthPage(true); }}
-                  className="btn-3d-sm text-white text-xs"
+                  className="relative flex items-center gap-1.5 h-9 px-4 rounded-full bg-gradient-to-r from-deal-orange to-deal-orange-dark text-white text-xs font-bold transition-all duration-300 shadow-md shadow-deal-orange/25 hover:shadow-lg hover:shadow-deal-orange/35 overflow-hidden group"
                 >
-                  {t.nav.register}
+                  <span className="absolute inset-0 bg-gradient-to-r from-deal-orange via-deal-gold to-deal-orange bg-[length:200%_100%] opacity-0 group-hover:opacity-100 group-hover:animate-[gradientShift_2s_ease_infinite] transition-opacity duration-500" />
+                  <UserPlus className="w-3.5 h-3.5 relative z-10 group-hover:rotate-6 transition-transform" />
+                  <span className="relative z-10">{t.nav.register}</span>
                 </motion.button>
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
+                {/* User name badge */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-deal-orange/10 text-deal-orange text-xs font-semibold"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-2 h-9 px-3 rounded-full bg-gradient-to-r from-deal-orange/10 to-deal-gold/5 border border-deal-orange/15 text-deal-orange text-xs font-bold transition-all duration-300 hover:border-deal-orange/30 hover:shadow-sm"
                 >
-                  <User className="w-4 h-4" />
-                  {currentUser.name}
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-deal-orange to-deal-gold flex items-center justify-center shadow-sm">
+                    <span className="text-white font-black text-[10px]">{currentUser.name.charAt(0)}</span>
+                  </div>
+                  <span className="hidden md:inline max-w-[80px] truncate">{currentUser.name}</span>
                 </motion.button>
+
+                {/* Dashboard */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setShowDashboard(true)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-deal-teal/10 text-deal-teal text-xs font-semibold"
+                  className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-deal-teal/10 border border-deal-teal/15 text-deal-teal text-xs font-bold transition-all duration-300 hover:bg-deal-teal/15 hover:border-deal-teal/25"
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  {t.nav.dashboard}
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">{t.nav.dashboard}</span>
                 </motion.button>
+
+                {/* Logout */}
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => { logout(); setShowDashboard(false); }}
-                  className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors"
+                  className="w-9 h-9 rounded-full bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:border-red-200 transition-all duration-300"
                 >
                   <LogOut className="w-4 h-4 text-red-500" />
                 </motion.button>
               </div>
             )}
 
-            {/* Mobile hamburger - touch-friendly 44px */}
+            {/* Mobile hamburger */}
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="sm:hidden w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center shadow-sm"
+              className="sm:hidden w-11 h-11 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/80 flex items-center justify-center shadow-sm"
             >
               {mobileOpen ? <X className="w-5 h-5 text-deal-navy" /> : <Menu className="w-5 h-5 text-deal-navy" />}
             </motion.button>
@@ -195,8 +206,7 @@ export default function Navbar() {
             className="md:hidden overflow-hidden glass border-t border-white/20"
           >
             <div className="px-4 py-4 space-y-2">
-              {/* Essential nav links - only Home on very small screens */}
-              {navLinks.slice(0, 1).map((link) => (
+              {navLinks.map((link) => (
                 <button
                   key={link.key}
                   onClick={() => { link.action(); setMobileOpen(false); }}
@@ -206,30 +216,21 @@ export default function Navbar() {
                 </button>
               ))}
 
-              {/* More nav links - shown below 640px */}
-              {navLinks.slice(1).map((link) => (
-                <button
-                  key={link.key}
-                  onClick={() => { link.action(); setMobileOpen(false); }}
-                  className="w-full text-start px-4 py-3 rounded-xl text-sm font-semibold text-deal-navy hover:bg-deal-orange/10 hover:text-deal-orange transition-colors"
-                >
-                  {link.label}
-                </button>
-              ))}
-
-              <div className="border-t border-gray-200 pt-3 mt-3">
+              <div className="border-t border-gray-200/80 pt-3 mt-3">
                 {!currentUser ? (
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setAuthMode('login'); setShowAuthPage(true); setMobileOpen(false); }}
-                      className="flex-1 btn-3d-sm text-white text-xs"
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-full bg-white border-2 border-deal-orange/30 text-deal-orange text-xs font-bold hover:bg-deal-orange/5"
                     >
+                      <LogIn className="w-3.5 h-3.5" />
                       {t.nav.login}
                     </button>
                     <button
                       onClick={() => { setAuthMode('register'); setShowAuthPage(true); setMobileOpen(false); }}
-                      className="flex-1 btn-3d-sm btn-3d-teal text-white text-xs"
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-full bg-gradient-to-r from-deal-orange to-deal-orange-dark text-white text-xs font-bold shadow-md shadow-deal-orange/25"
                     >
+                      <UserPlus className="w-3.5 h-3.5" />
                       {t.nav.register}
                     </button>
                   </div>
@@ -237,14 +238,14 @@ export default function Navbar() {
                   <div className="space-y-2">
                     <button
                       onClick={() => { setShowDashboard(true); setMobileOpen(false); }}
-                      className="w-full flex items-center gap-2 px-4 py-2 rounded-xl bg-deal-orange/10 text-deal-orange text-sm font-semibold"
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-deal-orange/10 text-deal-orange text-sm font-semibold"
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       {t.nav.dashboard}
                     </button>
                     <button
                       onClick={() => { logout(); setShowDashboard(false); setMobileOpen(false); }}
-                      className="w-full flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-500 text-sm font-semibold"
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-500 text-sm font-semibold"
                     >
                       <LogOut className="w-4 h-4" />
                       {t.nav.logout}

@@ -6,6 +6,7 @@ import {
   ArrowRight, ArrowLeft, Mail, Lock, User, Phone, Loader2,
   Camera, Users, Wrench, Store, HardHat, Sparkles, X, MessageCircle,
   ShoppingCart, Settings, BarChart3, Package, Truck, ChevronRight,
+  Eye, LogIn,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useI18n, useAppStore } from '@/lib/store';
@@ -161,11 +162,46 @@ export default function AuthPage() {
     reader.readAsDataURL(file);
   }, []);
 
-  const handleDashPreviewClick = (role: string) => {
+  // Demo accounts for each role
+  const demoAccounts: Record<string, { email: string; password: string; name: string }> = {
+    CUSTOMER: { email: 'customer1@deal.dz', password: 'pass123', name: 'أحمد بن علي' },
+    CRAFTSMAN: { email: 'craftsman1@deal.dz', password: 'pass123', name: 'محمد الكهربائي' },
+    MERCHANT: { email: 'merchant1@deal.dz', password: 'pass123', name: 'سعيد للمواد' },
+    EQUIPMENT_OWNER: { email: 'equip1@deal.dz', password: 'pass123', name: 'رابح للمعدات' },
+  };
+
+  const handleDashPreviewClick = async (role: string) => {
+    // For register mode: pre-select role
     if (!isLogin) {
       handleChange('role', role);
       setSelectedDashPreview(role);
       setTimeout(() => setSelectedDashPreview(null), 2000);
+      return;
+    }
+    // For login mode: quick demo login with that role's demo account
+    const demo = demoAccounts[role];
+    if (!demo) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: demo.email, password: demo.password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCurrentUser({ id: data.id, name: data.name, email: data.email, role: data.role });
+        toast.success(`${t.loginPage.tryDashboard || ''} ✓`);
+        resetForm();
+        setShowAuthPage(false);
+        setShowDashboard(true);
+      } else {
+        toast.error(t.auth.invalidCredentials);
+      }
+    } catch {
+      toast.error(t.auth.invalidCredentials);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,10 +212,11 @@ export default function AuthPage() {
     { value: 'EQUIPMENT_OWNER', label: t.auth.equipmentOwner, icon: HardHat, gradient: 'from-purple-100 to-purple-50', activeGradient: 'from-purple-600 to-purple-700' },
   ];
 
-  const authLabel = locale === 'ar' ? 'loginPage' : 'loginPage';
   const welcomeText = locale === 'ar' ? t.loginPage.welcome : t.loginPage.welcomeFr;
   const subtitleText = locale === 'ar' ? t.loginPage.subtitle : t.loginPage.subtitleFr;
-  const exploreText = locale === 'ar' ? t.loginPage.exploreDashboards : t.loginPage.exploreDashboardsFr;
+  const exploreText = isLogin
+    ? (locale === 'ar' ? 'جرب لوحة التحكم بدخول تجريبي' : 'Essayez avec un accès démo')
+    : (locale === 'ar' ? t.loginPage.exploreDashboards : t.loginPage.exploreDashboardsFr);
   const backText = locale === 'ar' ? t.loginPage.backToHome : t.loginPage.backToHomeFr;
   const uploadText = locale === 'ar' ? t.loginPage.uploadAvatar : t.loginPage.uploadAvatarFr;
 
@@ -285,6 +322,7 @@ export default function AuthPage() {
                   <p className="text-sm font-bold text-white/40 mb-4 uppercase tracking-wider">{exploreText}</p>
                   {dashboards.map((dash, i) => {
                     const DashIcon = getDashboardIcon(dash.key);
+                    const demo = demoAccounts[dash.key];
                     return (
                       <motion.button
                         key={dash.key}
@@ -292,18 +330,31 @@ export default function AuthPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.6 + i * 0.1 }}
                         onClick={() => handleDashPreviewClick(dash.key)}
-                        className={`w-full auth-dash-preview ${selectedDashPreview === dash.key ? 'ring-1 ring-white/30 bg-white/20 scale-[1.02]' : ''}`}
+                        disabled={loading}
+                        className={`w-full auth-dash-preview group transition-all duration-300 ${selectedDashPreview === dash.key ? 'ring-1 ring-white/30 bg-white/20 scale-[1.02]' : ''} ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/15'}`}
                       >
                         <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                           style={{ background: `linear-gradient(135deg, ${dash.color}, ${dash.color}99)` }}
                         >
-                          <DashIcon className="w-4 h-4 text-white" />
+                          {isLogin ? (
+                            <LogIn className="w-4 h-4 text-white" />
+                          ) : (
+                            <DashIcon className="w-4 h-4 text-white" />
+                          )}
                         </div>
-                        <div className="text-start">
+                        <div className="text-start flex-1">
                           <p className="text-xs font-bold">{getDashboardLabel(dash.key, locale)}</p>
+                          {isLogin && (
+                            <p className="text-[10px] text-white/30 mt-0.5">{demo?.email}</p>
+                          )}
                         </div>
-                        <ChevronRight className={`w-4 h-4 text-white/30 ms-auto ${isRTL ? 'rotate-180' : ''}`} />
+                        {isLogin && (
+                          <Eye className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 transition-colors" />
+                        )}
+                        {!isLogin && (
+                          <ChevronRight className={`w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors ms-auto ${isRTL ? 'rotate-180' : ''}`} />
+                        )}
                       </motion.button>
                     );
                   })}
