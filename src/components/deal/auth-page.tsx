@@ -171,11 +171,11 @@ export default function AuthPage() {
 
   // Demo accounts for each role
   const demoAccounts: Record<string, { email: string; password: string; name: string }> = {
-    CUSTOMER: { email: 'customer1@deal.dz', password: 'pass123', name: 'أحمد بن علي' },
-    CRAFTSMAN: { email: 'craftsman1@deal.dz', password: 'pass123', name: 'محمد الكهربائي' },
-    MERCHANT: { email: 'merchant1@deal.dz', password: 'pass123', name: 'سعيد للمواد' },
-    EQUIPMENT_OWNER: { email: 'equip1@deal.dz', password: 'pass123', name: 'رابح للمعدات' },
-    ADMIN: { email: 'admin@deal.dz', password: 'admin123', name: 'مدير المنصة' },
+    CUSTOMER: { email: 'ahmed@customer.dz', password: 'pass123', name: 'أحمد مرابط' },
+    CRAFTSMAN: { email: 'karim@deal.dz', password: 'pass123', name: 'كريم بن أحمد' },
+    MERCHANT: { email: 'bati@deal.dz', password: 'pass123', name: 'مؤسسة البناء المModern' },
+    EQUIPMENT_OWNER: { email: 'rent@deal.dz', password: 'pass123', name: 'مؤسسة كراء المعدات الثقيلة' },
+    ADMIN: { email: 'admin@deal.dz', password: 'admin123', name: 'إدارة DEAL' },
   };
 
   const handleDashPreviewClick = async (role: string) => {
